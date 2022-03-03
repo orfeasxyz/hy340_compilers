@@ -35,31 +35,103 @@ operator =|\+\+|-|\*|\/|%|==|!=|\+|--|>|<|>=|<=
 
 {keyword} { 
 	DPRINTF("keyword\n");
+	add_token(ylval, KEYWORD);
 }
 
 {operator} { 
 	DPRINTF("operator\n");
+	add_token(ylval, OPERATOR);
 }
 
 {id} {
 	DPRINTF("id\n");
+	add_token(ylval, IDENTIFIER);
 }
 
 {string} {
 	DPRINTF("string\n");
+	add_token(ylval, STRING);
 }
 
-{comment}           { fprintf(stderr, "Recognized comment with value: %s\n", yytext); }
-{digit}+            { fprintf(stderr, "Recognized INTCONST with value: %s\n", yytext); }
-{digit}*\.{digit}+   { fprintf(stderr, "Recognized FLOAT with value: %s\n", yytext); }
-{space}             { ; }
-.                   { fprintf(stderr, "Unrecognized token: %s\n", yytext); }
+{comment} { 
+	DPRINTF("comment\n");
+	add_token(ylval, COMMENT);
+}
+
+{digit}+ {
+	DPRINTF("intconst\n");
+	add_token(ylval, INTCONST);
+}
+
+{digit}*\.{digit}+ {
+	DPRINTF("realconst\n");
+	add_token(ylval, REALCONST);
+}
+
+{space} {
+	;
+}
+
+. {
+	fprintf(stderr, "%d: Unrecognized token %s.", yylineno, yytext);
+	exit(0);
+}
 
 %%
 
 int yywrap() {
     return 1;
 }
+
+static char *operator_enum_map[] = {
+	"=",
+	"+",
+	"-",
+	"*",
+	"/",
+	"%",
+	"==",
+	"!=",
+	"++",
+	"--",
+	">",
+	"<"
+	">=",
+	"<="
+};
+
+static char *keyword_enum_map[] = {
+	"if",
+	"else",
+	"while",
+	"for",
+	"function",
+	"return",
+	"break",
+	"continue",
+	"and",
+	"not",
+	"or",
+	"local",
+	"true",
+	"false",
+	"nil"
+};
+
+static char *punct_enum_map[] = {
+	"{",
+	"}",
+	"[",
+	"]",
+	"(",
+	")",
+	";",
+	",",
+	":",
+	"::",
+	".",
+	".."
+};
 
 int str_to_enum(char **hay, size_t sz, char *needle) {
 	for(size_t i = 0; i < sz; ++i) {
@@ -88,20 +160,22 @@ void add_token(struct alpha_token_t *ylval, enum token_category category) {
 		case REALCONST:
 			ylval->content.fval = atof(yytext);
 			break;
+		case STRING:
+			ylval->content.sval = strdup(yytext);
+			break;
 		case IDENTIFIER:
 			ylval->content.sval = strdup(yytext);
 			break;
 		case OPERATOR:
-			ylval->content.oval = (enum operator_type) str_to_enum(operator_type_str, ARRSIZE(operator_type_str), yytext);
+			ylval->content.oval = (enum operator_type) str_to_enum(operator_enum_map, ARRSIZE(operator_enum_map), yytext);
 			break;
 		case PUNCTUATION:
-			ylval->content.pval = (enum punct_type) str_to_enum(punct_type_str, ARRSIZE(punct_type_str), yytext);
+			ylval->content.pval = (enum punct_type) str_to_enum(punct_enum_map, ARRSIZE(punct_enum_map), yytext);
 			break;
 		case KEYWORD:
-			ylval->content.kval = (enum keyword_type) str_to_enum(keyword_type_str, ARRSIZE(keyword_type_str), yytext);
+			ylval->content.kval = (enum keyword_type) str_to_enum(keyword_enum_map, ARRSIZE(keyword_enum_map), yytext);
 			break;
 		case COMMENT:
-			ylval->content.cval = (enum comment_type) str_to_enum(comment_type_str, ARRSIZE(comment_type_str), yytext);
 			break;
 		default:
 			assert(false); // if category is nothing from the above, there is logic error

@@ -80,6 +80,7 @@ enum comment_type {
 enum token_category {
 	INTCONST,
 	REALCONST,
+	STRING,
 	IDENTIFIER,
 	OPERATOR,
 	PUNCTUATION,
