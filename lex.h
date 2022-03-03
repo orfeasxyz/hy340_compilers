@@ -1,6 +1,8 @@
 #ifndef LEX_H
 #define LEX_H
 
+#include <stdio.h>
+
 // define x-macros for all enum types
 #define TOKEN_CATEGORIES \
 	X(INTCONST) \
@@ -114,5 +116,7 @@ typedef struct alpha_token_t {
 void add_token(struct alpha_token_t *ylval, enum token_category category);
 
 int alpha_yylex(alpha_token_t *ylval);
+
+extern FILE* yyin;
 
 #endif // LEX_H

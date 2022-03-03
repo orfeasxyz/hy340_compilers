@@ -46,6 +46,8 @@ int main(int argc, char* argv[]){
             exit(0);
         }
 
+        yyin = input_file;
+
         // If an output file was given, redirect what would be printed in stdout to that file
         if(argc == 3 && !freopen(argv[3], "w", stdout)) {
             printf("There was an error reading the output file, make sure it exists and the path is written correnctly");
@@ -93,17 +95,14 @@ void float_printer(alpha_token_t* token){
     printf("%d: #%d \"%s\" %s %f <- real", token->line_no, token->no, token->text, token_category_str[token->category], token->content.fval);
 }
 
-void (*printer[8])(alpha_token_t*) =
-{
-    int_printer,
-    float_printer,
-    string_printer,
-    string_printer,
-    operator_printer,
-    punctuation_printer,
-    keyword_printer,
-    line_comment_printer
-};
+void (*printer[8])(alpha_token_t*) =   {int_printer,
+                                        float_printer,
+                                        string_printer,
+                                        string_printer,
+                                        operator_printer,
+                                        punctuation_printer,
+                                        keyword_printer,
+                                        line_comment_printer};
     
 void display_token(alpha_token_t* token){
     printer[token->category](token);
