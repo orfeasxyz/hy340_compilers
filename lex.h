@@ -51,6 +51,7 @@
 
 #define COMMENT_TYPES \
 	X(BLOCK_COMMENT) \
+	X(NESTED_COMMENT) \
 	X(LINE_COMMENT)
 
 #define X(val) val,
@@ -74,6 +75,12 @@ enum comment_type {
 	COMMENT_TYPES
 	DUMMY_COMMENT
 };
+#undef X
+
+extern char *operator_type_str[DUMMY_OPERATOR+1];
+extern char *punct_type_str[DUMMY_PUNCT+1];
+extern char *keyword_type_str[DUMMY_KEYWORD+1];
+extern char *comment_type_str[DUMMY_COMMENT+1];
 
 enum token_category {
 	INTCONST,
@@ -95,13 +102,17 @@ union token_content {
 	enum comment_type	cval;
 };
 
-struct alpha_token_t {
+typedef struct alpha_token_t {
 	int line_no;
 	int no;
 	char *text;
 	enum token_category category;
 	union token_content content;
 	struct alpha_token_t *next;
-};
+} alpha_token_t;
+
+void add_token(struct alpha_token_t *ylval, enum token_category category);
+
+int alpha_yylex(alpha_token_t *ylval);
 
 #endif // LEX_H
