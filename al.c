@@ -4,6 +4,12 @@
 
 // enum to string mapping for printing
 #define X(val) #val,
+
+char *token_category_str[] = {
+	TOKEN_CATEGORIES
+	"DUMMY_CATEGORY"
+};
+
 char *operator_type_str[] = {
 	OPERATOR_TYPES
 	"DUMMY_COMMENT"
@@ -25,12 +31,10 @@ char *comment_type_str[] = {
 };
 #undef X
 
-void display_token(alpha_token_t *token) {
-}
+void display_token(alpha_token_t*);
 
 int main(int argc, char* argv[]){
-    FILE* input_file; 
-    alpha_token_t token;
+    FILE* input_file;
 
     // File checking, arguments should always be either 2 or 3 (in case of optional output file)
     if(argc == 1 || argc > 3){
@@ -59,4 +63,48 @@ int main(int argc, char* argv[]){
     }
 
     return 0;
+}
+
+void keyword_printer(alpha_token_t* token){
+    printf("%d: #%d \"%s\" %s %s <- enumerated", token->line_no, token->no, token->text, token_category_str[token->category], keyword_type_str[token->content.kval]);
+}
+
+void operator_printer(alpha_token_t* token){
+    printf("%d: #%d \"%s\" %s %s <- enumerated", token->line_no, token->no, token->text, token_category_str[token->category], operator_type_str[token->content.oval]);
+}
+
+void punctuation_printer(alpha_token_t* token){
+    printf("%d: #%d \"%s\" %s %s <- enumerated", token->line_no, token->no, token->text, token_category_str[token->category], punct_type_str[token->content.pval]);
+}
+
+void line_comment_printer(alpha_token_t* token){
+    printf("%d: #%d \"%s\" %s \"%s\" <- char*", token->line_no, token->no, token->text, token_category_str[token->category], comment_type_str[token->content.cval]);
+}
+
+void string_printer(alpha_token_t* token){
+    printf("%d: #%d \"%s\" %s \"%s\" <- char*", token->line_no, token->no, token->text, token_category_str[token->category], token->text);
+}
+
+void int_printer(alpha_token_t* token){
+    printf("%d: #%d \"%s\" %s %d <- int", token->line_no, token->no, token->text, token_category_str[token->category], token->content.ival);
+}
+
+void float_printer(alpha_token_t* token){
+    printf("%d: #%d \"%s\" %s %f <- real", token->line_no, token->no, token->text, token_category_str[token->category], token->content.fval);
+}
+
+void (*printer[8])(alpha_token_t*) =
+{
+    int_printer,
+    float_printer,
+    string_printer,
+    string_printer,
+    operator_printer,
+    punctuation_printer,
+    keyword_printer,
+    line_comment_printer
+};
+    
+void display_token(alpha_token_t* token){
+    printer[token->category](token);
 }
