@@ -2,6 +2,29 @@
 #include <stdlib.h>
 #include "lex.h"
 
+// enum to string mapping for printing
+#define X(val) #val,
+char *operator_type_str[] = {
+	OPERATOR_TYPES
+	"DUMMY_COMMENT"
+};
+
+char *keyword_type_str[] = {
+	KEYWORD_TYPES
+	"DUMMY_KEYWORD"
+};
+
+char *punct_type_str[] = {
+	PUNCT_TYPES
+	"DUMMY_PUNCT"
+};
+
+char *comment_type_str[] = {
+	COMMENT_TYPES
+	"DUMMY_COMMENT"
+};
+#undef X
+
 void display_token(alpha_token_t *token) {
 }
 

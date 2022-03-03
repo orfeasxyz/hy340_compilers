@@ -19,27 +19,6 @@
 	#define ARRSIZE(arr) sizeof(arr) / sizeof(arr[0])
 
     #define YY_DECL int alpha_yylex(alpha_token_t *ylval)
-	#define X(val) #val,
-	char *operator_type_str[] = {
-		OPERATOR_TYPES
-		"DUMMY_COMMENT"
-	};
-
-	char *keyword_type_str[] = {
-		KEYWORD_TYPES
-		"DUMMY_KEYWORD"
-	};
-
-	char *punct_type_str[] = {
-		PUNCT_TYPES
-		"DUMMY_PUNCT"
-	};
-
-	char *comment_type_str[] = {
-		COMMENT_TYPES
-		"DUMMY_COMMENT"
-	};
-	#undef X
 %}
 
 /* Flex macros */

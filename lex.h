@@ -77,11 +77,6 @@ enum comment_type {
 };
 #undef X
 
-extern char *operator_type_str[DUMMY_OPERATOR+1];
-extern char *punct_type_str[DUMMY_PUNCT+1];
-extern char *keyword_type_str[DUMMY_KEYWORD+1];
-extern char *comment_type_str[DUMMY_COMMENT+1];
-
 enum token_category {
 	INTCONST,
 	REALCONST,
