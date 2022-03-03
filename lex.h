@@ -2,6 +2,16 @@
 #define LEX_H
 
 // define x-macros for all enum types
+#define TOKEN_CATEGORIES \
+	X(INTCONST) \
+	X(REALCONST) \
+	X(STRING) \
+	X(IDENTIFIER) \
+	X(OPERATOR) \
+	X(PUNCTUATION) \
+	X(KEYWORD) \
+	X(COMMENT)
+
 #define KEYWORD_TYPES \
 	X(IF) \
 	X(ELSE) \
@@ -75,18 +85,12 @@ enum comment_type {
 	COMMENT_TYPES
 	DUMMY_COMMENT
 };
-#undef X
 
 enum token_category {
-	INTCONST,
-	REALCONST,
-	STRING,
-	IDENTIFIER,
-	OPERATOR,
-	PUNCTUATION,
-	KEYWORD,
-	COMMENT
+	TOKEN_CATEGORIES
+	DUMMY_TOKEN
 };
+#undef X
 
 union token_content {
 	int ival;
