@@ -9,7 +9,6 @@ identifier_1
 for
 while
 if
-<<<<<<< HEAD
 /*
 
     /*
@@ -28,9 +27,3 @@ if
 "hello world"
 "hello\tworld"
 // "unclosed string \""
-/*
-=======
-"hello world"
-"hello\tworld"
-// "unclosed string \""
->>>>>>> d3709d2626e53df5fc5e61abf68a1f3b8862deeb

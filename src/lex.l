@@ -35,7 +35,6 @@ operator =|\+\+|-|\*|\/|%|==|!=|\+|--|>|<|>=|<=
 
 %%
 
-<<<<<<< HEAD
 "/\*" {
 	block_comments(ylval, BLOCK_COMMENT);
 }
@@ -66,43 +65,11 @@ operator =|\+\+|-|\*|\/|%|==|!=|\+|--|>|<|>=|<=
 
 {digit}*\.{digit}+ {
 	add_token(ylval, REALCONST, 0, 0);
-=======
-{keyword} { 
-	add_token(ylval, KEYWORD);
-}
-
-{operator} { 
-	add_token(ylval, OPERATOR);
-}
-
-{id} {
-	add_token(ylval, IDENTIFIER);
-}
-
-{string} {
-	add_token(ylval, STRING);
-}
-
-{comment} { 
-	add_token(ylval, COMMENT);
-}
-
-{digit}+ {
-	add_token(ylval, INTCONST);
-}
-
-{digit}*\.{digit}+ {
-	add_token(ylval, REALCONST);
->>>>>>> d3709d2626e53df5fc5e61abf68a1f3b8862deeb
 }
 
 {space} {
 	;
-<<<<<<< HEAD
-	}
-=======
 }
->>>>>>> d3709d2626e53df5fc5e61abf68a1f3b8862deeb
 
 . {
 	ERROR("Unrecognized token");
@@ -229,11 +196,7 @@ char* process_string(char* string){
     return strdup(buffer);
 }
 
-<<<<<<< HEAD
 void add_token(alpha_token_t *ylval, enum token_category category, int line, enum comment_type ctype) {
-=======
-void add_token(alpha_token_t *ylval, enum token_category category) {
->>>>>>> d3709d2626e53df5fc5e61abf68a1f3b8862deeb
 	static int token_cnt = 1;
 	alpha_token_t *new_token;
 
@@ -252,7 +215,6 @@ void add_token(alpha_token_t *ylval, enum token_category category) {
 	}
 
 	new_token->next = NULL;
-<<<<<<< HEAD
 	new_token->no = token_cnt++;
 	if(!line){
 		new_token->text = strdup(yytext);
@@ -264,11 +226,6 @@ void add_token(alpha_token_t *ylval, enum token_category category) {
 		sprintf(temp, "%d - %d", line, yylineno);
 		new_token->text = strdup(temp);
 	}
-=======
-	new_token->line_no = yylineno;
-	new_token->no = token_cnt++;
-	new_token->text = strdup(yytext);
->>>>>>> d3709d2626e53df5fc5e61abf68a1f3b8862deeb
 	new_token->category = category;
 
 	switch(category){
@@ -294,17 +251,13 @@ void add_token(alpha_token_t *ylval, enum token_category category) {
 			new_token->content.kval = (enum keyword_type) str_to_enum(keyword_enum_map, ARRSIZE(keyword_enum_map), yytext);
 			break;
 		case COMMENT:
-<<<<<<< HEAD
 			if(yytext[1] == '/') new_token->content.cval = LINE_COMMENT;
 			else new_token->content.cval = ctype;
-=======
->>>>>>> d3709d2626e53df5fc5e61abf68a1f3b8862deeb
 			break;
 		default:
 			assert(false); // if category is nothing from the above, there is logic error
 	}
 }
-<<<<<<< HEAD
 
 void block_comments(alpha_token_t *ylval, enum comment_type type){
 	char next;
@@ -339,5 +292,3 @@ void block_comments(alpha_token_t *ylval, enum comment_type type){
 		}
 	}
 }
-=======
->>>>>>> d3709d2626e53df5fc5e61abf68a1f3b8862deeb

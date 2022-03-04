@@ -113,7 +113,7 @@ typedef struct alpha_token_t {
 	struct alpha_token_t *next;
 } alpha_token_t;
 
-void add_token(struct alpha_token_t *ylval, enum token_category category, int, enum comment_type);
+void add_token(struct alpha_token_t *ylval, enum token_category category, int line, enum comment_type ctype);
 
 int alpha_yylex(alpha_token_t *ylval);
 
