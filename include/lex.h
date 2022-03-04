@@ -56,8 +56,8 @@
 	X(PAR_CLOSED) \
 	X(SEMI_COLON) \
 	X(COMMA) \
-	X(COLON) \
-	X(DOUBLE_COLON) \
+	X(DOUBLE_DOTS) \
+	X(QUADRUPLE_DOTS) \
 	X(DOT) \
 	X(RANGE)
 
@@ -113,9 +113,11 @@ typedef struct alpha_token_t {
 	struct alpha_token_t *next;
 } alpha_token_t;
 
-void add_token(struct alpha_token_t *ylval, enum token_category category);
+void add_token(struct alpha_token_t *ylval, enum token_category category, int, enum comment_type);
 
 int alpha_yylex(alpha_token_t *ylval);
+
+void block_comments(alpha_token_t *ylval, enum comment_type type);
 
 extern FILE* yyin;
 

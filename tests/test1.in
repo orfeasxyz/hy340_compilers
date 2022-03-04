@@ -1,0 +1,30 @@
+// this is a comment
+identifier1
+identifier_1
+5
+6.7
+.5
+9 + 4
+6 / 10.7
+for
+while
+if
+/*
+
+    /*
+
+        /*
+
+        */
+
+    */
+
+    /*
+
+    */
+
+*/
+"hello world"
+"hello\tworld"
+// "unclosed string \""
+/*
