@@ -79,9 +79,16 @@ void punctuation_printer(alpha_token_t* token){
     printf("%s <- enumerated", punct_type_str[token->content.pval]);
 }
 
+<<<<<<< HEAD
 void comment_printer(alpha_token_t* token){
 	printf("%s <- enumerated", comment_type_str[token->content.cval]);
 }
+=======
+void line_comment_printer(alpha_token_t* token){
+    printf("%s <- char*", comment_type_str[token->content.cval]);
+}
+
+>>>>>>> d3709d2626e53df5fc5e61abf68a1f3b8862deeb
 void string_printer(alpha_token_t* token){
     printf("\"%s\" <- char*", token->content.sval);
 }
@@ -102,7 +109,11 @@ void (*printer[8])(alpha_token_t*) = {
 	operator_printer,
 	punctuation_printer,
 	keyword_printer,
+<<<<<<< HEAD
 	comment_printer
+=======
+	line_comment_printer
+>>>>>>> d3709d2626e53df5fc5e61abf68a1f3b8862deeb
 };
     
 void display_token(alpha_token_t* token){
