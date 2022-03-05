@@ -9,6 +9,12 @@
 	#include <stdbool.h>
     #include "lex.h"
 	
+	#ifdef __linux__
+	#	define FILE_EOF '\0'
+	#else
+	#	define FILE_EOF EOF
+	#endif
+	
 	// utility macros
 	#ifdef DEBUG
 	#	define DPRINTF(...) fprintf(stderr, __VA_ARGS__)
@@ -265,14 +271,14 @@ void block_comments(alpha_token_t *ylval, enum comment_type type){
 	int closed = 0;
 	while(!closed){
 		next = input();
-		if(next == -1){
+		if(next == FILE_EOF){
 			printf("Not closing comment in line %d", starting_line);
 			exit(0);
 		}
 		char look_ahead;
 		if(next == '*'){
 			look_ahead = input();
-			if(look_ahead == -1){
+			if(look_ahead == FILE_EOF){
 				printf("Not closing comment in line %d", starting_line);
 				exit(0);
 			}
@@ -282,7 +288,7 @@ void block_comments(alpha_token_t *ylval, enum comment_type type){
 			}
 		} else if (next == '/'){
 			look_ahead = input();
-			if(look_ahead == -1){
+			if(look_ahead == FILE_EOF){
 				printf("Not closing comment in line %d", starting_line);
 				exit(0);
 			}
