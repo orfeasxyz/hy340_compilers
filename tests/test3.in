@@ -1,0 +1,31 @@
+x = 5;
+y = 2;
+// This is a for loop
+for(i = 0; i < x; i++){
+    if(i > y){
+        y -= 1;
+    }
+}
+
+if(y == nil){
+    return 5;
+}
+
+/*
+    This is the first layer of comments
+    /*
+        This is the second one
+        Should be totally ignored
+    */
+
+    Closing second layer
+
+*/
+
+// Closing last layer in line_comment
+
+word = "This is a word";
+
+function sum(a, b){
+    return a + b;
+}

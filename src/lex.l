@@ -38,6 +38,7 @@ string  \"[^\n"]*\"
 comment "//".*
 keyword if|else|while|for|function|return|break|continue|and|not|or|local|true|false|nil
 operator =|\+\+|-|\*|\/|%|==|!=|\+|--|>|<|>=|<=
+punctuation \{|\}|\[|\]|\(|\)|;|,|\.\.|\.|::|:
 
 %%
 
@@ -51,6 +52,10 @@ operator =|\+\+|-|\*|\/|%|==|!=|\+|--|>|<|>=|<=
 
 {operator} { 
 	add_token(ylval, OPERATOR, 0, 0);
+}
+
+{punctuation} {
+	add_token(ylval, PUNCTUATION, 0, 0);
 }
 
 {id} {
@@ -99,7 +104,7 @@ static char *operator_enum_map[] = {
 	"++",
 	"--",
 	">",
-	"<"
+	"<",
 	">=",
 	"<="
 };
@@ -141,6 +146,7 @@ int str_to_enum(char **hay, size_t sz, char *needle) {
 	for(size_t i = 0; i < sz; ++i) {
 		if(STREQ(hay[i], needle)) return i;	
 	}
+	printf("%s\n", needle);
 	assert(false); // if we don't find the given string in the table, there is a logic error
 }
 
@@ -202,6 +208,7 @@ char* process_string(char* string){
     return strdup(buffer);
 }
 
+// function to process and add each token to the list of tokens, fields line and ctype are only used in case we have a comment token
 void add_token(alpha_token_t *ylval, enum token_category category, int line, enum comment_type ctype) {
 	static int token_cnt = 1;
 	alpha_token_t *new_token;
@@ -226,7 +233,7 @@ void add_token(alpha_token_t *ylval, enum token_category category, int line, enu
 		new_token->text = strdup(yytext);
 		new_token->line_no = yylineno;
 	}
-	else{
+	else{ // if the category is a comment so the fields line and ctype have values
 		new_token->line_no = line;
 		char temp[1024];
 		sprintf(temp, "%d - %d", line, yylineno);

@@ -1,0 +1,90 @@
+// Keywords
+if
+else
+while
+for
+function
+return
+break
+continue
+and
+not
+or=
+local
+true
+false
+nil
+
+// Operators
+=
++
+-
+*
+/
+%
+==
+!=
+++
+--
+>
+<
+>=
+<=
+
+// Punctuation
+{
+}
+[
+]
+(
+)
+;
+,
+.
+..
+:
+::
+
+// ints 
+12312
+235948723954
+123
+124124
+
+// floats
+121.1231
+1.43
+0.233
+
+// strings
+"Hello, I'm under the water"
+"This is definitely a working program"
+"newline\ntab\tbeep\a"
+"backspacee\b\n"
+
+// identifiers 
+kappa
+one1
+two2
+seven_7
+three_3_
+down_the_rockefeller_street
+
+// comments
+/*
+
+    /*
+
+    */
+
+    /*
+
+        /*
+
+            /* */
+
+        */
+    
+    */
+
+*/
