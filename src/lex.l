@@ -273,35 +273,26 @@ void add_token(alpha_token_t *ylval, enum token_category category, int line, enu
 }
 
 void block_comments(alpha_token_t *ylval, enum comment_type type){
-	char next;
+	char curr, next;
 	int starting_line = yylineno;
-	int closed = 0;
-	while(!closed){
-		next = input();
-		if(next == FILE_EOF){
-			printf("Not closing comment in line %d", starting_line);
-			exit(0);
-		}
-		char look_ahead;
-		if(next == '*'){
-			look_ahead = input();
-			if(look_ahead == FILE_EOF){
-				printf("Not closing comment in line %d", starting_line);
-				exit(0);
-			}
-			if(look_ahead == '/'){
+	while((curr = input()) != FILE_EOF){
+		switch(curr) {
+		case '*':
+			next = input();
+			if(next == '/'){
 				add_token(ylval, COMMENT, starting_line, type);
-				closed = 1;
+				return;	
 			}
-		} else if (next == '/'){
-			look_ahead = input();
-			if(look_ahead == FILE_EOF){
-				printf("Not closing comment in line %d", starting_line);
-				exit(0);
-			}
-			if(look_ahead == '*'){
+			break;
+		case '/':
+			next = input();
+			if(next == '*'){
 				block_comments(ylval, NESTED_COMMENT);
 			}
+			break;
+		default:
+			continue;
 		}
 	}
+	ERROR("Unclosed comment.\n");	
 }
