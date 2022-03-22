@@ -151,10 +151,12 @@ int str_to_enum(char **hay, size_t sz, char *needle) {
 }
 
 char* process_string(char* string){
-    char buffer[1024] = {0};
-	string[strlen(string)-1] = '\0';
+    size_t len = strlen(string);
+	char *buffer = malloc(len);
+
+	string[strlen(string)-1] = '\0'; // ignore closing "
 	
-    int i = 1;
+    int i = 1; // start from 1 to ignore opening "
 	int j = 0;
 
     while(string[i]){
@@ -205,7 +207,8 @@ char* process_string(char* string){
 		++j;
         ++i;
     }
-    return strdup(buffer);
+	buffer[j] = '\0';
+    return buffer;
 }
 
 // function to process and add each token to the list of tokens, fields line and ctype are only used in case we have a comment token
@@ -283,11 +286,17 @@ void block_comments(alpha_token_t *ylval, enum comment_type type){
 				add_token(ylval, COMMENT, starting_line, type);
 				return;	
 			}
+			else {
+				unput(next);
+			}
 			break;
 		case '/':
 			next = input();
 			if(next == '*'){
 				block_comments(ylval, NESTED_COMMENT);
+			}
+			else {
+				unput(next);
 			}
 			break;
 		default:
