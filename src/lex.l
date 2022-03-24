@@ -34,7 +34,7 @@ digit   [0-9]
 alpha   [a-zA-Z]
 space   [\r\n \t\v]
 id      [a-zA-Z][a-zA-Z_0-9]*
-string  \"[^\n"]*\"
+string  \"[^\"\\]*(\\.[^\"\\]*)*\"
 comment "//".*
 keyword if|else|while|for|function|return|break|continue|and|not|or|local|true|false|nil
 operator =|\+\+|-|\*|\/|%|==|!=|\+|--|>|<|>=|<=
