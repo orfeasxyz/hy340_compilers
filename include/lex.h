@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+/*
 // define x-macros for all enum types
 #define TOKEN_CATEGORIES \
 	X(INTCONST) \
@@ -117,8 +118,10 @@ void add_token(struct alpha_token_t *ylval, enum token_category category, int li
 
 int alpha_yylex(alpha_token_t *ylval);
 
-void block_comments(alpha_token_t *ylval, enum comment_type type);
+*/
 
-extern FILE* yyin;
+void block_comments();
+
+char* process_string(char*);
 
 #endif // LEX_H

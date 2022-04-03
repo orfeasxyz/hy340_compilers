@@ -4,6 +4,8 @@
 	#include <string.h>
 	#include <assert.h>
 	#include <stdbool.h>
+    #include "../include/symtable.h"
+    #include "../include/structs.h"
 
     int yyerror(char* message);
     int yylex(void);
@@ -11,6 +13,11 @@
     extern int yylineno;
     extern char* yytext;
     extern FILE* yyin;
+
+    SymTable_T head = SymTable_new();
+    SymTable_T current_table = head;
+
+    int scope = 0;
 %}
 
 // Declarations
