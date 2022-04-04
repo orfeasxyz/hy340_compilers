@@ -178,7 +178,7 @@ void SymTable_hide(SymTable_T oSymTable){
 
 SymbolTableEntry* SymTable_lookup(SymTable_T oSymTable, const char *key){
     List_T temp;
-    Symtable_T current = oSymTable;
+    SymTable_T current = oSymTable;
     assert(oSymTable);
     assert(key);
 

@@ -29,4 +29,3 @@ typedef struct SymbolTableEntry {
 
     enum SymbolType type;
 } SymbolTableEntry;
-
