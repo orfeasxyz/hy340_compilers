@@ -186,7 +186,7 @@ SymbolTableEntry* SymTable_lookup(SymTable_T oSymTable, const char *key){
         temp = current->buckets[SymTable_hash(key, current->max_size)];
 
         while(temp){
-            if(!strcmp(temp->key, key)) return temp;
+            if(!strcmp(temp->key, key) && temp->val->isActive) return temp;
             temp = temp->next;
         }
 
@@ -204,7 +204,7 @@ SymbolTableEntry* SymTable_lookup_here(SymTable_T oSymTable, const char *key){
     temp = oSymTable->buckets[SymTable_hash(key, oSymTable->max_size)];
 
     while(temp){
-        if(!strcmp(temp->key, key)) return temp;
+        if(!strcmp(temp->key, key) && temp->val->isActive) return temp;
         temp = temp->next;
     }
 
@@ -239,6 +239,7 @@ void SymTable_next(SymTable_T oSymTable){
 
     oSymTable->next = SymTable_new();
     oSymTable->next->prev = oSymTable;
+    oSymTable = oSymTable->next;
     
     return;
 }

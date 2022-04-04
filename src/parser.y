@@ -27,6 +27,7 @@
 %union {
     double nval;
     char* sval;
+    SymbolTableEntry* exprval;
 }
 
 %token<nval> NUM
@@ -35,7 +36,8 @@
              MINUS MUL DIV MOD EQUAL NEQUAL INC DEC GT LT GET LET
              CURLY_OPEN CURLY_CLOSED SQUARE_OPEN SQUARE_CLOSED
              PAR_OPEN PAR_CLOSED SEMI_COLON COMMA COLON DOUBLE_COLON
-             DOT RANGE UMINUS
+             DOT DOUBLE_DOT UMINUS
+%type<exprval> lvalue
 
 
 %right ASSIGN
@@ -48,7 +50,7 @@
 %left PLUS MINUS
 %left MUL DIV MOD
 %right NOT INC DEC
-%left DOT RANGE
+%left DOT DOUBLE_DOT
 %left SQUARE_OPEN SQUARE_CLOSED 
 %left PAR_OPEN PAR_CLOSED
 %left UMINUS
@@ -69,7 +71,7 @@ statement:      expression SEMI_COLON
                 | BREAK SEMI_COLON
                 | CONTINUE SEMI_COLON
                 | block
-                | funcdef SEMI_COLON
+                | funcdef
                 | SEMI_COLON
                 ;
 
@@ -109,7 +111,7 @@ prim:           lvalue
                 | const
                 ;
 
-lvalue:         IDENT
+lvalue:         IDENT                   {$$ = $1;}
                 | LOCAL IDENT
                 | DOUBLE_COLON IDENT
                 | member
@@ -132,7 +134,7 @@ callsuffix:     normcall
 
 normcall:       PAR_OPEN elist PAR_CLOSED;
 
-methodcall:     RANGE IDENT PAR_OPEN elist PAR_CLOSED ;
+methodcall:     DOUBLE_DOT IDENT PAR_OPEN elist PAR_CLOSED ;
 
 elist:          expression elist_alt
                 |
@@ -159,7 +161,7 @@ indexed_alt:    COMMA indexedelem indexed_alt
 
 indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED ;
 
-block:          CURLY_OPEN statements CURLY_CLOSED ;
+block:          CURLY_OPEN statements CURLY_CLOSED;
 
 funcdef:        FUNCTION PAR_OPEN idlist PAR_CLOSED block
                 | FUNCTION IDENT PAR_OPEN idlist PAR_CLOSED block

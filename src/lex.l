@@ -77,7 +77,7 @@ comment "//".*
 ":"             {return COLON;}
 "::"            {return DOUBLE_COLON;}
 "."             {return DOT;}
-".."            {return RANGE;}
+".."            {return DOUBLE_DOT;}
 
 
 "/\*" {
