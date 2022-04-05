@@ -7,6 +7,7 @@
     #include "symtable.h"
     #include "structs.h"
     #include "func_stack.h"
+	#include "rule_handler.h"
 
     int yyerror(char* message);
     int yylex(void);
@@ -104,7 +105,7 @@ term:           PAR_OPEN expression PAR_CLOSED
                 | prim
                 ;
     
-assignexpr:     lvalue ASSIGN expression {HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, func_stack_top())};
+assignexpr:     lvalue ASSIGN expression {HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, func_stack_top());};
 
 prim:           lvalue
                 | call
@@ -113,9 +114,9 @@ prim:           lvalue
                 | const
                 ;
 
-lvalue:         IDENT                   {$$ = HANDLE_LVALUE_TO_IDENT(current_table, $1, yylineno, scope)}
-                | LOCAL IDENT           {$$ = HANDLE_LVALUE_TO_LOCAL_IDENT(current_table, head, $2, yylineno, scope)}
-                | DOUBLE_COLON IDENT    {$$ = HANDLE_LVALUE_TO_GLOBAL_IDENT(head, $2, yylineno, scope)}
+lvalue:         IDENT                   {$$ = HANDLE_LVALUE_TO_IDENT(current_table, $1, yylineno, scope);}
+                | LOCAL IDENT           {$$ = HANDLE_LVALUE_TO_LOCAL_IDENT(current_table, head, $2, yylineno, scope);}
+                | DOUBLE_COLON IDENT    {$$ = HANDLE_LVALUE_TO_GLOBAL_IDENT(head, $2, yylineno, scope);}
                 | member                {}
                 ;
 

@@ -2,7 +2,7 @@ CC=gcc
 BASE_DIR=../
 IDIR=$(BASE_DIR)/include/
 CFLAGS=-I $(IDIR) -DDEBUG -Wall
-OBJ=lex.yy.c parser.c rule_handler.c symtable.c
+OBJ=lex.yy.c parser.c rule_handler.c symtable.c func_stack.c
 
 all: parser lex
 	$(CC) $(CFLAGS) $(OBJ) -o $(BASE_DIR)/alpha.exe

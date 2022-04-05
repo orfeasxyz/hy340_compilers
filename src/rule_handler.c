@@ -2,6 +2,7 @@
 #include "symtable.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 int isVar(SymbolTableEntry* temp){
     return temp->type == VAR_FORMAL || temp->type == VAR_GLOBAL || temp->type == VAR_LOCAL;
@@ -22,7 +23,7 @@ SymbolTableEntry* HANDLE_LVALUE_TO_IDENT(SymTable_T table, char* key, int lineno
 
     Variable* temp_var = malloc(sizeof(struct Variable));
     temp_var->name = malloc(strlen(key) + 1);
-    strcpy(temp_var->name, key);
+    strcpy((char*)temp_var->name, key);
     temp_var->line = lineno;
     temp_var->scope = scope;
 
@@ -58,7 +59,7 @@ SymbolTableEntry* HANDLE_LVALUE_TO_LOCAL_IDENT(SymTable_T table, SymTable_T glob
 
     Variable* temp_var = malloc(sizeof(struct Variable));
     temp_var->name = malloc(strlen(key) + 1);
-    strcpy(temp_var->name, key);
+    strcpy((char*)temp_var->name, key);
     temp_var->line = lineno;
     temp_var->scope = scope;
 

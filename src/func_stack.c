@@ -1,8 +1,9 @@
 #include "func_stack.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
-func_stack_T head = NULL;
+static func_stack_T head = NULL;
 
 struct func_stack{
     int scope;
