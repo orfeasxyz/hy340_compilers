@@ -72,7 +72,7 @@ comment "//".*
 "]"             {return SQUARE_CLOSED;}
 "("             {return PAR_OPEN;}
 ")"             {return PAR_CLOSED;}
-";"             {return SEMICOLON;}
+";"             {return SEMI_COLON;}
 ","             {return COMMA;}
 ":"             {return COLON;}
 "::"            {return DOUBLE_COLON;}
@@ -81,7 +81,7 @@ comment "//".*
 
 
 "/\*" {
-	block_comments(ylval, BLOCK_COMMENT);
+	block_comments();
 }
 
 {id} {
@@ -97,7 +97,7 @@ comment "//".*
 {comment} {}
 
 {digit}+ {
-	sscanf(yytext, "%d", &yylval.nval);
+	sscanf(yytext, "%lf", &yylval.nval);
 	return NUM;
 }
 
@@ -182,7 +182,6 @@ char* process_string(char* string){
 
 void block_comments(){
 	char curr, next;
-	int starting_line = yylineno;
 	while((curr = input()) != FILE_EOF){
 		switch(curr) {
 		case '*':

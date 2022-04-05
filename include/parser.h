@@ -97,8 +97,9 @@ extern int yydebug;
     COLON = 298,                   /* COLON  */
     DOUBLE_COLON = 299,            /* DOUBLE_COLON  */
     DOT = 300,                     /* DOT  */
-    RANGE = 301,                   /* RANGE  */
-    UMINUS = 302                   /* UMINUS  */
+    DOUBLE_DOT = 301,              /* DOUBLE_DOT  */
+    UMINUS = 302,                  /* UMINUS  */
+    LOWER_THAN_ELSE = 303          /* LOWER_THAN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -150,25 +151,28 @@ extern int yydebug;
 #define COLON 298
 #define DOUBLE_COLON 299
 #define DOT 300
-#define RANGE 301
+#define DOUBLE_DOT 301
 #define UMINUS 302
+#define LOWER_THAN_ELSE 303
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 20 "src/parser.y"
+#line 27 "parser.y"
 
     double nval;
     char* sval;
+    struct SymbolTableEntry* exprval;
 
-#line 166 "parser.h"
+#line 169 "parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif
+
 
 extern YYSTYPE yylval;
 

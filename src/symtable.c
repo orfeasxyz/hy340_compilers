@@ -39,13 +39,18 @@ struct SymTable{
 /* ================================================= */
 
 size_t get_size(size_t max_size){
-    int index = (int) (max_size / MIN_SIZE + 0.5);
-    index = (int) (log(index) / log(2) + 0.5) + 1;
+	int index = 0;
+	for(int i = 0; i < sizeof(sizes) / sizeof(sizes[0]); ++i) {
+		if(sizes[i] == max_size) {
+			index = i + 1;
+			break;
+		}
+	}
+	assert(index);
     return sizes[(index <= 7 ? index : 7)];
 }
 
 SymTable_T SymTable_new(void){
-    size_t i;
     SymTable_T table = malloc(sizeof(struct SymTable));
 
     table->length = 0;
@@ -113,7 +118,7 @@ void rehash(SymTable_T table){
     for(i = 0; i < prev_size; i++){
         temp = prev_buckets[i];
         while(temp){
-            SymTable_put(table, temp->key, temp->val);
+            SymTable_insert(table, temp->key, temp->val);
             prev_node = temp;
             temp = temp->next;
             free(prev_node->key);
@@ -127,7 +132,7 @@ void rehash(SymTable_T table){
 }
 
 
-void SymTable_insert(SymTable_T oSymTable, const char *key, SymbolTableEntry* value){
+SymbolTableEntry* SymTable_insert(SymTable_T oSymTable, const char *key, SymbolTableEntry* value){
     List_T new;
     size_t pos;
     assert(oSymTable);
@@ -153,7 +158,7 @@ void SymTable_insert(SymTable_T oSymTable, const char *key, SymbolTableEntry* va
         oSymTable->buckets[pos] = new;
     }
 
-    return;
+    return new->val;
 }
 
 /* ================================================= */
@@ -186,7 +191,7 @@ SymbolTableEntry* SymTable_lookup(SymTable_T oSymTable, const char *key){
         temp = current->buckets[SymTable_hash(key, current->max_size)];
 
         while(temp){
-            if(!strcmp(temp->key, key) && temp->val->isActive) return temp;
+            if(!strcmp(temp->key, key) && temp->val->isActive) return temp->val;
             temp = temp->next;
         }
 
@@ -204,7 +209,7 @@ SymbolTableEntry* SymTable_lookup_here(SymTable_T oSymTable, const char *key){
     temp = oSymTable->buckets[SymTable_hash(key, oSymTable->max_size)];
 
     while(temp){
-        if(!strcmp(temp->key, key) && temp->val->isActive) return temp;
+        if(!strcmp(temp->key, key) && temp->val->isActive) return temp->val;
         temp = temp->next;
     }
 
@@ -213,7 +218,7 @@ SymbolTableEntry* SymTable_lookup_here(SymTable_T oSymTable, const char *key){
 
 /* ================================================= */
 
-void SymTable_map(SymTable_T oSymTable, void (*pfApply)(const char *key, SymbolTableEntry* value, void *pvExtra), const void *pvExtra){
+void SymTable_map(SymTable_T oSymTable, void (*pfApply)(const char *key, SymbolTableEntry* value, void *pvExtra), void *pvExtra){
     List_T temp;
     size_t i;
     assert(oSymTable);

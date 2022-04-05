@@ -4,8 +4,8 @@
 	#include <string.h>
 	#include <assert.h>
 	#include <stdbool.h>
-    #include "../include/symtable.h"
-    #include "../include/structs.h"
+    #include "symtable.h"
+    #include "structs.h"
 
     int yyerror(char* message);
     int yylex(void);
@@ -14,8 +14,8 @@
     extern char* yytext;
     extern FILE* yyin;
 
-    SymTable_T head = SymTable_new();
-    SymTable_T current_table = head;
+    SymTable_T head;
+    SymTable_T current_table;
 
     int scope = 0;
 %}
@@ -27,7 +27,7 @@
 %union {
     double nval;
     char* sval;
-    SymbolTableEntry* exprval;
+    struct SymbolTableEntry* exprval;
 }
 
 %token<nval> NUM
@@ -111,7 +111,7 @@ prim:           lvalue
                 | const
                 ;
 
-lvalue:         IDENT                   {$$ = $1;}
+lvalue:         IDENT
                 | LOCAL IDENT
                 | DOUBLE_COLON IDENT
                 | member
@@ -196,3 +196,6 @@ int yyerror(char *message){
     return -1;
 }
 
+int main(int argc, char **argv) {
+	return 0;
+}

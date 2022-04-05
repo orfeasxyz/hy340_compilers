@@ -2,9 +2,9 @@
 #define _STRUCTS_H_
 
 enum SymbolType {
-    GLOBAL,
-    LOCAL,
-    FORMAL,
+    VAR_GLOBAL,
+    VAR_LOCAL,
+    VAR_FORMAL,
     USERFUNC,
     LIBFUNC
 }; 
