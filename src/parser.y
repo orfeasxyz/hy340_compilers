@@ -6,6 +6,7 @@
 	#include <stdbool.h>
     #include "symtable.h"
     #include "structs.h"
+    #include "func_stack.h"
 
     int yyerror(char* message);
     int yylex(void);
@@ -18,6 +19,7 @@
     SymTable_T current_table;
 
     int scope = 0;
+    int anon_counter = 0;
 %}
 
 // Declarations
@@ -102,7 +104,7 @@ term:           PAR_OPEN expression PAR_CLOSED
                 | prim
                 ;
     
-assignexpr:     lvalue ASSIGN expression ;
+assignexpr:     lvalue ASSIGN expression {HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, func_stack_top())};
 
 prim:           lvalue
                 | call
@@ -111,10 +113,10 @@ prim:           lvalue
                 | const
                 ;
 
-lvalue:         IDENT
-                | LOCAL IDENT
-                | DOUBLE_COLON IDENT
-                | member
+lvalue:         IDENT                   {$$ = HANDLE_LVALUE_TO_IDENT(current_table, $1, yylineno, scope)}
+                | LOCAL IDENT           {$$ = HANDLE_LVALUE_TO_LOCAL_IDENT(current_table, head, $2, yylineno, scope)}
+                | DOUBLE_COLON IDENT    {$$ = HANDLE_LVALUE_TO_GLOBAL_IDENT(head, $2, yylineno, scope)}
+                | member                {}
                 ;
 
 member:         lvalue DOT IDENT
@@ -161,15 +163,15 @@ indexed_alt:    COMMA indexedelem indexed_alt
 
 indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED ;
 
-block:          CURLY_OPEN statements CURLY_CLOSED;
+block:          CURLY_OPEN {scope++; SymTable_next(current_table);} statements CURLY_CLOSED {scope--; SymTable_hide(current_table); SymTable_prev(current_table);};
 
 funcdef:        FUNCTION PAR_OPEN idlist PAR_CLOSED block
-                | FUNCTION IDENT PAR_OPEN idlist PAR_CLOSED block
+                | FUNCTION IDENT PAR_OPEN {scope++; SymTable_next(current_table);} idlist PAR_CLOSED {scope--; SymTable_prev(current_table); func_stack_push(scope);} block {func_stack_pop();}
                 ;
 
 const:          NUM | STRING | NIL | TRUE | FALSE ;
 
-idlist:         IDENT idlist_alt
+idlist:         IDENT idlist_alt 
                 |
                 ;
 
@@ -197,5 +199,8 @@ int yyerror(char *message){
 }
 
 int main(int argc, char **argv) {
+    head = SymTable_new();
+    current_table = head;
+
 	return 0;
 }
