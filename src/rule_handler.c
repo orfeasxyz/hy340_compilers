@@ -59,14 +59,14 @@ SymbolTableEntry* HANDLE_LVALUE_TO_IDENT(SymTable_T table, char* key, int lineno
 SymbolTableEntry* HANDLE_LVALUE_TO_LOCAL_IDENT(SymTable_T table, SymTable_T global, char* key, int lineno, int scope){
     SymbolTableEntry* temp;
 
-    if((temp = SymTable_lookup_here(table, key))){
+    if((temp = SymTable_lookup(table, key))){
         if(!isVar(temp)){
-            fprintf(stderr, "Function's name %s used after keyword LOCAL\n", key);
+            fprintf(stderr, "%s name %s used after keyword LOCAL\n", (temp->type == LIBFUNC ? "Library function's" : "Function's"), key);
             return NULL;
         }
+    } 
 
-        return temp;
-    }
+    if((temp = SymTable_lookup(table, key))) return temp;
 
     temp = malloc(sizeof(struct SymbolTableEntry));
     temp->isActive = 1;
@@ -131,7 +131,7 @@ char* HANDLE_IDLIST_IDENT(SymTable_T table, char* key, int lineno, int scope){
 char* HANDLE_FUNCTION_WITH_NAME(SymTable_T table, char* key, int lineno, int scope){
     SymbolTableEntry* temp;
 
-    if((temp = SymTable_lookup_here(table, key))){
+    if((temp = SymTable_lookup(table, key))){
         if(isVar(temp)){
             fprintf(stderr, "Can't redefine variable %s as function\n", key);
             return NULL;
@@ -142,9 +142,11 @@ char* HANDLE_FUNCTION_WITH_NAME(SymTable_T table, char* key, int lineno, int sco
             return NULL;
         }
 
-        fprintf(stderr, "Can't redefine the same function %s\n", key);
-        return NULL;
-    }
+        if(temp->value.funcVal->scope == scope){
+            fprintf(stderr, "Can't redefine the same function %s\n", key);
+            return NULL;
+        }
+    } 
 
     temp = malloc(sizeof(struct SymbolTableEntry));
     temp->isActive = 1;
@@ -251,4 +253,6 @@ void HANDLE_PRIM_TO_LVALUE(SymbolTableEntry* entry, int func_scope){
 
 void HANDLE_CALL_TO_LVALUE_CALLSUFFIX(SymbolTableEntry* entry, int func_scope){
     if(!entry) return;
+
+    if(!isVar(entry)) return;
 }

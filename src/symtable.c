@@ -276,7 +276,21 @@ void SymTable_print(SymTable_T oSymTable){
         for(i = 0; i < oSymTable->max_size; i++){
             temp = oSymTable->buckets[i];
             while(temp){
-                printf("Key: %s, Val: %s\n", temp->key, enum_to_s[temp->val->type]);
+                int line = 0;
+                switch(temp->val->type) {
+                    case VAR_GLOBAL:
+                    case VAR_LOCAL:
+                    case VAR_FORMAL:
+                        line = temp->val->value.varVal->line; 
+                        break;
+                    case USERFUNC:
+                    case LIBFUNC:
+                        line = temp->val->value.funcVal->line;
+                        break;
+                    default:
+                        assert(0);
+                }
+                printf("Key: %s, Val: %s, Line: %d\n", temp->key, enum_to_s[temp->val->type], line);
                 temp = temp->next;
             }
         }

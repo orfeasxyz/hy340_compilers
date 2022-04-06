@@ -1,7 +1,7 @@
 CC=gcc
 BASE_DIR=../
 IDIR=$(BASE_DIR)/include/
-CFLAGS=-I $(IDIR) -DDEBUG -Wall
+CFLAGS=-I $(IDIR) -DDEBUG -Wall -g
 OBJ=lex.yy.c parser.c rule_handler.c symtable.c func_stack.c
 
 all: parser lex

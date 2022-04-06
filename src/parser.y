@@ -184,15 +184,13 @@ idlist_alt:     COMMA IDENT idlist_alt  {HANDLE_IDLIST_IDENT(current_table, $2, 
                 |
                 ;
 
-ifstmt:         IF body statement %prec LOWER_THAN_ELSE {current_table = SymTable_next(current_table); SymTable_hide(current_table); current_table = SymTable_prev(current_table);}
-                | IF body statement ELSE statement
+ifstmt:         IF PAR_OPEN expression PAR_CLOSED statement %prec LOWER_THAN_ELSE
+                | IF PAR_OPEN expression PAR_CLOSED statement ELSE statement
                 ;
 
-whilestmt:      WHILE body statement
+whilestmt:      WHILE PAR_OPEN expression PAR_CLOSED statement       
 
-body:           PAR_OPEN {scope++; current_table = SymTable_next(current_table);} expression PAR_CLOSED {scope--; current_table = SymTable_prev(current_table);}
-
-forstmt:        FOR PAR_OPEN {scope++; current_table = SymTable_next(current_table);} elist SEMI_COLON expression SEMI_COLON elist PAR_CLOSED {scope--; current_table = SymTable_prev(current_table);} statement ;
+forstmt:        FOR PAR_OPEN elist SEMI_COLON expression SEMI_COLON elist PAR_CLOSED statement ;
 
 returnstmt:     RETURN SEMI_COLON
                 | RETURN expression SEMI_COLON
@@ -207,8 +205,12 @@ int yyerror(char *message){
 
 int main(int argc, char **argv) {
 	struct SymbolTableEntry temp;
-	temp.isActive = 0;
-	temp.value.funcVal = NULL;
+    Function* temp_func = malloc(sizeof(struct Function));
+
+    temp_func->line = 0;
+    temp_func->scope = 0;
+	temp.isActive = 1;
+	temp.value.funcVal = temp_func;
 	temp.type = LIBFUNC;
 
     head = SymTable_new();
@@ -218,7 +220,9 @@ int main(int argc, char **argv) {
 	SymTable_insert(head, "input", &temp);
     current_table = head;
 
-	yyin = fopen("tests/general.alpha", "r");
+    printf("lineno = %d\n", yylineno);
+	assert(argc == 2);
+	yyin = fopen(argv[1], "r");
 	yyparse();
 
     SymTable_print(head);
