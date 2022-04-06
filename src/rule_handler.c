@@ -24,6 +24,8 @@ Function* makeFunc(char* key, int lineno, int scope){
     strcpy(temp->name, key);
     temp->line = lineno;
     temp->scope = scope;
+
+	return temp;
 }
 
 int isLegal(int scope, int func_scope){
@@ -143,11 +145,11 @@ char* HANDLE_FUNCTION_WITH_NAME(SymTable_T table, char* key, int lineno, int sco
         }
 
         if(temp->type == LIBFUNC){
-            fprintf(stderr, "Can't overshadow library function $s\n", key);
+            fprintf(stderr, "Can't overshadow library function %s\n", key);
             return NULL;
         }
 
-        fprintf(stderr, "Can't redefine the same function\n", key);
+        fprintf(stderr, "Can't redefine the same function %s\n", key);
         return NULL;
     }
 
@@ -156,6 +158,8 @@ char* HANDLE_FUNCTION_WITH_NAME(SymTable_T table, char* key, int lineno, int sco
     temp->type = USERFUNC;
 
     temp->value.funcVal = makeFunc(key, lineno, scope);
+
+	return temp->value.funcVal->name;
 }
 
 char* HANDLE_FUNCTION_WITHOUT_NAME(SymTable_T table, int anon_count, int lineno, int scope){
@@ -169,6 +173,8 @@ char* HANDLE_FUNCTION_WITHOUT_NAME(SymTable_T table, int anon_count, int lineno,
     temp->type = USERFUNC;
 
     temp->value.funcVal = makeFunc(funcname, lineno, scope);
+
+	return temp->value.funcVal->name;
 }
 
 void HANDLE_TERM_TO_INC_LVALUE(SymbolTableEntry* entry, int func_scope){

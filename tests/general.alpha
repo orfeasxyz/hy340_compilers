@@ -46,4 +46,4 @@ Node();
 Node2(a,2,3,4,5, Node().new());
 
 pinakas..i = 5;
-pinakas[i] = 3.45
+pinakas[i] = 3.45;
