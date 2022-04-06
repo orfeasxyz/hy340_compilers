@@ -9,6 +9,14 @@
 #define MAX_SIZE 2560
 #define HASH_MULTIPLIER 65599
 
+char* enum_to_s[] = {
+    "VAR_GLOBAL",
+    "VAR_LOCAL",
+    "VAR_FORMAL",
+    "USERFUNC",
+    "LIBFUNC"
+}; 
+
 int sizes[] = {MIN_SIZE, 40, 80, 160, 320, 640, 1280, MAX_SIZE};
 
 /* Return a hash code for key. */
@@ -249,10 +257,36 @@ void SymTable_next(SymTable_T oSymTable){
     return;
 }
 
+/* ================================================= */
+
 void SymTable_prev(SymTable_T oSymTable){
     assert(oSymTable);
     assert(oSymTable->prev);
     
     oSymTable = oSymTable->prev;
+    return;
+}
+
+/* ================================================= */
+
+void SymTable_print(SymTable_T oSymTable){
+    List_T temp;
+    size_t i;
+    unsigned int scope = 0;
+    if(!oSymTable) return;
+
+    while(oSymTable){
+        printf("SCOPE %d \n\n", scope++);
+        for(i = 0; i < oSymTable->max_size; i++){
+            temp = oSymTable->buckets[i];
+            while(temp){
+                printf("Key: %s, Val: %s\n", temp->key, enum_to_s[temp->val->type]);
+                temp = temp->next;
+            }
+        }
+        oSymTable = oSymTable->next;
+        printf("\n\n");
+    }
+
     return;
 }

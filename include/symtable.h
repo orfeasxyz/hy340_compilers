@@ -25,4 +25,6 @@ SymbolTableEntry* SymTable_lookup_here(SymTable_T oSymTable, const char *key);
 
 void SymTable_map(SymTable_T oSymTable, void (*pfApply)(const char *pcKey, SymbolTableEntry* pvValue, void *pvExtra), void *pvExtra);
 
+void SymTable_print(SymTable_T oSymTable);
+
 #endif // _SYMTABLE_H_
