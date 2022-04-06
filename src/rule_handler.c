@@ -68,15 +68,6 @@ SymbolTableEntry* HANDLE_LVALUE_TO_LOCAL_IDENT(SymTable_T table, SymTable_T glob
         return temp;
     }
 
-    else if((temp = SymTable_lookup_here(global, key))){
-        if(!isVar(temp)){
-            fprintf(stderr, "Function's name %s used after keyword LOCAL\n", key);
-            return NULL;
-        }
-
-        return temp;
-    }
-
     temp = malloc(sizeof(struct SymbolTableEntry));
     temp->isActive = 1;
     temp->type = (scope ? VAR_LOCAL : VAR_GLOBAL);
@@ -119,9 +110,11 @@ char* HANDLE_IDLIST_IDENT(SymTable_T table, char* key, int lineno, int scope){
         return NULL;
     }
 
-    if(!isVar(temp = SymTable_lookup(table, key))){
-        fprintf(stderr, "Function with name %s is active, can't initialize formal argument with same name\n", key);
-        return NULL;
+    if((temp = SymTable_lookup(table, key))){
+        if(!isVar(temp)){
+            fprintf(stderr, "Function with name %s is active, can't initialize formal argument with same name\n", key);
+            return NULL;
+        }
     }
 
     temp = malloc(sizeof(struct SymbolTableEntry));
@@ -159,6 +152,8 @@ char* HANDLE_FUNCTION_WITH_NAME(SymTable_T table, char* key, int lineno, int sco
 
     temp->value.funcVal = makeFunc(key, lineno, scope);
 
+    SymTable_insert(table, key, temp);
+
 	return temp->value.funcVal->name;
 }
 
@@ -173,6 +168,8 @@ char* HANDLE_FUNCTION_WITHOUT_NAME(SymTable_T table, int anon_count, int lineno,
     temp->type = USERFUNC;
 
     temp->value.funcVal = makeFunc(funcname, lineno, scope);
+
+    SymTable_insert(table, funcname, temp);
 
 	return temp->value.funcVal->name;
 }

@@ -166,9 +166,9 @@ indexed_alt:    COMMA indexedelem indexed_alt
 
 indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED ;
 
-block:          CURLY_OPEN {scope++; SymTable_next(current_table);} statements CURLY_CLOSED {scope--; SymTable_hide(current_table); SymTable_prev(current_table);};
+block:          CURLY_OPEN {scope++; current_table = SymTable_next(current_table);} statements CURLY_CLOSED {scope--; SymTable_hide(current_table); current_table = SymTable_prev(current_table);};
 
-funcdef:        funcname PAR_OPEN {scope++; SymTable_next(current_table);} idlist PAR_CLOSED {scope--; SymTable_prev(current_table); func_stack_push(scope);} block {func_stack_pop();} ;
+funcdef:        funcname PAR_OPEN {scope++; current_table = SymTable_next(current_table);} idlist PAR_CLOSED {scope--; current_table = SymTable_prev(current_table); func_stack_push(scope);} block {func_stack_pop();} ;
 
 funcname:       FUNCTION IDENT          {$$ = HANDLE_FUNCTION_WITH_NAME(current_table, $2, yylineno, scope);}
                 | FUNCTION              {$$ = HANDLE_FUNCTION_WITHOUT_NAME(current_table, anon_counter++, yylineno, scope);}
@@ -184,13 +184,15 @@ idlist_alt:     COMMA IDENT idlist_alt  {HANDLE_IDLIST_IDENT(current_table, $2, 
                 |
                 ;
 
-ifstmt:         IF PAR_OPEN expression PAR_CLOSED statement %prec LOWER_THAN_ELSE
-                | IF PAR_OPEN expression PAR_CLOSED statement ELSE statement
+ifstmt:         IF body statement %prec LOWER_THAN_ELSE {current_table = SymTable_next(current_table); SymTable_hide(current_table); current_table = SymTable_prev(current_table);}
+                | IF body statement ELSE statement
                 ;
 
-whilestmt:      WHILE PAR_OPEN expression PAR_CLOSED statement
+whilestmt:      WHILE body statement
 
-forstmt:        FOR PAR_OPEN elist SEMI_COLON expression SEMI_COLON elist PAR_CLOSED statement ;
+body:           PAR_OPEN {scope++; current_table = SymTable_next(current_table);} expression PAR_CLOSED {scope--; current_table = SymTable_prev(current_table);}
+
+forstmt:        FOR PAR_OPEN {scope++; current_table = SymTable_next(current_table);} elist SEMI_COLON expression SEMI_COLON elist PAR_CLOSED {scope--; current_table = SymTable_prev(current_table);} statement ;
 
 returnstmt:     RETURN SEMI_COLON
                 | RETURN expression SEMI_COLON
@@ -204,11 +206,22 @@ int yyerror(char *message){
 }
 
 int main(int argc, char **argv) {
+	struct SymbolTableEntry temp;
+	temp.isActive = 0;
+	temp.value.funcVal = NULL;
+	temp.type = LIBFUNC;
+
     head = SymTable_new();
+	SymTable_insert(head, "print", &temp);
+	SymTable_insert(head, "cos", &temp);
+	SymTable_insert(head, "sin", &temp);
+	SymTable_insert(head, "input", &temp);
     current_table = head;
 
 	yyin = fopen("tests/general.alpha", "r");
 	yyparse();
+
+    SymTable_print(head);
 
 	return 0;
 }

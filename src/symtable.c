@@ -166,6 +166,7 @@ SymbolTableEntry* SymTable_insert(SymTable_T oSymTable, const char *key, SymbolT
         oSymTable->buckets[pos] = new;
     }
 
+	//SymTable_print(oSymTable);
     return new->val;
 }
 
@@ -243,28 +244,23 @@ void SymTable_map(SymTable_T oSymTable, void (*pfApply)(const char *key, SymbolT
 
 /* ================================================= */
 
-void SymTable_next(SymTable_T oSymTable){
+SymTable_T SymTable_next(SymTable_T oSymTable){
     assert(oSymTable);
-    if(oSymTable->next){
-        oSymTable = oSymTable->next;
-        return;
+    if(!oSymTable->next){
+        oSymTable->next = SymTable_new();
+        oSymTable->next->prev = oSymTable;
     }
 
-    oSymTable->next = SymTable_new();
-    oSymTable->next->prev = oSymTable;
-    oSymTable = oSymTable->next;
-    
-    return;
+    return oSymTable->next;
 }
 
 /* ================================================= */
 
-void SymTable_prev(SymTable_T oSymTable){
+SymTable_T SymTable_prev(SymTable_T oSymTable){
     assert(oSymTable);
     assert(oSymTable->prev);
     
-    oSymTable = oSymTable->prev;
-    return;
+    return oSymTable->prev;
 }
 
 /* ================================================= */
