@@ -4,10 +4,10 @@
 	#include <string.h>
 	#include <assert.h>
 	#include <stdbool.h>
-    #include "symtable.h"
-    #include "structs.h"
-    #include "func_stack.h"
-	#include "rule_handler.h"
+    #include "../include/symtable.h"
+    #include "../include/structs.h"
+    #include "../include/func_stack.h"
+	#include "../include/rule_handler.h"
 
     int yyerror(char* message);
     int yylex(void);
@@ -40,6 +40,7 @@
              CURLY_OPEN CURLY_CLOSED SQUARE_OPEN SQUARE_CLOSED
              PAR_OPEN PAR_CLOSED SEMI_COLON COMMA COLON DOUBLE_COLON
              DOT DOUBLE_DOT UMINUS
+%type<sval> funcname idlist idlist_alt
 %type<exprval> lvalue
 
 
@@ -98,16 +99,16 @@ expression:     assignexpr
 term:           PAR_OPEN expression PAR_CLOSED
                 | UMINUS expression
                 | NOT expression
-                | INC lvalue
-                | lvalue INC
-                | DEC lvalue
-                | lvalue DEC
+                | INC lvalue            {HANDLE_TERM_TO_INC_LVALUE($2, func_stack_top());}
+                | lvalue INC            {HANDLE_TERM_TO_LVALUE_INC($1, func_stack_top());}
+                | DEC lvalue            {HANDLE_TERM_TO_DEC_LVALUE($2, func_stack_top());}
+                | lvalue DEC            {HANDLE_TERM_TO_LVALUE_DEC($1, func_stack_top());}
                 | prim
                 ;
     
-assignexpr:     lvalue ASSIGN expression {HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, func_stack_top());};
+assignexpr:     lvalue ASSIGN expression{HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, func_stack_top());};
 
-prim:           lvalue
+prim:           lvalue                  {HANDLE_PRIM_TO_LVALUE($1, func_stack_top());}
                 | call
                 | objectdef
                 | PAR_OPEN funcdef PAR_CLOSED
@@ -127,7 +128,7 @@ member:         lvalue DOT IDENT
                 ;
 
 call:           call PAR_OPEN elist PAR_CLOSED
-                | lvalue callsuffix
+                | lvalue callsuffix     {HANDLE_CALL_TO_LVALUE_CALLSUFFIX($1, func_stack_top());}
                 | PAR_OPEN funcdef PAR_CLOSED PAR_OPEN elist PAR_CLOSED
                 ;
 
@@ -166,17 +167,19 @@ indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED ;
 
 block:          CURLY_OPEN {scope++; SymTable_next(current_table);} statements CURLY_CLOSED {scope--; SymTable_hide(current_table); SymTable_prev(current_table);};
 
-funcdef:        FUNCTION PAR_OPEN idlist PAR_CLOSED block
-                | FUNCTION IDENT PAR_OPEN {scope++; SymTable_next(current_table);} idlist PAR_CLOSED {scope--; SymTable_prev(current_table); func_stack_push(scope);} block {func_stack_pop();}
+funcdef:        funcname PAR_OPEN {scope++; SymTable_next(current_table);} idlist PAR_CLOSED {scope--; SymTable_prev(current_table); func_stack_push(scope);} block {func_stack_pop();} ;
+
+funcname:       FUNCTION IDENT          {$$ = HANDLE_FUNCTION_WITH_NAME(current_table, $2, yylineno, scope);}
+                | FUNCTION              {$$ = HANDLE_FUCNTION_WITHOUT_NAME(current_table, anon_counter++, yylineno, scope);}
                 ;
 
 const:          NUM | STRING | NIL | TRUE | FALSE ;
 
-idlist:         IDENT idlist_alt 
+idlist:         IDENT idlist_alt        {$$ = HANDLE_IDLIST_IDENT(current_table, $1, yylineno, scope);}
                 |
                 ;
 
-idlist_alt:     COMMA IDENT idlist_alt
+idlist_alt:     COMMA IDENT idlist_alt  {$$ = HANDLE_IDLIST_IDENT(current_table, $2, yylineno, scope);}
                 |
                 ;
 
