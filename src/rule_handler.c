@@ -28,6 +28,17 @@ Function* makeFunc(char* key, int lineno, int scope){
 	return temp;
 }
 
+void libFunc(SymTable_T head, char* name){
+    SymbolTableEntry* temp_entry = malloc(sizeof(struct SymbolTableEntry));
+    Function* temp = makeFunc(name, 0, 0);
+
+    temp_entry->isActive = 1;
+    temp_entry->type = LIBFUNC;
+    temp_entry->value.funcVal = temp;
+    
+    SymTable_insert(head, name, temp_entry);
+}
+
 int isLegal(int scope, int func_scope){
     return (scope == 0 || scope > func_scope);
 }

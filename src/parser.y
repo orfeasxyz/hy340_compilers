@@ -204,21 +204,22 @@ int yyerror(char *message){
 }
 
 int main(int argc, char **argv) {
-	struct SymbolTableEntry temp;
-    Function* temp_func = malloc(sizeof(struct Function));
-
-    temp_func->line = 0;
-    temp_func->scope = 0;
-	temp.isActive = 1;
-	temp.value.funcVal = temp_func;
-	temp.type = LIBFUNC;
 
     head = SymTable_new();
-	SymTable_insert(head, "print", &temp);
-	SymTable_insert(head, "cos", &temp);
-	SymTable_insert(head, "sin", &temp);
-	SymTable_insert(head, "input", &temp);
     current_table = head;
+
+    libFunc(head, "print");
+    libFunc(head, "input");
+    libFunc(head, "objectmemberkeys");
+    libFunc(head, "objecttotalmembers");
+    libFunc(head, "objectcopy");
+    libFunc(head, "totalarguments");
+    libFunc(head, "argument");
+    libFunc(head, "typeof");
+    libFunc(head, "strtonum");
+    libFunc(head, "sqrt");
+    libFunc(head, "cos");
+    libFunc(head, "sin");
 
     printf("lineno = %d\n", yylineno);
 	assert(argc == 2);
