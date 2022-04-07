@@ -1684,12 +1684,11 @@ yyreturn:
 
 
 int yyerror(char *message){
-    printf("Error: %s\n", message);
+    printf("Error on line %d: %s\n", yylineno, message);
     return -1;
 }
 
 int main(int argc, char **argv) {
-
     head = SymTable_new();
     current_table = head;
 
@@ -1706,11 +1705,28 @@ int main(int argc, char **argv) {
     libFunc(head, "cos");
     libFunc(head, "sin");
 
-	assert(argc == 2);
-	yyin = fopen(argv[1], "r");
+	if(argc > 3) {
+		fprintf(stderr, "Invalid argument format\nUsage: %s <input_file> [<output_file>]", argv[0]);
+		exit(0);
+	}
+
+    if(argc == 1) {
+		yyin = stdin;
+    }
+	else {
+		if(!(yyin = fopen(argv[1], "r"))){
+            fprintf(stderr, "There was an error reading the input file, make sure it exists and the path is written correnctly");
+            exit(0);
+        }
+	}
+
+	// If an output file was given, redirect what would be printed in stdout to that file
+	if(argc == 3 && !freopen(argv[2], "w", stdout)) {
+		fprintf(stderr, "There was an error reading the output file, make sure it exists and the path is written correnctly");
+		exit(0);
+	}
+
 	yyparse();
-
     SymTable_print(head);
-
-	return 0;
+    return 0;	
 }
