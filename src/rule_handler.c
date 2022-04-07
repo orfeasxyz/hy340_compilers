@@ -70,14 +70,12 @@ SymbolTableEntry* HANDLE_LVALUE_TO_IDENT(SymTable_T table, char* key, int lineno
 SymbolTableEntry* HANDLE_LVALUE_TO_LOCAL_IDENT(SymTable_T table, SymTable_T global, char* key, int lineno, int scope){
     SymbolTableEntry* temp;
 
-    if((temp = SymTable_lookup(table, key))){
-        if(!isVar(temp)){
-            fprintf(stderr, "%s name %s used after keyword LOCAL\n", (temp->type == LIBFUNC ? "Library function's" : "Function's"), key);
-            return NULL;
-        }
-    } 
+    if((temp = SymTable_lookup_here(table, key))) return temp;
 
-    if((temp = SymTable_lookup(table, key))) return temp;
+    if((temp = SymTable_lookup_here(global, key)) && temp->type == LIBFUNC){
+        fprintf(stderr, "Library function %s can't be shadowed by local variable\n", temp->value.funcVal->name);
+        return NULL;
+    }
 
     temp = malloc(sizeof(struct SymbolTableEntry));
     temp->isActive = 1;
@@ -250,20 +248,12 @@ void HANDLE_TERM_TO_LVALUE_DEC(SymbolTableEntry* entry, int func_scope){
 void HANDLE_PRIM_TO_LVALUE(SymbolTableEntry* entry, int func_scope){
     if(!entry) return;
 
-    if(!isVar(entry)){
-        fprintf(stderr, "Function %s can't be used as a primary\n", entry->value.funcVal->name);
-        return;
-    }
+    if(!isVar(entry)) return;
+
 
     if(isLegal(entry->value.varVal->scope, func_scope)) return;
 
     fprintf(stderr, "Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", entry->value.varVal->name, entry->value.varVal->scope, func_scope);
 
     return;
-}
-
-void HANDLE_CALL_TO_LVALUE_CALLSUFFIX(SymbolTableEntry* entry, int func_scope){
-    if(!entry) return;
-
-    if(!isVar(entry)) return;
 }

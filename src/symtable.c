@@ -10,11 +10,11 @@
 #define HASH_MULTIPLIER 65599
 
 char* enum_to_s[] = {
-    "VAR_GLOBAL",
-    "VAR_LOCAL",
-    "VAR_FORMAL",
-    "USERFUNC",
-    "LIBFUNC"
+    "global variable",
+    "local variable",
+    "formal argument",
+    "user function",
+    "library functin"
 }; 
 
 int sizes[] = {MIN_SIZE, 40, 80, 160, 320, 640, 1280, MAX_SIZE};
@@ -272,25 +272,28 @@ void SymTable_print(SymTable_T oSymTable){
     if(!oSymTable) return;
 
     while(oSymTable){
-        printf("SCOPE %d \n\n", scope++);
+        printf("------------     Scope #%d     ------------\n", scope++);
         for(i = 0; i < oSymTable->max_size; i++){
             temp = oSymTable->buckets[i];
             while(temp){
                 int line = 0;
+                int scope = 0;
                 switch(temp->val->type) {
                     case VAR_GLOBAL:
                     case VAR_LOCAL:
                     case VAR_FORMAL:
                         line = temp->val->value.varVal->line; 
+                        scope =  temp->val->value.varVal->scope;
                         break;
                     case USERFUNC:
                     case LIBFUNC:
                         line = temp->val->value.funcVal->line;
+                        scope =  temp->val->value.funcVal->scope;
                         break;
                     default:
                         assert(0);
                 }
-                printf("Key: %s, Val: %s, Line: %d\n", temp->key, enum_to_s[temp->val->type], line);
+                printf("\"%s\" [%s] (line: %d) (scope %d)\n", temp->key, enum_to_s[temp->val->type], line, scope);
                 temp = temp->next;
             }
         }

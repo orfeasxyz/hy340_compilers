@@ -1431,68 +1431,62 @@ yyreduce:
 #line 1432 "parser.c"
     break;
 
-  case 53: /* call: lvalue callsuffix  */
-#line 132 "parser.y"
-                                        {HANDLE_CALL_TO_LVALUE_CALLSUFFIX((yyvsp[-1].exprval), func_stack_top());}
-#line 1438 "parser.c"
-    break;
-
   case 73: /* $@1: %empty  */
 #line 169 "parser.y"
                            {scope++; current_table = SymTable_next(current_table);}
-#line 1444 "parser.c"
+#line 1438 "parser.c"
     break;
 
   case 74: /* block: CURLY_OPEN $@1 statements CURLY_CLOSED  */
 #line 169 "parser.y"
                                                                                                             {scope--; SymTable_hide(current_table); current_table = SymTable_prev(current_table);}
-#line 1450 "parser.c"
+#line 1444 "parser.c"
     break;
 
   case 75: /* $@2: %empty  */
 #line 171 "parser.y"
                                   {scope++; current_table = SymTable_next(current_table);}
-#line 1456 "parser.c"
+#line 1450 "parser.c"
     break;
 
   case 76: /* $@3: %empty  */
 #line 171 "parser.y"
                                                                                                              {scope--; current_table = SymTable_prev(current_table); func_stack_push(scope);}
-#line 1462 "parser.c"
+#line 1456 "parser.c"
     break;
 
   case 77: /* funcdef: funcname PAR_OPEN $@2 idlist PAR_CLOSED $@3 block  */
 #line 171 "parser.y"
                                                                                                                                                                                                     {func_stack_pop();}
-#line 1468 "parser.c"
+#line 1462 "parser.c"
     break;
 
   case 78: /* funcname: FUNCTION IDENT  */
 #line 173 "parser.y"
                                         {(yyval.sval) = HANDLE_FUNCTION_WITH_NAME(current_table, (yyvsp[0].sval), yylineno, scope);}
-#line 1474 "parser.c"
+#line 1468 "parser.c"
     break;
 
   case 79: /* funcname: FUNCTION  */
 #line 174 "parser.y"
                                         {(yyval.sval) = HANDLE_FUNCTION_WITHOUT_NAME(current_table, anon_counter++, yylineno, scope);}
-#line 1480 "parser.c"
+#line 1474 "parser.c"
     break;
 
   case 85: /* idlist: IDENT idlist_alt  */
 #line 179 "parser.y"
                                         {HANDLE_IDLIST_IDENT(current_table, (yyvsp[-1].sval), yylineno, scope);}
-#line 1486 "parser.c"
+#line 1480 "parser.c"
     break;
 
   case 87: /* idlist_alt: COMMA IDENT idlist_alt  */
 #line 183 "parser.y"
                                         {HANDLE_IDLIST_IDENT(current_table, (yyvsp[-1].sval), yylineno, scope);}
-#line 1492 "parser.c"
+#line 1486 "parser.c"
     break;
 
 
-#line 1496 "parser.c"
+#line 1490 "parser.c"
 
       default: break;
     }
@@ -1695,23 +1689,23 @@ int yyerror(char *message){
 }
 
 int main(int argc, char **argv) {
-	struct SymbolTableEntry temp;
-    Function* temp_func = malloc(sizeof(struct Function));
-
-    temp_func->line = 0;
-    temp_func->scope = 0;
-	temp.isActive = 1;
-	temp.value.funcVal = temp_func;
-	temp.type = LIBFUNC;
 
     head = SymTable_new();
-	SymTable_insert(head, "print", &temp);
-	SymTable_insert(head, "cos", &temp);
-	SymTable_insert(head, "sin", &temp);
-	SymTable_insert(head, "input", &temp);
     current_table = head;
 
-    printf("lineno = %d\n", yylineno);
+    libFunc(head, "print");
+    libFunc(head, "input");
+    libFunc(head, "objectmemberkeys");
+    libFunc(head, "objecttotalmembers");
+    libFunc(head, "objectcopy");
+    libFunc(head, "totalarguments");
+    libFunc(head, "argument");
+    libFunc(head, "typeof");
+    libFunc(head, "strtonum");
+    libFunc(head, "sqrt");
+    libFunc(head, "cos");
+    libFunc(head, "sin");
+
 	assert(argc == 2);
 	yyin = fopen(argv[1], "r");
 	yyparse();

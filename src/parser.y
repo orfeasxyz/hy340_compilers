@@ -126,10 +126,10 @@ member:         lvalue DOT IDENT
                 | lvalue SQUARE_OPEN expression SQUARE_CLOSED
                 | call DOT IDENT
                 | call SQUARE_OPEN expression SQUARE_CLOSED
-                ;
+                ;   
 
 call:           call PAR_OPEN elist PAR_CLOSED
-                | lvalue callsuffix     {HANDLE_CALL_TO_LVALUE_CALLSUFFIX($1, func_stack_top());}
+                | lvalue callsuffix     
                 | PAR_OPEN funcdef PAR_CLOSED PAR_OPEN elist PAR_CLOSED
                 ;
 
@@ -221,7 +221,6 @@ int main(int argc, char **argv) {
     libFunc(head, "cos");
     libFunc(head, "sin");
 
-    printf("lineno = %d\n", yylineno);
 	assert(argc == 2);
 	yyin = fopen(argv[1], "r");
 	yyparse();
