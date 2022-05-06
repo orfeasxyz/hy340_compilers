@@ -29,8 +29,11 @@
 %start program
 
 %union {
+	int bval;
     double nval;
     char* sval;
+	unsinged int func_addr;
+	char* lib_addr;
     struct SymbolTableEntry* exprval;
 }
 
@@ -42,7 +45,7 @@
              PAR_OPEN PAR_CLOSED SEMI_COLON COMMA COLON DOUBLE_COLON
              DOT DOUBLE_DOT UMINUS
 %type<sval> funcname
-%type<exprval> lvalue
+%type<exprval> lvalue expression term assignexpr 
 
 
 %right ASSIGN
@@ -63,6 +66,7 @@
 %%
 
 program:        statements ;
+
 
 statements:     statements statement 
                 |
@@ -106,7 +110,7 @@ term:           PAR_OPEN expression PAR_CLOSED
                 | lvalue DEC            {HANDLE_TERM_TO_LVALUE_DEC($1, func_stack_top());}
                 | prim
                 ;
-    
+
 assignexpr:     lvalue ASSIGN expression{HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, func_stack_top());};
 
 prim:           lvalue                  {HANDLE_PRIM_TO_LVALUE($1, func_stack_top());}
@@ -126,7 +130,7 @@ member:         lvalue DOT IDENT
                 | lvalue SQUARE_OPEN expression SQUARE_CLOSED
                 | call DOT IDENT
                 | call SQUARE_OPEN expression SQUARE_CLOSED
-                ;   
+                ;
 
 call:           call PAR_OPEN elist PAR_CLOSED
                 | lvalue callsuffix     
