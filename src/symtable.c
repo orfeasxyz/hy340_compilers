@@ -5,8 +5,8 @@
 #include <string.h>
 #include <assert.h>
 #include <math.h>
-#define MIN_SIZE 20
-#define MAX_SIZE 2560
+#define MIN_SIZE 256
+#define MAX_SIZE 32768
 #define HASH_MULTIPLIER 65599
 
 char* enum_to_s[] = {
@@ -17,7 +17,7 @@ char* enum_to_s[] = {
     "library functin"
 }; 
 
-int sizes[] = {MIN_SIZE, 40, 80, 160, 320, 640, 1280, MAX_SIZE};
+int sizes[] = {MIN_SIZE, 512, 1024, 2048, 4096, 8192, 16384, MAX_SIZE};
 
 /* Return a hash code for key. */
 static unsigned int SymTable_hash(const char *key, size_t max_size){

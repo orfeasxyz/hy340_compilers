@@ -34,7 +34,8 @@
     char* sval;
 	unsinged int func_addr;
 	char* lib_addr;
-    struct SymbolTableEntry* exprval;
+    SymbolTableEntry* symval;
+    expr* exprval;
 }
 
 %token<nval> NUM
@@ -104,10 +105,10 @@ expression:     assignexpr
 term:           PAR_OPEN expression PAR_CLOSED
                 | UMINUS expression
                 | NOT expression
-                | INC lvalue            {HANDLE_TERM_TO_INC_LVALUE($2, func_stack_top());}
-                | lvalue INC            {HANDLE_TERM_TO_LVALUE_INC($1, func_stack_top());}
-                | DEC lvalue            {HANDLE_TERM_TO_DEC_LVALUE($2, func_stack_top());}
-                | lvalue DEC            {HANDLE_TERM_TO_LVALUE_DEC($1, func_stack_top());}
+                | INC lvalue            {HANDLE_TERM_TO_INC_LVALUE($2, lineno, func_stack_top());}
+                | lvalue INC            {HANDLE_TERM_TO_LVALUE_INC($1, lineno, func_stack_top());}
+                | DEC lvalue            {HANDLE_TERM_TO_DEC_LVALUE($2, lineno, func_stack_top());}
+                | lvalue DEC            {HANDLE_TERM_TO_LVALUE_DEC($1, lineno, func_stack_top());}
                 | prim
                 ;
 
