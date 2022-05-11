@@ -282,13 +282,13 @@ void SymTable_print(SymTable_T oSymTable){
                     case VAR_GLOBAL:
                     case VAR_LOCAL:
                     case VAR_FORMAL:
-                        line = temp->val->value.varVal->line; 
-                        scope =  temp->val->value.varVal->scope;
+                        line = temp->val->line; 
+                        scope =  temp->val->scope;
                         break;
                     case USERFUNC:
                     case LIBFUNC:
-                        line = temp->val->value.funcVal->line;
-                        scope =  temp->val->value.funcVal->scope;
+                        line = temp->val->line;
+                        scope =  temp->val->scope;
                         break;
                     default:
                         assert(0);

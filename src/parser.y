@@ -32,10 +32,10 @@
 	int bval;
     double nval;
     char* sval;
-	unsinged int func_addr;
+	unsigned int func_addr;
 	char* lib_addr;
-    SymbolTableEntry* symval;
-    expr* exprval;
+    struct SymbolTableEntry* symval;
+    struct Expr* exprval;
 }
 
 %token<nval> NUM
@@ -105,16 +105,16 @@ expression:     assignexpr
 term:           PAR_OPEN expression PAR_CLOSED
                 | UMINUS expression
                 | NOT expression
-                | INC lvalue            {HANDLE_TERM_TO_INC_LVALUE($2, lineno, func_stack_top());}
-                | lvalue INC            {HANDLE_TERM_TO_LVALUE_INC($1, lineno, func_stack_top());}
-                | DEC lvalue            {HANDLE_TERM_TO_DEC_LVALUE($2, lineno, func_stack_top());}
-                | lvalue DEC            {HANDLE_TERM_TO_LVALUE_DEC($1, lineno, func_stack_top());}
+                | INC lvalue            {HANDLE_TERM_TO_INC_LVALUE($2, yylineno, func_stack_top());}
+                | lvalue INC            {HANDLE_TERM_TO_LVALUE_INC($1, yylineno, func_stack_top());}
+                | DEC lvalue            {HANDLE_TERM_TO_DEC_LVALUE($2, yylineno, func_stack_top());}
+                | lvalue DEC            {HANDLE_TERM_TO_LVALUE_DEC($1, yylineno, func_stack_top());}
                 | prim
                 ;
 
-assignexpr:     lvalue ASSIGN expression{HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, func_stack_top());};
+assignexpr:     lvalue ASSIGN expression{HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, yylineno ,func_stack_top());};
 
-prim:           lvalue                  {HANDLE_PRIM_TO_LVALUE($1, func_stack_top());}
+prim:           lvalue                  {HANDLE_PRIM_TO_LVALUE($1,yylineno ,func_stack_top());}
                 | call
                 | objectdef
                 | PAR_OPEN funcdef PAR_CLOSED

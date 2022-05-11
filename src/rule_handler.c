@@ -1,5 +1,6 @@
 #include "../include/rule_handler.h"
 #include "../include/symtable.h"
+#include "../include/structs.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -11,7 +11,7 @@ typedef enum iopcode {
     ret, funcend, 
     tablegetelem,  
     add, 
-    div, 
+    mydiv, //conflict with stdlib.h
     and, 
     if_eq, 
     if_geatereq,
@@ -77,12 +77,12 @@ typedef struct SymbolTableEntry {
 typedef struct Expr {
 	ExprType			type;
 	SymbolTableEntry*	sym;
-	Expr*			    index;
+	struct Expr*	    index;
 	double			    numCosnt;
 	char*			    strConst;
 	unsigned char	    boolConst;
 
-	Expr*			    next;
+	struct Expr*	    next;
 } Expr;
 
 typedef struct quad {
