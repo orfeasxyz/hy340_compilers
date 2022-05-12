@@ -174,7 +174,7 @@ char* HANDLE_FUNCTION_WITHOUT_NAME(int lineno){
 
 Expr* HANDLE_FUNCPREFIX(char* func_name, int lineno){
     SymbolTableEntry* temp = SymTable_lookup(current_table ,func_name);
-    Expr* arg;
+    Expr* arg = malloc(sizeof(Expr));
 
     temp->iadress = nextQuadLabel();
 
@@ -187,7 +187,7 @@ Expr* HANDLE_FUNCPREFIX(char* func_name, int lineno){
     enterScopeSpace();
     resetFormalArgsOffset();
 
-    return temp;
+    return arg;
 }
 
 Expr* HANDLE_FUNCDEF(Expr* funcprefix, unsigned funcbody, int lineno){
@@ -197,6 +197,7 @@ Expr* HANDLE_FUNCDEF(Expr* funcprefix, unsigned funcbody, int lineno){
     stack_pop(scopeOffsetStack);
     restoreCurrScopeOffset(stack_top(scopeOffsetStack));
     emit(funcend, funcprefix, NULL, NULL, 0, lineno);
+	return funcprefix;
 }
 
 void HANDLE_TERM_TO_INC_LVALUE(SymbolTableEntry* entry, int lineno){
