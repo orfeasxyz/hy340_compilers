@@ -1,6 +1,7 @@
 #include "../include/rule_handler.h"
 #include "../include/symtable.h"
 #include "../include/structs.h"
+#include "../include/stack.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,8 +43,9 @@ int countDigits(int num){
     return count;
 }
 
-SymbolTableEntry* HANDLE_LVALUE_TO_IDENT(SymTable_T table, char* key, int lineno, int scope){
+SymbolTableEntry* HANDLE_LVALUE_TO_IDENT(char* key, int lineno){
     SymbolTableEntry* temp;
+    SymTable_T table = current_table;
 
     if((temp = SymTable_lookup(table, key))) return temp;
 
@@ -51,17 +53,18 @@ SymbolTableEntry* HANDLE_LVALUE_TO_IDENT(SymTable_T table, char* key, int lineno
     temp->type = (scope ? VAR_LOCAL : VAR_GLOBAL);
     temp->space = currScopeSpace();
     temp->offset = currScopeOffset();
-    //incCurrScopeOffset();
+    incCurrScopeOffset();
 
     return SymTable_insert(table, key, temp);
 }
 
-SymbolTableEntry* HANDLE_LVALUE_TO_LOCAL_IDENT(SymTable_T table, SymTable_T global, char* key, int lineno, int scope){
+SymbolTableEntry* HANDLE_LVALUE_TO_LOCAL_IDENT(char* key, int lineno){
     SymbolTableEntry* temp;
+    SymTable_T table = current_table;
 
     if((temp = SymTable_lookup_here(table, key))) return temp;
 
-    if((temp = SymTable_lookup_here(global, key)) && temp->type == LIBFUNC){
+    if((temp = SymTable_lookup_here(head, key)) && temp->type == LIBFUNC){
         fprintf(stderr, "Line %d: Library function %s can't be shadowed by local variable\n", lineno, temp->name);
         return NULL;
     }
@@ -70,23 +73,23 @@ SymbolTableEntry* HANDLE_LVALUE_TO_LOCAL_IDENT(SymTable_T table, SymTable_T glob
     temp->type = (scope ? VAR_LOCAL : VAR_GLOBAL);
     temp->space = currScopeSpace();
     temp->offset = currScopeOffset();
-    //incCurrScopeOffset();
+    incCurrScopeOffset();
 
 
     return SymTable_insert(table, key, temp);
 }
 
-SymbolTableEntry* HANDLE_LVALUE_TO_GLOBAL_IDENT(SymTable_T global, char* key, int lineno, int scope){
+SymbolTableEntry* HANDLE_LVALUE_TO_GLOBAL_IDENT(char* key, int lineno){
     SymbolTableEntry* temp;
 
-    if((temp = SymTable_lookup_here(global, key))) return temp;
+    if((temp = SymTable_lookup_here(head, key))) return temp;
 
     fprintf(stderr, "Line %d: Name %s was not found in the global scope but was referenced as ::%s\n", lineno, key ,key);
 
     return NULL;
 }
 
-void HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION(SymbolTableEntry* entry, int lineno, int func_scope){
+void HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION(SymbolTableEntry* entry, int lineno){
     if(!entry) return;
 
     if(!isVar(entry)){
@@ -94,15 +97,16 @@ void HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION(SymbolTableEntry* entry, int 
         return;
     }
 
-    if(isLegal(entry->scope, func_scope)) return;
+    if(isLegal(entry->scope, stack_top(functionScopeStack))) return;
 
-    fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, entry->name, entry->scope, func_scope);
+    fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, entry->name, entry->scope, stack_top(functionScopeStack));
 
     return;
 }
 
-char* HANDLE_IDLIST_IDENT(SymTable_T table, char* key, int lineno, int scope){
+char* HANDLE_IDLIST_IDENT(char* key, int lineno){
     SymbolTableEntry* temp;
+    SymTable_T table = current_table;
 
     if((temp = SymTable_lookup_here(table, key))){
         fprintf(stderr, "Line %d: Formal argument %s already defined in the same id_list\n", lineno, key);
@@ -124,8 +128,9 @@ char* HANDLE_IDLIST_IDENT(SymTable_T table, char* key, int lineno, int scope){
     return temp->name;
 }
 
-char* HANDLE_FUNCTION_WITH_NAME(SymTable_T table, char* key, int lineno, int scope){
+SymbolTableEntry* HANDLE_FUNCTION_WITH_NAME(char* key, int lineno){
     SymbolTableEntry* temp;
+    SymTable_T table = current_table;
 
     if((temp = SymTable_lookup(table, key))){
         if(isVar(temp)){
@@ -154,8 +159,9 @@ char* HANDLE_FUNCTION_WITH_NAME(SymTable_T table, char* key, int lineno, int sco
 	return temp->name;
 }
 
-char* HANDLE_FUNCTION_WITHOUT_NAME(SymTable_T table, int anon_count, int lineno, int scope){
+SymbolTableEntry* HANDLE_FUNCTION_WITHOUT_NAME(int lineno){
     SymbolTableEntry* temp;
+    SymTable_T table = current_table;
     char* funcname = malloc(countDigits(anon_count) + 2);
 
     sprintf(funcname, "$%d", anon_count);
@@ -168,7 +174,7 @@ char* HANDLE_FUNCTION_WITHOUT_NAME(SymTable_T table, int anon_count, int lineno,
 	return temp->name;
 }
 
-void HANDLE_TERM_TO_INC_LVALUE(SymbolTableEntry* entry, int lineno, int func_scope){
+void HANDLE_TERM_TO_INC_LVALUE(SymbolTableEntry* entry, int lineno){
     if(!entry) return;
 
     if(!isVar(entry)){
@@ -176,14 +182,14 @@ void HANDLE_TERM_TO_INC_LVALUE(SymbolTableEntry* entry, int lineno, int func_sco
         return;
     }
 
-    if(isLegal(entry->scope, func_scope)) return;
+    if(isLegal(entry->scope, stack_top(functionScopeStack))) return;
 
-    fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, entry->name, entry->scope, func_scope);
+    fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, entry->name, entry->scope, stack_top(functionScopeStack));
 
     return;
 }
 
-void HANDLE_TERM_TO_LVALUE_INC(SymbolTableEntry* entry, int lineno, int func_scope){
+void HANDLE_TERM_TO_LVALUE_INC(SymbolTableEntry* entry, int lineno){
     if(!entry) return;
 
     if(!isVar(entry)){
@@ -191,14 +197,14 @@ void HANDLE_TERM_TO_LVALUE_INC(SymbolTableEntry* entry, int lineno, int func_sco
         return;
     }
 
-    if(isLegal(entry->scope, func_scope)) return;
+    if(isLegal(entry->scope, stack_top(functionScopeStack))) return;
 
-    fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, entry->name, entry->scope, func_scope);
+    fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, entry->name, entry->scope, stack_top(functionScopeStack));
 
     return;
 }
 
-void HANDLE_TERM_TO_DEC_LVALUE(SymbolTableEntry* entry, int lineno, int func_scope){
+void HANDLE_TERM_TO_DEC_LVALUE(SymbolTableEntry* entry, int lineno){
     if(!entry) return;
 
     if(!isVar(entry)){
@@ -206,14 +212,14 @@ void HANDLE_TERM_TO_DEC_LVALUE(SymbolTableEntry* entry, int lineno, int func_sco
         return;
     }
 
-    if(isLegal(entry->scope, func_scope)) return;
+    if(isLegal(entry->scope, stack_top(functionScopeStack))) return;
 
-    fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, entry->name, entry->scope, func_scope);
+    fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, entry->name, entry->scope, stack_top(functionScopeStack));
 
     return;
 }
 
-void HANDLE_TERM_TO_LVALUE_DEC(SymbolTableEntry* entry, int lineno, int func_scope){
+void HANDLE_TERM_TO_LVALUE_DEC(SymbolTableEntry* entry, int lineno){
     if(!entry) return;
 
     if(!isVar(entry)){
@@ -221,22 +227,22 @@ void HANDLE_TERM_TO_LVALUE_DEC(SymbolTableEntry* entry, int lineno, int func_sco
         return;
     }
 
-    if(isLegal(entry->scope, func_scope)) return;
+    if(isLegal(entry->scope, stack_top(functionScopeStack))) return;
 
-    fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, entry->name, entry->scope, func_scope);
+    fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, entry->name, entry->scope, stack_top(functionScopeStack));
 
     return;
 }
 
-void HANDLE_PRIM_TO_LVALUE(SymbolTableEntry* entry, int lineno, int func_scope){
+void HANDLE_PRIM_TO_LVALUE(SymbolTableEntry* entry, int lineno){
     if(!entry) return;
 
     if(!isVar(entry)) return;
 
 
-    if(isLegal(entry->scope, func_scope)) return;
+    if(isLegal(entry->scope, stack_top(functionScopeStack))) return;
 
-    fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, entry->name, entry->scope, func_scope);
+    fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, entry->name, entry->scope, stack_top(functionScopeStack));
 
     return;
 }

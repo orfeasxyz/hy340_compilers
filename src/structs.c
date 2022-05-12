@@ -1,8 +1,10 @@
-#include "structs.h"
+#include "../include/structs.h"
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 
+unsigned scope = 0;
+unsigned anon_count = 0;
 quad*        quads = (void*)0; // quad vector
 unsigned    total = 0;
 unsigned    currQuad = 0;
@@ -93,4 +95,30 @@ void enterScopeSpace (void){
 void exitScopeSpace (void){ 
     assert(scopeSpaceCounter>1); 
     --scopeSpaceCounter; 
+}
+
+void resetFormalArgsOffset(void){
+    formalArgOffset = 0;
+}
+
+void resetFunctionLocalOffset(void){
+    functionLocalOffset = 0;
+}
+
+void restoreCurrScopeOffset(unsigned n){
+    switch(currScopeSpace()){
+        case programvar:    programVarOffset = n; break;
+        case functionlocal: functionLocalOffset = n; break;
+        case formalarg:     formalArgOffset = n; break;
+        default:            assert(0);
+    }
+}
+
+unsigned nextQuadLabel(void){
+    return currQuad;
+}
+
+void patchLabel(unsigned quadNo, unsigned label){
+    assert(quadNo < currQuad);
+    quads[quadNo].label = label;
 }

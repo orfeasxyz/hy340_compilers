@@ -72,6 +72,9 @@ typedef struct SymbolTableEntry {
     unsigned offset; // scopespace offset
     unsigned line;
     SymbolType type;
+
+    //function exlusives
+    unsigned iadress;
 } SymbolTableEntry;
 
 typedef struct Expr {
@@ -112,6 +115,9 @@ void emit (
 	unsigned	line
 );
 
+extern unsigned scope;
+extern unsigned anon_count;
+
 extern unsigned programVarOffset;
 extern unsigned functionLocalOffset;
 extern unsigned formalArgOffset;
@@ -122,5 +128,10 @@ unsigned currScopeOffset(void);
 void incCurrScopeOffset(void);
 void enterScopeSpace(void);
 void exitScopeSpace(void);
+void resetFormalArgsOffset(void);
+void resetFunctionLocalOffset(void);
+void restoreCurrScopeOffset(unsigned n);
+unsigned nextQuadLabel(void);
+void patchLabel(unsigned quadNo, unsigned label);
 
 #endif // _STRUCTS_H_

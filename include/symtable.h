@@ -31,4 +31,7 @@ void SymTable_map(SymTable_T oSymTable,
 
 void SymTable_print(SymTable_T oSymTable);
 
+extern SymTable_T head;
+extern SymTable_T current_table;
+
 #endif  // _SYMTABLE_H_

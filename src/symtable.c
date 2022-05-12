@@ -9,6 +9,9 @@
 #define MAX_SIZE 32768
 #define HASH_MULTIPLIER 65599
 
+SymTable_T head;
+SymTable_T current_table;
+
 char* enum_to_s[] = {
     "global variable",
     "local variable",
