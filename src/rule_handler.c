@@ -128,7 +128,7 @@ char* HANDLE_IDLIST_IDENT(char* key, int lineno){
     return temp->name;
 }
 
-SymbolTableEntry* HANDLE_FUNCTION_WITH_NAME(char* key, int lineno){
+char* HANDLE_FUNCTION_WITH_NAME(char* key, int lineno){
     SymbolTableEntry* temp;
     SymTable_T table = current_table;
 
@@ -151,14 +151,13 @@ SymbolTableEntry* HANDLE_FUNCTION_WITH_NAME(char* key, int lineno){
 
     temp = makeSymbol(key, lineno, scope);
     temp->type = USERFUNC;
-    temp->iadress = nextQuadLabel();
 
     SymTable_insert(table, key, temp);
 
-	return temp;
+	return temp->name;
 }
 
-SymbolTableEntry* HANDLE_FUNCTION_WITHOUT_NAME(int lineno){
+char* HANDLE_FUNCTION_WITHOUT_NAME(int lineno){
     SymbolTableEntry* temp;
     SymTable_T table = current_table;
     char* funcname = malloc(countDigits(anon_count) + 2);
@@ -167,18 +166,37 @@ SymbolTableEntry* HANDLE_FUNCTION_WITHOUT_NAME(int lineno){
 
     temp = makeSymbol(funcname, lineno, scope);
     temp->type = USERFUNC;
-    temp->iadress = nextQuadLabel();
 
     SymTable_insert(table, funcname, temp);
 
-	return temp;
+	return temp->name;
 }
 
-SymbolTableEntry* SymbolTablePrefix(SymbolTableEntry* funcprefix){
-    // emit(funcstart, funcprefix, NULL, NULL); ???????
+Expr* HANDLE_FUNCPREFIX(char* func_name, int lineno){
+    SymbolTableEntry* temp = SymTable_lookup(current_table ,func_name);
+    Expr* arg;
+
+    temp->iadress = nextQuadLabel();
+
+    arg->sym = temp;
+    arg->type = programfunc_e;
+    arg->strConst = temp->name;
+
+    emit(funcstart, arg, NULL, NULL, 0, lineno);
     stack_push(scopeOffsetStack, currScopeOffset());
     enterScopeSpace();
     resetFormalArgsOffset();
+
+    return temp;
+}
+
+Expr* HANDLE_FUNCDEF(Expr* funcprefix, unsigned funcbody, int lineno){
+    stack_pop(functionScopeStack);
+    exitScopeSpace();
+    funcprefix->sym->totalLocals = funcbody;
+    stack_pop(scopeOffsetStack);
+    restoreCurrScopeOffset(stack_top(scopeOffsetStack));
+    emit(funcend, funcprefix, NULL, NULL, 0, lineno);
 }
 
 void HANDLE_TERM_TO_INC_LVALUE(SymbolTableEntry* entry, int lineno){

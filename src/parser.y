@@ -4,11 +4,11 @@
 	#include <string.h>
 	#include <assert.h>
 	#include <stdbool.h>
-    #include "symtable.h"
-    #include "structs.h"
-    #include "stack.h"
-	#include "rule_handler.h"
-	#include "parser.h"
+    #include "../include/symtable.h"
+    #include "../include/structs.h"
+    #include "../include/stack.h"
+	#include "../include/rule_handler.h"
+	#include "../include/parser.h"
 
     int yyerror(char* message);
     int yylex(void);
@@ -39,7 +39,9 @@
              CURLY_OPEN CURLY_CLOSED SQUARE_OPEN SQUARE_CLOSED
              PAR_OPEN PAR_CLOSED SEMI_COLON COMMA COLON DOUBLE_COLON
              DOT DOUBLE_DOT UMINUS
-%type<symval> funcdef funcprefix
+%type<exprval> funcdef funcprefix
+%type<sval> funcname
+%type<func_addr> funcbody
 %type<exprval> lvalue expression term assignexpr 
 
 
@@ -167,12 +169,34 @@ indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED ;
 
 block:          CURLY_OPEN {scope++; current_table = SymTable_next(current_table);} statements CURLY_CLOSED {scope--; SymTable_hide(current_table); current_table = SymTable_prev(current_table);};
 
-funcdef:        funcprefix funcargs block {stack_pop(functionScopeStack);} ;
+funcdef:        funcprefix funcargs funcbody {$$ = HANDLE_FUNCDEF($1, $3, yylineno);} ;
 
-funcargs:       PAR_OPEN {scope++; current_table = SymTable_next(current_table);} idlist {scope--; current_table = SymTable_prev(current_table); stack_push(functionScopeStack, scope);}PAR_CLOSED ;
+funcbody:       block {
+                    $$ = currScopeOffset();
+                    exitScopeSpace();
+                };
 
-funcprefix:     FUNCTION IDENT          {$$ = HANDLE_FUNCTION_WITH_NAME($1, yylineno);}
-                | FUNCTION              {$$ = HANDLE_FUNCTION_WITHOUT_NAME(yylineno);}
+funcprefix:     FUNCTION funcname {$$ = HANDLE_FUNCPREFIX($2, yylineno);};
+
+funcargs:       PAR_OPEN 
+                {
+                    scope++; 
+                    current_table = SymTable_next(current_table);
+                } 
+                idlist 
+                {
+                    scope--;
+                    current_table = SymTable_prev(current_table); 
+                    stack_push(functionScopeStack, scope);
+                } 
+                PAR_CLOSED
+                {
+                    enterScopeSpace();
+                    resetFunctionLocalOffset();
+                };
+
+funcname:       IDENT          {$$ = HANDLE_FUNCTION_WITH_NAME($1, yylineno);}
+                |              {$$ = HANDLE_FUNCTION_WITHOUT_NAME(yylineno);}
                 ;
 
 const:          NUM | STRING | NIL | TRUE | FALSE ;

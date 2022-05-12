@@ -75,6 +75,7 @@ typedef struct SymbolTableEntry {
 
     //function exlusives
     unsigned iadress;
+    unsigned totalLocals;
 } SymbolTableEntry;
 
 typedef struct Expr {

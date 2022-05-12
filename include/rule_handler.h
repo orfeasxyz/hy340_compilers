@@ -12,9 +12,11 @@ void HANDLE_TERM_TO_LVALUE_INC(SymbolTableEntry*, int);
 void HANDLE_TERM_TO_DEC_LVALUE(SymbolTableEntry*, int);
 void HANDLE_TERM_TO_LVALUE_DEC(SymbolTableEntry*, int);
 void HANDLE_PRIM_TO_LVALUE(SymbolTableEntry*, int);
+Expr* HANDLE_FUNCPREFIX(char*, int);
+Expr* HANDLE_FUNCDEF(Expr*, unsigned, int);
 char* HANDLE_IDLIST_IDENT(char*, int);
-SymbolTableEntry* HANDLE_FUNCTION_WITH_NAME(char*, int);
-SymbolTableEntry* HANDLE_FUNCTION_WITHOUT_NAME(int);
+char* HANDLE_FUNCTION_WITH_NAME(char*, int);
+char* HANDLE_FUNCTION_WITHOUT_NAME(int);
 void HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION(SymbolTableEntry*, int);
 void libFunc(SymTable_T, char*);
 
