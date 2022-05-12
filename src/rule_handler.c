@@ -151,12 +151,11 @@ SymbolTableEntry* HANDLE_FUNCTION_WITH_NAME(char* key, int lineno){
 
     temp = makeSymbol(key, lineno, scope);
     temp->type = USERFUNC;
-
-
+    temp->iadress = nextQuadLabel();
 
     SymTable_insert(table, key, temp);
 
-	return temp->name;
+	return temp;
 }
 
 SymbolTableEntry* HANDLE_FUNCTION_WITHOUT_NAME(int lineno){
@@ -168,10 +167,18 @@ SymbolTableEntry* HANDLE_FUNCTION_WITHOUT_NAME(int lineno){
 
     temp = makeSymbol(funcname, lineno, scope);
     temp->type = USERFUNC;
+    temp->iadress = nextQuadLabel();
 
     SymTable_insert(table, funcname, temp);
 
-	return temp->name;
+	return temp;
+}
+
+SymbolTableEntry* SymbolTablePrefix(SymbolTableEntry* funcprefix){
+    // emit(funcstart, funcprefix, NULL, NULL); ???????
+    stack_push(scopeOffsetStack, currScopeOffset());
+    enterScopeSpace();
+    resetFormalArgsOffset();
 }
 
 void HANDLE_TERM_TO_INC_LVALUE(SymbolTableEntry* entry, int lineno){
