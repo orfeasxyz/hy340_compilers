@@ -3,11 +3,11 @@
 #include <string.h>
 #include <stdlib.h>
 
-unsigned scope = 0;
-unsigned anon_count = 0;
-quad*        quads = (void*)0; // quad vector
-unsigned    total = 0;
-unsigned    currQuad = 0;
+unsigned	scope = 0;
+unsigned	anon_count = 0;
+quad*		quads = (void*)0; // quad vector
+unsigned	total = 0;
+unsigned	currQuad = 0;
 
 void expand (void) {
     assert(total == currQuad);

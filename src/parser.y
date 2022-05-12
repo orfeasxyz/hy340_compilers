@@ -39,7 +39,7 @@
              CURLY_OPEN CURLY_CLOSED SQUARE_OPEN SQUARE_CLOSED
              PAR_OPEN PAR_CLOSED SEMI_COLON COMMA COLON DOUBLE_COLON
              DOT DOUBLE_DOT UMINUS
-%type<exprval> funcdef funcprefix
+%type<symval> funcdef funcprefix
 %type<sval> funcname
 %type<func_addr> funcbody
 %type<exprval> lvalue expression term assignexpr 
@@ -226,6 +226,15 @@ returnstmt:     RETURN SEMI_COLON
 int yyerror(char *message){
     printf("Error on line %d: %s\n", yylineno, message);
     return -1;
+}
+
+void print_quad() {
+	for (int i = 0; i < total; ++i) {
+		printf("%-4u %-15s %-10s %-10s %-10s %-4u\n",
+			quads[i].line,
+			iop2str(quads[i].op),
+			expr2str(quads[i].
+
 }
 
 int main(int argc, char **argv) {
