@@ -5,6 +5,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+
+Expr* emitIfTableItem(Expr* e);
 
 int isVar(SymbolTableEntry* temp){
     return temp->type == VAR_FORMAL || temp->type == VAR_GLOBAL || temp->type == VAR_LOCAL;
@@ -17,10 +20,10 @@ Expr* makeExpr(SymbolTableEntry* sym){
     e->next = (Expr*) 0;
     e->sym = sym;
 
-    if(isVar(sym))                  e->type = var_e;
-    else if(sym->type = USERFUNC)   e->type = programfunc_e;
-    else if(sym->type = LIBFUNC)    e->type = libraryfunc_e;
-    else                            assert(0);
+    if(isVar(sym))                   e->type = var_e;
+    else if(sym->type == USERFUNC)   e->type = programfunc_e;
+    else if(sym->type == LIBFUNC)    e->type = libraryfunc_e;
+    else                             assert(0);
 
     return e;
 }
@@ -143,7 +146,8 @@ Expr* HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION(Expr* lvalue, Expr* expressi
             0,
             lineno
         );
-    }   
+    }
+    return temp;   
 }
 
 // =======================================================================================
@@ -220,7 +224,7 @@ char* HANDLE_FUNCTION_WITHOUT_NAME(int lineno){
 
 SymbolTableEntry* HANDLE_FUNCPREFIX(char* func_name, int lineno){
     SymbolTableEntry* temp = SymTable_lookup(current_table ,func_name);
-    Expr* arg = makeExpr(programfunc_e);
+    Expr* arg = newExpr(programfunc_e);
 
     temp->iadress = nextQuadLabel();
 
@@ -236,7 +240,7 @@ SymbolTableEntry* HANDLE_FUNCPREFIX(char* func_name, int lineno){
 }
 
 SymbolTableEntry* HANDLE_FUNCDEF(SymbolTableEntry* funcprefix, unsigned funcbody, int lineno){
-    Expr* arg = makeExpr(programfunc_e);
+    Expr* arg = newExpr(programfunc_e);
 
     arg->sym = funcprefix;
     arg->strConst = funcprefix->name;
@@ -255,7 +259,7 @@ SymbolTableEntry* HANDLE_FUNCDEF(SymbolTableEntry* funcprefix, unsigned funcbody
 void HANDLE_TERM_TO_INC_LVALUE(Expr* lvalue, int lineno){
     if(!lvalue) return;
 
-    if(!isVar(lvalue)){
+    if(!isVar(lvalue->sym)){
         fprintf(stderr, "Line %d: Function %s can't be referenced after ++ operator\n", lineno, lvalue->sym->name);
         return;
     }
@@ -270,7 +274,7 @@ void HANDLE_TERM_TO_INC_LVALUE(Expr* lvalue, int lineno){
 void HANDLE_TERM_TO_LVALUE_INC(Expr* lvalue, int lineno){
     if(!lvalue) return;
 
-    if(!isVar(lvalue)){
+    if(!isVar(lvalue->sym)){
         fprintf(stderr, "Line %d: Function %s can't be referenced before ++ operator\n", lineno, lvalue->sym->name);
         return;
     }
@@ -285,7 +289,7 @@ void HANDLE_TERM_TO_LVALUE_INC(Expr* lvalue, int lineno){
 void HANDLE_TERM_TO_DEC_LVALUE(Expr* lvalue, int lineno){
     if(!lvalue) return;
 
-    if(!isVar(lvalue)){
+    if(!isVar(lvalue->sym)){
         fprintf(stderr, "Line %d: Function %s can't be referenced after -- operator\n", lineno, lvalue->sym->name);
         return;
     }
@@ -300,7 +304,7 @@ void HANDLE_TERM_TO_DEC_LVALUE(Expr* lvalue, int lineno){
 void HANDLE_TERM_TO_LVALUE_DEC(Expr* lvalue, int lineno){
     if(!lvalue) return;
 
-    if(!isVar(lvalue)){
+    if(!isVar(lvalue->sym)){
         fprintf(stderr, "Line %d: Function %s can't be referenced before -- operator\n", lineno, lvalue->sym->name);
         return;
     }

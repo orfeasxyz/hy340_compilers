@@ -228,14 +228,7 @@ int yyerror(char *message){
     return -1;
 }
 
-void print_quad() {
-	for (int i = 0; i < total; ++i) {
-		printf("%-4u %-15s %-10s %-10s %-10s %-4u\n",
-			quads[i].line,
-			iop2str(quads[i].op),
-			expr2str(quads[i].
 
-}
 
 int main(int argc, char **argv) {
     head = SymTable_new();

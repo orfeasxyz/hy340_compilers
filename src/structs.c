@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 unsigned	scope = 0;
 unsigned	anon_count = 0;
