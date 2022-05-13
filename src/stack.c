@@ -16,6 +16,7 @@ stack_T stack_push(stack_T head, int data){
     temp->data = data;
     temp->next = head;
     head = temp;
+    return head;
 }
 
 int stack_top(stack_T head){
@@ -28,4 +29,5 @@ stack_T stack_pop(stack_T head){
     stack_T temp = head;
     head = head->next;
     free(temp);
+    return head;
 }
