@@ -11,7 +11,7 @@ struct stack{
     struct stack* next;
 };
 
-void stack_push(stack_T head, int data){
+stack_T stack_push(stack_T head, int data){
     stack_T temp = malloc(sizeof(struct stack));
     temp->data = data;
     temp->next = head;
@@ -23,7 +23,7 @@ int stack_top(stack_T head){
     return head->data;
 }
 
-void stack_pop(stack_T head){
+stack_T stack_pop(stack_T head){
     assert(head);
     stack_T temp = head;
     head = head->next;

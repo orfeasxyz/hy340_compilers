@@ -102,18 +102,6 @@ Expr* HANDLE_LVALUE_TO_GLOBAL_IDENT(char* key, int lineno){
 // =======================================================================================
 
 Expr* HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION(Expr* lvalue, Expr* expression, int lineno){
-    // Wrong Syntax
-    // if(!lvalue) return (Expr*) 0;;
-
-    // if(!isVar(lvalue)){
-    //     fprintf(stderr, "Line %d: Function %s can't be an lvalue to an assignment\n", lineno, lvalue->name);
-    //     return (Expr*) 0;
-    // }
-
-    // if(!isLegal(lvalue->scope, stack_top(functionScopeStack)))
-    //     fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, lvalue->name, lvalue->scope, stack_top(functionScopeStack));
-    //     return (Expr*) 0;
-
     Expr* temp;
 
     if(lvalue->type == tableitem_e){
@@ -232,7 +220,7 @@ SymbolTableEntry* HANDLE_FUNCPREFIX(char* func_name, int lineno){
     arg->strConst = temp->name;
 
     emit(funcstart, arg, NULL, NULL, 0, lineno);
-    stack_push(scopeOffsetStack, currScopeOffset());
+    scopeOffsetStack = stack_push(scopeOffsetStack, currScopeOffset());
     enterScopeSpace();
     resetFormalArgsOffset();
 
@@ -245,10 +233,10 @@ SymbolTableEntry* HANDLE_FUNCDEF(SymbolTableEntry* funcprefix, unsigned funcbody
     arg->sym = funcprefix;
     arg->strConst = funcprefix->name;
 
-    stack_pop(functionScopeStack);
+    functionScopeStack = stack_pop(functionScopeStack);
     exitScopeSpace();
     funcprefix->totalLocals = funcbody;
-    stack_pop(scopeOffsetStack);
+    scopeOffsetStack = stack_pop(scopeOffsetStack);
     restoreCurrScopeOffset(stack_top(scopeOffsetStack));
     emit(funcend, arg, NULL, NULL, 0, lineno);
 	return funcprefix;
@@ -317,7 +305,6 @@ void HANDLE_TERM_TO_LVALUE_DEC(Expr* lvalue, int lineno){
 }
 
 Expr* HANDLE_PRIM_TO_LVALUE(Expr* lvalue, int lineno){
-    // Syntax ???                                                                NOTICE ME HERE PLEASEEEEE
     return emitIfTableItem(lvalue);
 }
 

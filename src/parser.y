@@ -187,7 +187,7 @@ funcargs:       PAR_OPEN
                 {
                     scope--;
                     current_table = SymTable_prev(current_table); 
-                    stack_push(functionScopeStack, scope);
+                    functionScopeStack = stack_push(functionScopeStack, scope);
                 } 
                 PAR_CLOSED
                 {

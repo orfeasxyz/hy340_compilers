@@ -5,9 +5,9 @@ typedef struct stack* stack_T;
 
 int stack_top(stack_T);
 
-void stack_push(stack_T, int);
+stack_T stack_push(stack_T, int);
 
-void stack_pop(stack_T);
+stack_T stack_pop(stack_T);
 
 extern stack_T scopeOffsetStack;
 extern stack_T functionScopeStack;
