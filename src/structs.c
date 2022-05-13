@@ -1,4 +1,5 @@
 #include "../include/structs.h"
+#include "../include/symtable.h"
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
@@ -46,6 +47,7 @@ unsigned programVarOffset = 0;
 unsigned functionLocalOffset = 0;
 unsigned formalArgOffset = 0;
 unsigned scopeSpaceCounter = 1;
+unsigned tempCounter = 0;
 
 ScopeSpace currScopeSpace(void){
     if(scopeSpaceCounter == 1){
@@ -121,4 +123,51 @@ unsigned nextQuadLabel(void){
 void patchLabel(unsigned quadNo, unsigned label){
     assert(quadNo < currQuad);
     quads[quadNo].label = label;
+}
+
+char* newTempName(){
+    int count = 0, num = tempCounter;
+    while(num){
+        num /= 10;
+        count++;
+    }
+
+    char* tempName = malloc(count + 3);
+
+    sprintf(tempName, "_t%d", tempCounter);
+
+    return tempName;
+}
+
+void resetTemp() {tempCounter = 0;}
+
+SymbolTableEntry* newTemp(){
+    char* name = newTempName();
+    SymbolTableEntry* sym = SymTable_lookup(current_table, name);
+    if(sym) return sym;
+    return makeSymbol(name, 0, scope);
+}
+
+Expr* newExpr(ExprType t){
+    Expr* e = (Expr*) malloc(sizeof(Expr));
+    memset(e, 0, sizeof(Expr));
+    e->type = t;
+    return e;
+}
+
+Expr* newExprConstString(char* s){
+    Expr* e = newExpr(conststring_e);
+    e->strConst = strdup(s);
+    return e;
+}
+
+SymbolTableEntry* makeSymbol(char* key, int lineno, int scope){
+    SymbolTableEntry* temp = malloc(sizeof(SymbolTableEntry));
+    temp->isActive = 1;
+    temp->name = malloc(sizeof(key) + 1);
+    strcpy(temp->name, key);
+    temp->line = lineno;
+    temp->scope = scope;
+
+    return temp;
 }

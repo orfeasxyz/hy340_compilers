@@ -39,10 +39,10 @@
              CURLY_OPEN CURLY_CLOSED SQUARE_OPEN SQUARE_CLOSED
              PAR_OPEN PAR_CLOSED SEMI_COLON COMMA COLON DOUBLE_COLON
              DOT DOUBLE_DOT UMINUS
-%type<symval> funcdef funcprefix
+%type<symval> funcdef funcprefix 
 %type<sval> funcname
 %type<func_addr> funcbody
-%type<exprval> lvalue expression term assignexpr 
+%type<exprval> lvalue expression term assignexpr prim member call objectdef const
 
 
 %right ASSIGN
@@ -108,7 +108,7 @@ term:           PAR_OPEN expression PAR_CLOSED
                 | prim
                 ;
 
-assignexpr:     lvalue ASSIGN expression{HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, yylineno);};
+assignexpr:     lvalue ASSIGN expression{HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, $3, yylineno);};
 
 prim:           lvalue                  {HANDLE_PRIM_TO_LVALUE($1, yylineno);}
                 | call
@@ -120,11 +120,11 @@ prim:           lvalue                  {HANDLE_PRIM_TO_LVALUE($1, yylineno);}
 lvalue:         IDENT                   {$$ = HANDLE_LVALUE_TO_IDENT($1, yylineno);}
                 | LOCAL IDENT           {$$ = HANDLE_LVALUE_TO_LOCAL_IDENT($2, yylineno);}
                 | DOUBLE_COLON IDENT    {$$ = HANDLE_LVALUE_TO_GLOBAL_IDENT($2, yylineno);}
-                | member                {}
+                | member                {$$ = $1;}
                 ;
 
-member:         lvalue DOT IDENT
-                | lvalue SQUARE_OPEN expression SQUARE_CLOSED
+member:         lvalue DOT IDENT                                {$$ = HANDLE_MEMBER_TO_LVALUE_DOT_IDENT($1, $3);}
+                | lvalue SQUARE_OPEN expression SQUARE_CLOSED   {$$ = HANDLE_MEMBER_TO_LVALUE_SQUARE_EXPR($1, $3);}
                 | call DOT IDENT
                 | call SQUARE_OPEN expression SQUARE_CLOSED
                 ;

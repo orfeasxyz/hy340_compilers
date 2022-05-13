@@ -61,9 +61,6 @@ typedef enum ExprType {
 	nil_e
 } ExprType;
 
-
-
-
 typedef struct SymbolTableEntry {
     int isActive;
     ScopeSpace space;
@@ -124,6 +121,13 @@ extern unsigned functionLocalOffset;
 extern unsigned formalArgOffset;
 extern unsigned scopeSpaceCounter;
 
+extern unsigned tempCounter;
+
+char* newTempName();
+void resetTemp();
+SymbolTableEntry* newTemp();
+
+SymbolTableEntry* makeSymbol(char*, int, int);
 ScopeSpace currScopeSpace(void);
 unsigned currScopeOffset(void);
 void incCurrScopeOffset(void);
@@ -134,5 +138,7 @@ void resetFunctionLocalOffset(void);
 void restoreCurrScopeOffset(unsigned n);
 unsigned nextQuadLabel(void);
 void patchLabel(unsigned quadNo, unsigned label);
+Expr* newExpr(ExprType t);
+Expr* newExprConstString(char* s);
 
 #endif // _STRUCTS_H_
