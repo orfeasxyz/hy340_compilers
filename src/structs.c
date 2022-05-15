@@ -187,5 +187,107 @@ void checkArith(Expr* e, const char* context){
         e->type == programfunc_e ||
         e->type == libraryfunc_e ||
         e->type == boolexpr_e )
-    comperror("Illegal expr used in %s!", context);
+    fprintf(stderr,"Illegal expr used in %s!", context);
+}
+
+int boolVal(Expr *e) {
+    switch (e->type) {
+        case constbool_e:
+            return e->boolConst;
+        case constnum_e:
+            return e->numConst != 0;
+        case conststring_e:
+            return strlen(e->strConst) != 0;
+        case nil_e:
+            return 0;
+        case tableitem_e:
+            return 1;
+        case arithmexpr_e:
+            return e->numConst != 0;
+        case boolexpr_e:
+            return e->boolConst;
+        case programfunc_e:
+            return 1;
+        case libraryfunc_e:
+            return 1;
+        default:
+            assert(0);
+    }
+}
+
+char* getStringValueQuad(Expr* e){
+    switch(e->type){
+        case conststring_e:
+            return e->strConst;
+        case constnum_e:{
+            char* str = malloc(sizeof(char) * 32);
+            sprintf(str, "%f", e->numConst);
+            return str;
+        }
+        case nil_e:
+            return "nil";
+        case tableitem_e:
+            return e->sym->name;
+        case programfunc_e:
+            return e->sym->name;
+        case libraryfunc_e:
+            return e->sym->name;
+        case boolexpr_e:
+            return e->sym->name;
+        case arithmexpr_e:{
+            char* str = malloc(sizeof(char) * 32);
+            sprintf(str, "%f", e->numConst);
+            return str;
+        }
+        case newtable_e:
+            return "table";
+        case constbool_e:
+            return e->boolConst ? "true" : "false";
+        default: assert(0);
+    }
+}
+
+char* iopcodeName(quad* quad){
+    switch (quad->op)
+    {
+        case assign: return "assign";
+        case mul: return "mul";
+        case uminus: return "uminus";
+        case not: return "not";
+        case if_lesseq: return "if_lesseq";
+        case if_greater: return "if_greater";
+        case ret: return "ret";
+        case funcend: return "funcend";
+        case tablegetelem: return "tablegetelement";
+        case add: return "add";
+        case mydiv: return "mydiv";
+        case and: return "and";
+        case if_eq: return "if_eq";
+        case if_geatereq: return "if_geatereq";
+        case call: return "call";
+        case getretval: return "getretval";
+        case tablecreate: return "tablecreate";
+        case sub: return "sub";
+        case mod: return "mod";
+        case or: return "or";
+        case if_noteq: return "if_noteq";
+        case if_less: return "if_less";
+        case param: return "param";
+        case funcstart: return "funcstart";
+        default: assert(0);
+    }
+}
+
+void printQuads(quad* quads) {
+    printf("quad# |  opcode   |  result  | arg1  |  arg2  |  label  |\n");
+    for (int i = 0; i < currQuad; i++) {
+        quad* q = &quads[i];
+        printf("%4d | %10s | %10s | %10s | %10s | %10d |\n",
+        i,
+        iopcodeName(q),
+        getStringValueQuad(q->result),
+        getStringValueQuad(q->arg1),
+        getStringValueQuad(q->arg2),
+        q->label? q->label : 0);
+    }
 }

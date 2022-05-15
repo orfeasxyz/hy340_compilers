@@ -148,6 +148,8 @@ void patchLabel(unsigned quadNo, unsigned label);
 Expr* newExpr(ExprType t);
 Expr* newExprConstString(char* s);
 Expr* newExprConstNum(double i);
-void chekcArith(Expr*, const char*);
-
+void checkArith(Expr*, const char*);
+int boolVal(Expr *);
+char* getStringValueQuad(Expr*);
+char* iopcodeName(quad*);
 #endif // _STRUCTS_H_

@@ -250,7 +250,7 @@ Expr* HANDLE_TERM_TO_INC_LVALUE(Expr* lvalue, int lineno){
     if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack))) 
         fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, lvalue->sym->name, lvalue->sym->scope, stack_top(functionScopeStack));
 
-    chekcArith(lvalue, "INC LVALUE");
+    checkArith(lvalue, "INC LVALUE");
     Expr* temp = newExpr(var_e);
     temp->sym = newTemp();
     if(lvalue->type == tableitem_e){
@@ -272,10 +272,10 @@ Expr* HANDLE_TERM_TO_LVALUE_INC(Expr* lvalue, int lineno){
     if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack)))
         fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, lvalue->sym->name, lvalue->sym->scope, stack_top(functionScopeStack));
 
-    chekcArith(lvalue, "LVALUE INC");
+    checkArith(lvalue, "LVALUE INC");
     Expr* temp;
     if(lvalue->type == tableitem_e){
-        temp = emitIfTableItem(arithmexpr_e);
+        temp = emitIfTableItem(lvalue);
         emit(add, temp, newExprConstNum(1), temp, 0, lineno);
         emit(tablesetelem, lvalue, lvalue->index, temp, 0, lineno);
     } else {
@@ -288,13 +288,13 @@ Expr* HANDLE_TERM_TO_LVALUE_INC(Expr* lvalue, int lineno){
     return temp;
 }
 
-void HANDLE_TERM_TO_DEC_LVALUE(Expr* lvalue, int lineno){
+Expr* HANDLE_TERM_TO_DEC_LVALUE(Expr* lvalue, int lineno){
     if(!lvalue) return (Expr*) 0;
 
     if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack)))
         fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, lvalue->sym->name, lvalue->sym->scope, stack_top(functionScopeStack));
 
-    chekcArith(lvalue, "DEC LVALUE");
+    checkArith(lvalue, "DEC LVALUE");
     Expr* temp = newExpr(var_e);
     temp->sym = newTemp();
     if(lvalue->type == tableitem_e){
@@ -310,16 +310,16 @@ void HANDLE_TERM_TO_DEC_LVALUE(Expr* lvalue, int lineno){
     return temp;
 }
 
-void HANDLE_TERM_TO_LVALUE_DEC(Expr* lvalue, int lineno){
+Expr* HANDLE_TERM_TO_LVALUE_DEC(Expr* lvalue, int lineno){
     if(!lvalue) return (Expr*) 0;
 
     if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack)))
         fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, lvalue->sym->name, lvalue->sym->scope, stack_top(functionScopeStack));
 
-    chekcArith(lvalue, "LVALUE DEC");
+    checkArith(lvalue, "LVALUE DEC");
     Expr* temp;
     if(lvalue->type == tableitem_e){
-        temp = emitIfTableItem(arithmexpr_e);
+        temp = emitIfTableItem(lvalue);
         emit(sub, temp, newExprConstNum(1), temp, 0, lineno);
         emit(tablesetelem, lvalue, lvalue->index, temp, 0, lineno);
     } else {
@@ -333,7 +333,7 @@ void HANDLE_TERM_TO_LVALUE_DEC(Expr* lvalue, int lineno){
 }
 
 Expr* HANDLE_TERM_TO_UMINUS_EXPR(Expr* expression){
-    chekcArith(expression, "Uminus expression");
+    checkArith(expression, "Uminus expression");
     Expr* temp = newExpr(arithmexpr_e);
     temp->sym = newTemp();
     emit(uminus, expression, NULL, temp, 0, expression->sym->line);
@@ -344,6 +344,7 @@ Expr* HANDLE_TERM_TO_NOT_EXPR(Expr* expression){
     Expr* temp = newExpr(boolexpr_e);
     temp->sym = newTemp();
     emit(not, expression, NULL, temp, 0, expression->sym->line);
+    return temp;
 }
 
 Expr* HANDLE_PRIM_TO_LVALUE(Expr* lvalue, int lineno){
@@ -400,7 +401,7 @@ Expr* HANDLE_PRIM_TO_FUNCDEF(SymbolTableEntry* funcdef){
 // =======================================================================================
 
 Expr* makeCall (Expr* lvalue, Expr* reversed_elist) {
-    Expr* func = emit_iftableitem(lvalue);
+    Expr* func = emitIfTableItem(lvalue);
     while (reversed_elist) {
         emit(param, reversed_elist, NULL, NULL, 0, lvalue->sym->line);
         reversed_elist = reversed_elist->next;
@@ -423,17 +424,17 @@ Call* HANDLE_METHODCALL(char* name, Expr* elist){
     return temp; 
 }
 
-Call* HANDLE_CALL_ELIST(Call* call, Expr* elist){
+Expr* HANDLE_CALL_ELIST(Expr* call, Expr* elist){
     return makeCall(call, elist);
 }
 
-Call* HANDLE_CALL_FUNCDEF_ELIST(SymbolTableEntry* funcdef, Expr* elist){
+Expr* HANDLE_CALL_FUNCDEF_ELIST(SymbolTableEntry* funcdef, Expr* elist){
     Expr* func = newExpr(programfunc_e);
     func->sym = funcdef;
     return makeCall(func, elist);
 }
 
-Call* HANDLE_CALL_LVALUE_SUFFIX(Expr* lvalue, Call* callsuffix){
+Expr* HANDLE_CALL_LVALUE_SUFFIX(Expr* lvalue, Call* callsuffix){
     lvalue = emitIfTableItem(lvalue);
     if(callsuffix->method){
         Expr* t = lvalue;
@@ -470,7 +471,7 @@ Expr* HANDLE_OBJECTDEF_TO_INDEXED(Expr* indexed){
     Expr* t = newExpr(newtable_e);
     t->sym = newTemp();
     emit(tablecreate, t, NULL, NULL, 0, indexed->sym->line);
-    for(; indexed; indexed->next){
+    for(; indexed; indexed = indexed->next){
         emit(tablesetelem, t, indexed->index, indexed, 0, indexed->sym->line);
     }
 

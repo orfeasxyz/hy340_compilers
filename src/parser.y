@@ -43,7 +43,7 @@
 %type<symval> funcdef funcprefix 
 %type<sval> funcname
 %type<func_addr> funcbody
-%type<exprval> lvalue expression term assignexpr prim member call objectdef const elist indexed
+%type<exprval> lvalue expression term assignexpr prim member call objectdef const elist indexed indexedelem
 %type<callval> callsuffix normcall methodcall 
 
 
@@ -140,7 +140,7 @@ callsuffix:     normcall        {$$ = $1;}
                 | methodcall    {$$ = $1;}
                 ;
 
-normcall:       PAR_OPEN elist PAR_CLOSED                      {$$ = HANDLE_NORMCALL($1);};
+normcall:       PAR_OPEN elist PAR_CLOSED                      {$$ = HANDLE_NORMCALL($2);};
 
 methodcall:     DOUBLE_DOT IDENT PAR_OPEN elist PAR_CLOSED     {$$ = HANDLE_METHODCALL($2, $4);};
 
