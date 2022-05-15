@@ -152,4 +152,5 @@ void checkArith(Expr*, const char*);
 int boolVal(Expr *);
 char* getStringValueQuad(Expr*);
 char* iopcodeName(quad*);
+void printQuads(void);
 #endif // _STRUCTS_H_

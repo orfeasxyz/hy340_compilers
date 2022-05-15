@@ -243,6 +243,10 @@ char* getStringValueQuad(Expr* e){
             return "table";
         case constbool_e:
             return e->boolConst ? "true" : "false";
+        case var_e:
+            return e->sym->name;
+        case assignexpr_e:
+            return "assignexpr";
         default: assert(0);
     }
 }
@@ -278,16 +282,16 @@ char* iopcodeName(quad* quad){
     }
 }
 
-void printQuads(quad* quads) {
+void printQuads(void) {
     printf("quad# |  opcode   |  result  | arg1  |  arg2  |  label  |\n");
     for (int i = 0; i < currQuad; i++) {
         quad* q = &quads[i];
         printf("%4d | %10s | %10s | %10s | %10s | %10d |\n",
         i,
         iopcodeName(q),
-        getStringValueQuad(q->result),
-        getStringValueQuad(q->arg1),
-        getStringValueQuad(q->arg2),
-        q->label? q->label : 0);
+        (q->result != NULL ? getStringValueQuad(q->result) : " "),
+        (q->arg1 != NULL ? getStringValueQuad(quads->arg1) : " "),
+        (quads->arg2 != NULL ? getStringValueQuad(quads->arg2) : " "),
+        q->label ? q->label : 0);
     }
 }

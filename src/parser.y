@@ -270,5 +270,6 @@ int main(int argc, char **argv) {
 
 	yyparse();
     SymTable_print(head);
+    printQuads();
     return 0;	
 }
