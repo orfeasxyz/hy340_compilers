@@ -30,6 +30,7 @@
 	char* lib_addr;
     struct SymbolTableEntry* symval;
     struct Expr* exprval;
+    struct Call* callval;
 }
 
 %token<nval> NUM
@@ -42,7 +43,8 @@
 %type<symval> funcdef funcprefix 
 %type<sval> funcname
 %type<func_addr> funcbody
-%type<exprval> lvalue expression term assignexpr prim member call objectdef const
+%type<exprval> lvalue expression term assignexpr prim member call objectdef const elist indexed
+%type<callval> callsuffix normcall methodcall 
 
 
 %right ASSIGN
@@ -98,22 +100,22 @@ expression:     assignexpr
                 | term
                 ;
 
-term:           PAR_OPEN expression PAR_CLOSED
-                | UMINUS expression
-                | NOT expression
-                | INC lvalue            {HANDLE_TERM_TO_INC_LVALUE($2, yylineno);}
-                | lvalue INC            {HANDLE_TERM_TO_LVALUE_INC($1, yylineno);}
-                | DEC lvalue            {HANDLE_TERM_TO_DEC_LVALUE($2, yylineno);}
-                | lvalue DEC            {HANDLE_TERM_TO_LVALUE_DEC($1, yylineno);}
-                | prim
+term:           PAR_OPEN expression PAR_CLOSED  {$$ = $2;}
+                | UMINUS expression             {$$ = HANDLE_TERM_TO_UMINUS_EXPR($2);}
+                | NOT expression                {$$ = HANDLE_TERM_TO_NOT_EXPR($2);}
+                | INC lvalue                    {$$ = HANDLE_TERM_TO_INC_LVALUE($2, yylineno);}
+                | lvalue INC                    {$$ = HANDLE_TERM_TO_LVALUE_INC($1, yylineno);}
+                | DEC lvalue                    {HANDLE_TERM_TO_DEC_LVALUE($2, yylineno);}
+                | lvalue DEC                    {HANDLE_TERM_TO_LVALUE_DEC($1, yylineno);}
+                | prim                          {$$ = $1;}
                 ;
 
-assignexpr:     lvalue ASSIGN expression{HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, $3, yylineno);};
+assignexpr:     lvalue ASSIGN expression        {HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, $3, yylineno);};
 
-prim:           lvalue                  {HANDLE_PRIM_TO_LVALUE($1, yylineno);}
+prim:           lvalue                          {HANDLE_PRIM_TO_LVALUE($1, yylineno);}
                 | call
                 | objectdef
-                | PAR_OPEN funcdef PAR_CLOSED
+                | PAR_OPEN funcdef PAR_CLOSED   {$$ = HANDLE_PRIM_TO_FUNCDEF($2);}
                 | const
                 ;
 
@@ -129,20 +131,20 @@ member:         lvalue DOT IDENT                                {$$ = HANDLE_MEM
                 | call SQUARE_OPEN expression SQUARE_CLOSED
                 ;
 
-call:           call PAR_OPEN elist PAR_CLOSED
-                | lvalue callsuffix     
-                | PAR_OPEN funcdef PAR_CLOSED PAR_OPEN elist PAR_CLOSED
+call:           call PAR_OPEN elist PAR_CLOSED                              {$$ = HANDLE_CALL_ELIST($1, $3);}
+                | lvalue callsuffix                                         {$$ = HANDLE_CALL_LVALUE_SUFFIX($1, $2);}
+                | PAR_OPEN funcdef PAR_CLOSED PAR_OPEN elist PAR_CLOSED     {$$ = HANDLE_CALL_FUNCDEF_ELIST($2, $5);}
                 ;
 
-callsuffix:     normcall
-                | methodcall
+callsuffix:     normcall        {$$ = $1;}
+                | methodcall    {$$ = $1;}
                 ;
 
-normcall:       PAR_OPEN elist PAR_CLOSED;
+normcall:       PAR_OPEN elist PAR_CLOSED                      {$$ = HANDLE_NORMCALL($1);};
 
-methodcall:     DOUBLE_DOT IDENT PAR_OPEN elist PAR_CLOSED ;
+methodcall:     DOUBLE_DOT IDENT PAR_OPEN elist PAR_CLOSED     {$$ = HANDLE_METHODCALL($2, $4);};
 
-elist:          expression elist_alt
+elist:          expression elist_alt                           
                 |
                 ;
 
@@ -150,11 +152,9 @@ elist_alt:      COMMA expression elist_alt
                 | 
                 ;
 
-objectdef:      SQUARE_OPEN expression SQUARE_CLOSED
-                | SQUARE_OPEN expression COMMA elist SQUARE_CLOSED
-                | SQUARE_OPEN indexedelem SQUARE_CLOSED
-                | SQUARE_OPEN indexedelem COMMA indexed SQUARE_CLOSED
-                | SQUARE_OPEN SQUARE_CLOSED
+objectdef:      SQUARE_OPEN elist SQUARE_CLOSED                {$$ = HANDLE_OBJECTDEF_TO_ELIST($2);}
+                | SQUARE_OPEN indexedelem SQUARE_CLOSED        {$$ = HANDLE_OBJECTDEF_TO_INDEXED($2);}
+                | SQUARE_OPEN SQUARE_CLOSED                    {$$ = HANDLE_OBJECTDEF();}
                 ;
 
 indexed:        indexedelem indexed_alt

@@ -15,7 +15,8 @@ typedef enum iopcode {
     and, 
     if_eq, 
     if_geatereq,
-    call, getretval, 
+    call,
+    getretval, 
     tablecreate, 
     tablesetelem,
     sub, 
@@ -79,7 +80,7 @@ typedef struct Expr {
 	ExprType			type;
 	SymbolTableEntry*	sym;
 	struct Expr*	    index;
-	double			    numCosnt;
+	double			    numConst;
 	char*			    strConst;
 	unsigned char	    boolConst;
 
@@ -94,6 +95,12 @@ typedef struct quad {
 	unsigned	label;
 	unsigned	line;
 } quad;
+
+typedef struct Call {
+    Expr*           elist;
+    unsigned char   method;
+    char*           name;
+} Call;
 
 extern quad*	quads;
 extern unsigned	total;
@@ -140,5 +147,7 @@ unsigned nextQuadLabel(void);
 void patchLabel(unsigned quadNo, unsigned label);
 Expr* newExpr(ExprType t);
 Expr* newExprConstString(char* s);
+Expr* newExprConstNum(double i);
+void chekcArith(Expr*, const char*);
 
 #endif // _STRUCTS_H_

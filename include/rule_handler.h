@@ -8,8 +8,8 @@ void libFunc(SymTable_T, char*);
 Expr* HANDLE_LVALUE_TO_IDENT(char*, int);
 Expr* HANDLE_LVALUE_TO_LOCAL_IDENT(char*, int);
 Expr* HANDLE_LVALUE_TO_GLOBAL_IDENT(char*, int);
-void HANDLE_TERM_TO_INC_LVALUE(Expr*, int);
-void HANDLE_TERM_TO_LVALUE_INC(Expr*, int);
+Expr* HANDLE_TERM_TO_INC_LVALUE(Expr*, int);
+Expr* HANDLE_TERM_TO_LVALUE_INC(Expr*, int);
 void HANDLE_TERM_TO_DEC_LVALUE(Expr*, int);
 void HANDLE_TERM_TO_LVALUE_DEC(Expr*, int);
 Expr* HANDLE_PRIM_TO_LVALUE(Expr*, int);
@@ -21,7 +21,16 @@ char* HANDLE_FUNCTION_WITHOUT_NAME(int);
 Expr* HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION(Expr*, Expr*, int);
 Expr* HANDLE_MEMBER_TO_LVALUE_DOT_IDENT(Expr*, char*);
 Expr* HANDLE_MEMBER_TO_LVALUE_SQUARE_EXPR(Expr*, Expr*);
-
-
+Call* HANDLE_METHODCALL(char*, Expr*);
+Call* HANDLE_CALL_ELIST(Call*, Expr*);
+Call* HANDLE_CALL_FUNCDEF_ELIST(SymbolTableEntry*, Expr*);
+Call* HANDLE_CALL_LVALUE_SUFFIX(Expr*, Call*);
+Call* HANDLE_NORMCALL(Expr*);
+Expr* HANDLE_OBJECTDEF_TO_ELIST(Expr*);
+Expr* HANDLE_OBJECTDEF_TO_INDEXED(Expr*);
+Expr* HANDLE_OBJECTDEF(void);
+Expr* HANDLE_PRIM_TO_FUNCDEF(SymbolTableEntry*);
+Expr* HANDLE_TERM_TO_UMINUS_EXPR(Expr*);
+Expr* HANDLE_TERM_TO_NOT_EXPR(Expr*);
 
 #endif  // _RULE_HANDLERS_H_

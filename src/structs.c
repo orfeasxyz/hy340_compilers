@@ -162,6 +162,12 @@ Expr* newExprConstString(char* s){
     return e;
 }
 
+Expr* newExprConstNum(double i){
+    Expr* e = newExpr(constnum_e);
+    e->numConst = i;
+    return e;
+}
+
 SymbolTableEntry* makeSymbol(char* key, int lineno, int scope){
     SymbolTableEntry* temp = malloc(sizeof(SymbolTableEntry));
     temp->isActive = 1;
@@ -171,4 +177,15 @@ SymbolTableEntry* makeSymbol(char* key, int lineno, int scope){
     temp->scope = scope;
 
     return temp;
+}
+
+void checkArith(Expr* e, const char* context){
+    if (e->type == constbool_e ||
+        e->type == conststring_e ||
+        e->type == nil_e ||
+        e->type == newtable_e ||
+        e->type == programfunc_e ||
+        e->type == libraryfunc_e ||
+        e->type == boolexpr_e )
+    comperror("Illegal expr used in %s!", context);
 }
