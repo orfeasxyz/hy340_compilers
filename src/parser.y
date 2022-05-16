@@ -147,6 +147,7 @@ methodcall:     DOUBLE_DOT IDENT PAR_OPEN elist PAR_CLOSED     {$$ = HANDLE_METH
 
 elist:          expression
                 | expression COMMA elist
+				|
                 ;
 
 objectdef:      SQUARE_OPEN objectarg SQUARE_CLOSED  {$$ = $2;};
@@ -201,7 +202,7 @@ const:          NUM         {$$ = newExprConstNum($1);}
                 ;
 
 idlist:         IDENT                   {HANDLE_IDLIST_IDENT($1, yylineno);}
-                | IDENT COMMA idlist    {/* TO DO */} 
+                | IDENT COMMA idlist    {/* TODO */} 
                 ;
 
 ifstmt:         IF PAR_OPEN expression PAR_CLOSED statement %prec LOWER_THAN_ELSE

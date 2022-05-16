@@ -13,6 +13,7 @@ typedef enum iopcode {
     tablegetelem,  
     add, 
     mydiv, //conflict with stdlib.h
+	jump,
     and, 
     if_eq, 
     if_geatereq,
@@ -153,6 +154,6 @@ Expr* newExprConstBool(unsigned char b);
 void checkArith(Expr*, const char*);
 int boolVal(Expr *);
 char* getStringValueQuad(Expr*);
-char* iopcodeName(quad*);
+const char* iopcodeName(quad*);
 void printQuads(void);
 #endif // _STRUCTS_H_

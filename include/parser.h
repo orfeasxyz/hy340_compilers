@@ -168,8 +168,9 @@ union YYSTYPE
 	char* lib_addr;
     struct SymbolTableEntry* symval;
     struct Expr* exprval;
+    struct Call* callval;
 
-#line 173 "parser.h"
+#line 174 "parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

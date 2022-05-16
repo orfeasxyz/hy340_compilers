@@ -36,12 +36,13 @@ void emit (
     }
 
     // Consturct new quad
-    quad* p        = quads + currQuad++;
-    p->arg1        = arg1;
-    p->arg2        = arg2;
-    p->result    = result;
-    p->label    = label;
-    p->line        = line;
+    quad* p		= quads + currQuad++;
+    p->arg1		= arg1;
+    p->arg2		= arg2;
+    p->result	= result;
+    p->label	= label;
+    p->line		= line;
+	p->op		= op;
 }
 
 unsigned programVarOffset = 0;
@@ -128,14 +129,14 @@ void patchLabel(unsigned quadNo, unsigned label){
 
 char* newTempName(){
     int count = 0, num = tempCounter;
-    while(num){
-        num /= 10;
-        count++;
-    }
+	while (num) {
+		num /= 10;
+		++count;
+	}
 
     char* tempName = malloc(count + 3);
 
-    sprintf(tempName, "_t%d", tempCounter);
+    sprintf(tempName, "_t%d", tempCounter++);
 
     return tempName;
 }
@@ -227,7 +228,7 @@ char* getStringValueQuad(Expr* e){
             return e->strConst;
         case constnum_e:{
             char* str = malloc(sizeof(char) * 32);
-            sprintf(str, "%f", e->numConst);
+            sprintf(str, "%.1f", e->numConst);
             return str;
         }
         case nil_e:
@@ -242,62 +243,68 @@ char* getStringValueQuad(Expr* e){
             return e->sym->name;
         case arithmexpr_e:{
             char* str = malloc(sizeof(char) * 32);
-            sprintf(str, "%f", e->numConst);
+            sprintf(str, "%.1f", e->numConst);
             return str;
         }
         case newtable_e:
-            return "table";
+            return e->sym->name;
         case constbool_e:
             return e->boolConst ? "true" : "false";
         case var_e:
             return e->sym->name;
         case assignexpr_e:
-            return "assignexpr";
+            return e->sym->name;
         default: assert(0);
     }
 }
 
-char* iopcodeName(quad* quad){
-    switch (quad->op)
-    {
-        case assign: return "assign";
-        case mul: return "mul";
-        case uminus: return "uminus";
-        case not: return "not";
-        case if_lesseq: return "if_lesseq";
-        case if_greater: return "if_greater";
-        case ret: return "ret";
-        case funcend: return "funcend";
-        case tablegetelem: return "tablegetelement";
-        case add: return "add";
-        case mydiv: return "mydiv";
-        case and: return "and";
-        case if_eq: return "if_eq";
-        case if_geatereq: return "if_geatereq";
-        case call: return "call";
-        case getretval: return "getretval";
-        case tablecreate: return "tablecreate";
-        case sub: return "sub";
-        case mod: return "mod";
-        case or: return "or";
-        case if_noteq: return "if_noteq";
-        case if_less: return "if_less";
-        case param: return "param";
-        case funcstart: return "funcstart";
-        default: assert(0);
-    }
+const char* str_iopcodeName[] = {
+    "assign",
+	"jump",
+    "mul",
+    "uminus",
+    "not",
+    "if_lesseq",
+    "if_greater",
+    "ret",
+    "funcend",
+    "tablegetelem",
+    "add",
+    "mydiv",
+    "and",
+    "if_eq",
+    "if_geatereq",
+    "call",
+    "getretval",
+    "tablecreate",
+    "tablesetelem",
+    "sub",
+    "mod",
+    "or",
+    "if_noteq",
+    "if_less",
+    "param",
+    "funcstart"
+};
+
+const char* iopcodeName(quad* q){
+    return str_iopcodeName[q->op];
 }
 
 void printQuads(void) {
-    printf("quad# |  opcode   |  result  | arg1  |  arg2  |  label  |\n");
+	char str_label[16] = {0};
+	printf("%8s | %10s | %10s | %10s | %10s | %10s |\n", "quad#", "opcode", "result", "arg1", "arg2", "label");
     for (int i = 0; i < currQuad; i++) {
         quad* q = &quads[i];
-        printf("%4d | %10s | %10s | %10s | %10s | %10d |\n",
+		if (q->op == jump) {
+			sprintf(str_label, "%#x", q->label);
+		}
+        printf("%8d | %10s | %10s | %10s | %10s | %10s |\n",
         i,
         iopcodeName(q),
         (q->result != NULL ? getStringValueQuad(q->result) : " "),
-        (q->arg1 != NULL ? getStringValueQuad(quads->arg1) : " "),
-        (quads->arg2 != NULL ? getStringValueQuad(quads->arg2) : " "),
-        q->label ? q->label : 0);
+        (q->arg1 != NULL ? getStringValueQuad(q->arg1) : " "),
+        (quads->arg2 != NULL ? getStringValueQuad(q->arg2) : " "),
+        q->op == jump ? str_label : " ");
     }
 }
