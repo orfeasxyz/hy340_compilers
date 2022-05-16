@@ -52,7 +52,6 @@ int countDigits(int num){
 
 // =======================================================================================
 
-
 Expr* HANDLE_LVALUE_TO_IDENT(char* key, int lineno){
     SymbolTableEntry* temp;
     SymTable_T table = current_table;
@@ -456,6 +455,14 @@ Call* HANDLE_NORMCALL(Expr* elist){
 
 // =======================================================================================
 
+Expr* HANDLE_INDEXELEM(Expr* index, Expr* value){
+    value->index = index;
+    return value;
+}
+
+// =======================================================================================
+
+
 Expr* HANDLE_OBJECTDEF_TO_ELIST(Expr* elist){
     Expr* t = newExpr(newtable_e);
     t->sym = newTemp();
@@ -475,11 +482,5 @@ Expr* HANDLE_OBJECTDEF_TO_INDEXED(Expr* indexed){
         emit(tablesetelem, t, indexed->index, indexed, 0, indexed->sym->line);
     }
 
-    return t;
-}
-
-Expr* HANDLE_OBJECTDEF(void){
-    Expr* t = newExpr(newtable_e);
-    t->sym = newTemp();
     return t;
 }

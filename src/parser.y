@@ -43,7 +43,8 @@
 %type<symval> funcdef funcprefix 
 %type<sval> funcname
 %type<func_addr> funcbody
-%type<exprval> lvalue expression term assignexpr prim member call objectdef const elist indexed indexedelem
+%type<exprval> lvalue expression term assignexpr prim member call 
+               objectdef const elist indexed indexedelem objectarg
 %type<callval> callsuffix normcall methodcall 
 
 
@@ -67,7 +68,7 @@
 program:        statements ;
 
 
-statements:     statements statement 
+statements:     statements {resetTemp();} statement 
                 |
                 ;
 
@@ -83,7 +84,7 @@ statement:      expression SEMI_COLON
                 | SEMI_COLON
                 ;
 
-expression:     assignexpr
+expression:     assignexpr                      {$$ = $1;}
                 | expression PLUS expression
                 | expression MINUS expression
                 | expression MUL expression
@@ -144,28 +145,21 @@ normcall:       PAR_OPEN elist PAR_CLOSED                      {$$ = HANDLE_NORM
 
 methodcall:     DOUBLE_DOT IDENT PAR_OPEN elist PAR_CLOSED     {$$ = HANDLE_METHODCALL($2, $4);};
 
-elist:          expression elist_alt                           
-                |
+elist:          expression
+                | expression COMMA elist
                 ;
 
-elist_alt:      COMMA expression elist_alt
-                | 
+objectdef:      SQUARE_OPEN objectarg SQUARE_CLOSED  {$$ = $2;};
+
+objectarg:      elist       {$$ = HANDLE_OBJECTDEF_TO_ELIST($1);}
+                | indexed   {$$ = HANDLE_OBJECTDEF_TO_INDEXED($1);}
                 ;
 
-objectdef:      SQUARE_OPEN elist SQUARE_CLOSED                {$$ = HANDLE_OBJECTDEF_TO_ELIST($2);}
-                | SQUARE_OPEN indexedelem SQUARE_CLOSED        {$$ = HANDLE_OBJECTDEF_TO_INDEXED($2);}
-                | SQUARE_OPEN SQUARE_CLOSED                    {$$ = HANDLE_OBJECTDEF();}
+indexed:        indexedelem
+                | indexedelem COMMA indexed
                 ;
 
-indexed:        indexedelem indexed_alt
-                |
-                ;
-
-indexed_alt:    COMMA indexedelem indexed_alt
-                |
-                ;
-
-indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED ;
+indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED {$$ = HANDLE_INDEXELEM($2, $4);};
 
 block:          CURLY_OPEN {scope++; current_table = SymTable_next(current_table);} statements CURLY_CLOSED {scope--; SymTable_hide(current_table); current_table = SymTable_prev(current_table);};
 
@@ -199,14 +193,15 @@ funcname:       IDENT          {$$ = HANDLE_FUNCTION_WITH_NAME($1, yylineno);}
                 |              {$$ = HANDLE_FUNCTION_WITHOUT_NAME(yylineno);}
                 ;
 
-const:          NUM | STRING | NIL | TRUE | FALSE ;
-
-idlist:         IDENT idlist_alt        {HANDLE_IDLIST_IDENT($1, yylineno);}
-                |
+const:          NUM         {$$ = newExprConstNum($1);}
+                | STRING    {$$ = newExprConstString($1);}
+                | NIL       {$$ = (struct Expr*) 0;}
+                | TRUE      {$$ = newExprConstBool(1);}
+                | FALSE     {$$ = newExprConstBool(0);}
                 ;
 
-idlist_alt:     COMMA IDENT idlist_alt  {HANDLE_IDLIST_IDENT($2, yylineno);}
-                |
+idlist:         IDENT                   {HANDLE_IDLIST_IDENT($1, yylineno);}
+                | IDENT COMMA idlist    {/* TO DO */} 
                 ;
 
 ifstmt:         IF PAR_OPEN expression PAR_CLOSED statement %prec LOWER_THAN_ELSE

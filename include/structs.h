@@ -8,7 +8,8 @@ typedef enum iopcode {
     not, 
     if_lesseq, 
     if_greater, 
-    ret, funcend, 
+    ret, 
+    funcend, 
     tablegetelem,  
     add, 
     mydiv, //conflict with stdlib.h
@@ -142,12 +143,13 @@ void enterScopeSpace(void);
 void exitScopeSpace(void);
 void resetFormalArgsOffset(void);
 void resetFunctionLocalOffset(void);
-void restoreCurrScopeOffset(unsigned n);
+void restoreCurrScopeOffset(unsigned);
 unsigned nextQuadLabel(void);
-void patchLabel(unsigned quadNo, unsigned label);
+void patchLabel(unsigned, unsigned);
 Expr* newExpr(ExprType t);
-Expr* newExprConstString(char* s);
-Expr* newExprConstNum(double i);
+Expr* newExprConstString(char*);
+Expr* newExprConstNum(double);
+Expr* newExprConstBool(unsigned char b);
 void checkArith(Expr*, const char*);
 int boolVal(Expr *);
 char* getStringValueQuad(Expr*);

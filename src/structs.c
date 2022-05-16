@@ -168,6 +168,12 @@ Expr* newExprConstNum(double i){
     return e;
 }
 
+Expr* newExprConstBool(unsigned char bool){
+    Expr* e = newExpr(constbool_e);
+    e->boolConst = bool;
+    return e;
+}
+
 SymbolTableEntry* makeSymbol(char* key, int lineno, int scope){
     SymbolTableEntry* temp = malloc(sizeof(SymbolTableEntry));
     temp->isActive = 1;
