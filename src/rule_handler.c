@@ -561,7 +561,7 @@ Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
         return (Expr*) 0;
     }
 
-    if( (strcmp(op, "==") == 0 || strcmp(op, "!=") == 0) && (expr1->type == expr2->type) ){
+    if((op == if_eq || op == if_noteq) && (expr1->type == expr2->type) ){
         int res;
         if(expr1->type == constnum_e) res = expr2->numConst == expr1->numConst;
         else if(expr1->type == constbool_e) res = expr2->boolConst == expr1->boolConst;
@@ -572,7 +572,7 @@ Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
         else if(expr1->type == programfunc_e) res = strcmp(expr2->sym->name, expr1->sym->name) == 0;
         else if(expr1->type == libraryfunc_e) res = strcmp(expr2->sym->name, expr1->sym->name) == 0;
 
-        return (strcmp(op, "==") == 0 ? newExprConstBool(res) :  newExprConstBool(!res));
+        return (op == if_eq ? newExprConstBool(res) :  newExprConstBool(!res));
     }
 
     if((expr1->type == nil_e && expr2->type == tableitem_e) || (expr1->type == tableitem_e && expr2->type == nil_e)){
