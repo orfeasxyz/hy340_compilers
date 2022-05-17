@@ -295,13 +295,13 @@ const char* iopcodeName(quad* q){
 
 void printQuads(void) {
 	char str_label[16] = {0};
-	printf("%8s | %10s | %10s | %10s | %10s | %10s |\n", "quad#", "opcode", "result", "arg1", "arg2", "label");
+	printf("%8s | %14s | %10s | %10s | %10s | %10s |\n", "quad#", "opcode", "result", "arg1", "arg2", "label");
     for (int i = 0; i < currQuad; i++) {
         quad* q = &quads[i];
 		if (q->op == jump) {
 			sprintf(str_label, "%#x", q->label);
 		}
-        printf("%8d | %10s | %10s | %10s | %10s | %10s |\n",
+        printf("%8d | %14s | %10s | %10s | %10s | %10s |\n",
         i,
         iopcodeName(q),
         (q->result != NULL ? getStringValueQuad(q->result) : " "),

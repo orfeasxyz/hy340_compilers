@@ -476,7 +476,7 @@ Expr* HANDLE_INDEXED_ADD(Expr* indexedelem, Expr* indexed){
 Expr* HANDLE_OBJECTDEF_TO_ELIST(Expr* elist){
     Expr* t = newExpr(newtable_e);
     t->sym = newTemp();
-    emit(tablecreate, t, NULL, NULL, 0, elist->sym->line);
+    emit(tablecreate, t, NULL, NULL, 0, t->sym->line);
     for(int i; elist; elist = elist->next){
         emit(tablesetelem, t, newExprConstNum(i++), elist, 0, elist->sym->line);
     }

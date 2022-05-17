@@ -3,6 +3,7 @@
 
 typedef enum iopcode { 
     assign, 
+    jump,
     mul, 
     uminus, 
     not, 
@@ -13,7 +14,6 @@ typedef enum iopcode {
     tablegetelem,  
     add, 
     mydiv, //conflict with stdlib.h
-	jump,
     and, 
     if_eq, 
     if_geatereq,
