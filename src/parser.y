@@ -86,19 +86,19 @@ statement:      expression SEMI_COLON
                 ;
 
 expression:     assignexpr                      {$$ = $1;}
-                | expression PLUS expression    {$$ = HANDLE_ARITH_OP($2, $1, $3);}
-                | expression MINUS expression   {$$ = HANDLE_ARITH_OP($2, $1, $3);}
-                | expression MUL expression     {$$ = HANDLE_ARITH_OP($2, $1, $3);}
-                | expression DIV expression     {$$ = HANDLE_ARITH_OP($2, $1, $3);}
-                | expression MOD expression     {$$ = HANDLE_ARITH_OP($2, $1, $3);}
-                | expression GT expression      {$$ = HANDLE_REL_OP($2, $1, $3);}
-                | expression GET expression     {$$ = HANDLE_REL_OP($2, $1, $3);}
-                | expression LT expression      {$$ = HANDLE_REL_OP($2, $1, $3);}
-                | expression LET expression     {$$ = HANDLE_REL_OP($2, $1, $3);}
-                | expression EQUAL expression   {$$ = HANDLE_REL_OP($2, $1, $3);}
-                | expression NEQUAL expression  {$$ = HANDLE_REL_OP($2, $1, $3);}
-                | expression AND expression     {$$ = HANDLE_BOOL_OP($2, $1, $3);}
-                | expression OR expression      {$$ = HANDLE_BOOL_OP($2, $1, $3);}
+                | expression PLUS expression    {$$ = HANDLE_ARITH_OP(add, $1, $3);}
+                | expression MINUS expression   {$$ = HANDLE_ARITH_OP(sub, $1, $3);}
+                | expression MUL expression     {$$ = HANDLE_ARITH_OP(mul, $1, $3);}
+                | expression DIV expression     {$$ = HANDLE_ARITH_OP(mydiv, $1, $3);}
+                | expression MOD expression     {$$ = HANDLE_ARITH_OP(mod, $1, $3);}
+                | expression GT expression      {$$ = HANDLE_REL_OP(if_greater, $1, $3);}
+                | expression GET expression     {$$ = HANDLE_REL_OP(if_geatereq, $1, $3);}
+                | expression LT expression      {$$ = HANDLE_REL_OP(if_less, $1, $3);}
+                | expression LET expression     {$$ = HANDLE_REL_OP(if_lesseq, $1, $3);}
+                | expression EQUAL expression   {$$ = HANDLE_REL_OP(if_eq, $1, $3);}
+                | expression NEQUAL expression  {$$ = HANDLE_REL_OP(if_noteq, $1, $3);}
+                | expression AND expression     {$$ = HANDLE_BOOL_OP(and, $1, $3);}
+                | expression OR expression      {$$ = HANDLE_BOOL_OP(or, $1, $3);}
                 | term                          {$$ = $1;}
                 ;
 
@@ -204,6 +204,7 @@ const:          NUM         {$$ = newExprConstNum($1);}
 
 idlist:         IDENT                   {HANDLE_IDLIST_IDENT($1, yylineno);}
                 | IDENT COMMA idlist    {HANDLE_IDLIST_IDENT($1, yylineno);} 
+                |
                 ;
 
 ifprefix:       IF PAR_OPEN expression PAR_CLOSED   {$$ = HANDLE_IFPREFIX($3);}

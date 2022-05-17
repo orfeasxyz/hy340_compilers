@@ -496,24 +496,6 @@ Expr* HANDLE_OBJECTDEF_TO_INDEXED(Expr* indexed){
 }
 
 // =======================================================================================
-
-iopcode switch_op(char* op){
-    if(strcmp(op, "+") == 0) return add;
-    else if(strcmp(op, "-") == 0) return sub;
-    else if(strcmp(op, "*") == 0) return mul;
-    else if(strcmp(op, "/") == 0) return mydiv;
-    else if(strcmp(op, "%") == 0) return mod;
-    else if(strcmp(op, ">") == 0) return if_greater;
-    else if(strcmp(op, ">=") == 0) return if_geatereq;
-    else if(strcmp(op, "<") == 0) return if_less;
-    else if(strcmp(op, "<=") == 0) return if_lesseq;
-    else if(strcmp(op, "==") == 0) return if_eq;
-    else if(strcmp(op, "!=") == 0) return if_noteq;
-    else if(strcmp(op, "&&") == 0) return and;
-    else if(strcmp(op, "||") == 0) return or;
-    else assert(0);
-}
-
 int check_arith_eligible(Expr* temp){
     switch(temp->type){
         case programfunc_e:
@@ -531,7 +513,7 @@ int check_arith_eligible(Expr* temp){
     }
 }
 
-Expr* HANDLE_ARITH_OP(char* op, Expr* expr1, Expr* expr2){
+Expr* HANDLE_ARITH_OP(iopcode op, Expr* expr1, Expr* expr2){
     Expr* temp;
 
     if(check_arith_eligible(expr1) == 1 && check_arith_eligible(expr2) == 1){
@@ -550,12 +532,12 @@ Expr* HANDLE_ARITH_OP(char* op, Expr* expr1, Expr* expr2){
 
     temp = newExpr(arithmexpr_e);
     temp->sym = newTemp();
-    emit(switch_op(op), expr1, expr2, temp, 0, expr1->sym->line);
+    emit(op, expr1, expr2, temp, 0, expr1->sym->line);
 
     return temp;
 }
 
-Expr* HANDLE_REL_OP(char* op, Expr* expr1, Expr* expr2){
+Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
     Expr* temp;
 
     if(check_arith_eligible(expr1) == 1  && check_arith_eligible(expr2) == 1){
@@ -600,7 +582,7 @@ Expr* HANDLE_REL_OP(char* op, Expr* expr1, Expr* expr2){
     temp = newExpr(boolexpr_e);
     temp->sym = newTemp();
 
-    emit(switch_op(op), expr1, expr2, NULL, nextQuadLabel() + 3, expr1->sym->line);
+    emit(op, expr1, expr2, NULL, nextQuadLabel() + 3, expr1->sym->line);
     emit(assign, newExprConstBool(0), NULL, temp, 0, expr1->sym->line);
     emit(jump, NULL, NULL, NULL, nextQuadLabel() + 2, expr1->sym->line);
     emit(assign, newExprConstBool(1), NULL, temp, 0, expr1->sym->line);
@@ -608,7 +590,7 @@ Expr* HANDLE_REL_OP(char* op, Expr* expr1, Expr* expr2){
     return temp;
 }
 
-Expr* HANDLE_BOOL_OP(char* op, Expr* expr1, Expr* expr2){
+Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2){
     Expr* temp;
 
     if(expr1->type == assignexpr_e || expr1->type == var_e) {
@@ -623,7 +605,7 @@ Expr* HANDLE_BOOL_OP(char* op, Expr* expr1, Expr* expr2){
 
     temp = newExpr(boolexpr_e);
     temp->sym = newTemp();
-    emit(switch_op(op), expr1, expr2, temp, 0, expr1->sym->line);
+    emit(op, expr1, expr2, temp, 0, expr1->sym->line);
 
     return temp;
 

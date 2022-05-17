@@ -34,9 +34,9 @@ Expr* HANDLE_TERM_TO_UMINUS_EXPR(Expr*);
 Expr* HANDLE_TERM_TO_NOT_EXPR(Expr*);
 Expr* HANDLE_ELIST_ADD(Expr*, Expr*);
 Expr* HANDLE_INDEXED_ADD(Expr*, Expr*);
-Expr* HANDLE_ARITH_OP(char*, Expr*, Expr*);
-Expr* HANDLE_REL_OP(char*, Expr*, Expr*);
-Expr* HANDLE_BOOL_OP(char*, Expr*, Expr*);
+Expr* HANDLE_ARITH_OP(iopcode, Expr*, Expr*);
+Expr* HANDLE_REL_OP(iopcode, Expr*, Expr*);
+Expr* HANDLE_BOOL_OP(iopcode, Expr*, Expr*);
 unsigned HANDLE_IFPREFIX(Expr*);
 unsigned HANDLE_ELSEPREFIX(int);
 
