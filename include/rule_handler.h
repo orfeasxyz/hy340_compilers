@@ -32,5 +32,10 @@ Expr* HANDLE_INDEXELEM(Expr*, Expr*);
 Expr* HANDLE_PRIM_TO_FUNCDEF(SymbolTableEntry*);
 Expr* HANDLE_TERM_TO_UMINUS_EXPR(Expr*);
 Expr* HANDLE_TERM_TO_NOT_EXPR(Expr*);
+Expr* HANDLE_ELIST_ADD(Expr*, Expr*);
+Expr* HANDLE_INDEXED_ADD(Expr*, Expr*);
+Expr* HANDLE_ARITH_OP(char*, Expr*, Expr*);
+Expr* HANDLE_REL_OP(char*, Expr*, Expr*);
+
 
 #endif  // _RULE_HANDLERS_H_

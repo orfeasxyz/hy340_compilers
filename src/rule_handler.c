@@ -460,6 +460,16 @@ Expr* HANDLE_INDEXELEM(Expr* index, Expr* value){
     return value;
 }
 
+Expr* HANDLE_ELIST_ADD(Expr* expression, Expr* elist){
+    elist->next = expression;       /* DEPENDS ON LEFT-TO-RIGHT OR RIGHT-TO-LEFT INPUT READING */
+    return elist;                   /* THIS IS FOR LEFT-TO-RIGHT AND RETURNS THE LIST INVERSED */
+}
+
+Expr* HANDLE_INDEXED_ADD(Expr* indexedelem, Expr* indexed){
+    indexed->next = indexedelem;
+    return indexed;                 /* SAME AS ABOVE !!! */
+}
+
 // =======================================================================================
 
 
@@ -484,3 +494,102 @@ Expr* HANDLE_OBJECTDEF_TO_INDEXED(Expr* indexed){
 
     return t;
 }
+
+// =======================================================================================
+
+iopcode switch_op(char* op){
+    if(op == "+") return add;
+    else if(op == "-") return sub;
+    else if(op == "*") return mul;
+    else if(op == "/") return mydiv;
+    else if(op == "%") return mod;
+    else if(op == ">") return if_greater;
+    else if(op == ">=") return if_geatereq;
+    else if(op == "<") return if_less;
+    else if(op == "<=") return if_lesseq;
+    else if(op == "==") return if_eq;
+    else if(op == "!=") return if_noteq;
+    else if(op == "&&") return and;
+    else if(op == "||") return or;
+    else assert(0);
+}
+
+int check_arith_eligible(Expr* temp){
+    switch(temp->type){
+        case programfunc_e:
+        case libraryfunc_e:
+        case boolexpr_e:
+        case newtable_e:
+        case constbool_e:
+        case conststring_e:
+        case nil_e:
+            return -1;
+        case constnum_e:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+Expr* HANDLE_ARITH_OP(char* op, Expr* expr1, Expr* expr2){
+    Expr* temp;
+
+    if(check_arith_eligible(expr1) == 1 && check_arith_eligible(expr2) == 1){
+        return newExprConstNum(expr1->numConst + expr2->numConst);
+    }
+
+    if(check_arith_eligible(expr1) == -1) {
+        fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in arithmetic expression\n", expr1->sym->line, str_iopcodeName[expr1->type]);
+        return (Expr*) 0;
+    }
+
+    if(check_arith_eligible(expr2) == -1) {
+        fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in arithmetic expression\n", expr2->sym->line, str_iopcodeName[expr2->type]);
+        return (Expr*) 0;
+    }
+
+    temp = newExpr(arithmexpr_e);
+    temp->sym = newTemp();
+    emit(switch_op(op), expr1, expr2, temp, 0, expr1->sym->line);
+
+    return temp;
+}
+
+Expr* HANDLE_REL_OP(char* op, Expr* expr1, Expr* expr2){
+    Expr* temp;
+
+    if(check_arith_eligible(expr1) == 1 && check_arith_eligible(expr2) == 1){
+        int result;
+        if(op == ">") result = (expr1 > expr2);
+        else if(op == ">=") result = (expr1 >= expr2);
+        else if(op == "<") result = (expr1 < expr2);
+        else if(op == "<=") result = (expr1 <= expr2);
+        else if(op == "==") result = (expr1 == expr2);
+        else if(op == "!=") result = (expr1 != expr2);
+        return newExprConstBool(result);
+    }
+
+    if(check_arith_eligible(expr1) == -1) {
+        fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in relation expression\n", expr1->sym->line, str_iopcodeName[expr1->type]);
+        return (Expr*) 0;
+    }
+
+    if(check_arith_eligible(expr2) == -1) {
+        fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in relation expression\n", expr2->sym->line, str_iopcodeName[expr2->type]);
+        return (Expr*) 0;
+    }
+
+    //HERE
+
+    temp = newExpr(boolexpr_e);
+    temp->sym = newTemp();
+
+    emit(switch_op(op), expr1, expr2, nextQuadLabel() + 3, 0, expr1->sym->line);
+    emit(assign, newExprConstBool(0), NULL, temp, 0, expr1->sym->line);
+    emit(jump, NULL, NULL, nextQuadLabel() + 2, 0, expr1->sym->line);
+    emit(assign, newExprConstBool(1), NULL, temp, 0, expr1->sym->line);
+
+    return temp;
+}
+
+

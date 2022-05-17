@@ -154,6 +154,10 @@ Expr* newExprConstBool(unsigned char b);
 void checkArith(Expr*, const char*);
 int boolVal(Expr *);
 char* getStringValueQuad(Expr*);
+
+extern const char* str_iopcodeName[];
 const char* iopcodeName(quad*);
 void printQuads(void);
+
+
 #endif // _STRUCTS_H_

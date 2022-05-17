@@ -85,20 +85,20 @@ statement:      expression SEMI_COLON
                 ;
 
 expression:     assignexpr                      {$$ = $1;}
-                | expression PLUS expression
-                | expression MINUS expression
-                | expression MUL expression
-                | expression DIV expression
-                | expression MOD expression
-                | expression GT expression
-                | expression GET expression
-                | expression LT expression
-                | expression LET expression
-                | expression EQUAL expression
-                | expression NEQUAL expression
-                | expression AND expression
-                | expression OR expression
-                | term
+                | expression PLUS expression    {$$ = HANDLE_ARITH_OP($2, $1, $3);}
+                | expression MINUS expression   {$$ = HANDLE_ARITH_OP($2, $1, $3);}
+                | expression MUL expression     {$$ = HANDLE_ARITH_OP($2, $1, $3);}
+                | expression DIV expression     {$$ = HANDLE_ARITH_OP($2, $1, $3);}
+                | expression MOD expression     {$$ = HANDLE_ARITH_OP($2, $1, $3);}
+                | expression GT expression      {$$ = HANDLE_REL_OP($2, $1, $3);}
+                | expression GET expression     {$$ = HANDLE_REL_OP($2, $1, $3);}
+                | expression LT expression      {$$ = HANDLE_REL_OP($2, $1, $3);}
+                | expression LET expression     {$$ = HANDLE_REL_OP($2, $1, $3);}
+                | expression EQUAL expression   {$$ = HANDLE_REL_OP($2, $1, $3);}
+                | expression NEQUAL expression  {$$ = HANDLE_REL_OP($2, $1, $3);}
+                | expression AND expression     {$$ = HANDLE_BOOL_OP($2, $1, $3);}
+                | expression OR expression      {$$ = HANDLE_BOOL_OP($2, $1, $3);}
+                | term                          {$$ = $1;}
                 ;
 
 term:           PAR_OPEN expression PAR_CLOSED  {$$ = $2;}
@@ -114,11 +114,11 @@ term:           PAR_OPEN expression PAR_CLOSED  {$$ = $2;}
 assignexpr:     lvalue ASSIGN expression        {HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, $3, yylineno);};
 
 prim:           lvalue                          {HANDLE_PRIM_TO_LVALUE($1, yylineno);}
-                | call
-                | objectdef
+                | call                          {$$ = $1;}
+                | objectdef                     {$$ = $1;}
                 | PAR_OPEN funcdef PAR_CLOSED   {$$ = HANDLE_PRIM_TO_FUNCDEF($2);}
-                | const
-                ;
+                | const                         {$$ = $1;}
+                ;   
 
 lvalue:         IDENT                   {$$ = HANDLE_LVALUE_TO_IDENT($1, yylineno);}
                 | LOCAL IDENT           {$$ = HANDLE_LVALUE_TO_LOCAL_IDENT($2, yylineno);}
@@ -128,8 +128,8 @@ lvalue:         IDENT                   {$$ = HANDLE_LVALUE_TO_IDENT($1, yylinen
 
 member:         lvalue DOT IDENT                                {$$ = HANDLE_MEMBER_TO_LVALUE_DOT_IDENT($1, $3);}
                 | lvalue SQUARE_OPEN expression SQUARE_CLOSED   {$$ = HANDLE_MEMBER_TO_LVALUE_SQUARE_EXPR($1, $3);}
-                | call DOT IDENT
-                | call SQUARE_OPEN expression SQUARE_CLOSED
+                | call DOT IDENT                                {$$ = HANDLE_MEMBER_TO_LVALUE_DOT_IDENT($1, $3);}
+                | call SQUARE_OPEN expression SQUARE_CLOSED     {$$ = HANDLE_MEMBER_TO_LVALUE_SQUARE_EXPR($1, $3);}        
                 ;
 
 call:           call PAR_OPEN elist PAR_CLOSED                              {$$ = HANDLE_CALL_ELIST($1, $3);}
@@ -145,9 +145,9 @@ normcall:       PAR_OPEN elist PAR_CLOSED                      {$$ = HANDLE_NORM
 
 methodcall:     DOUBLE_DOT IDENT PAR_OPEN elist PAR_CLOSED     {$$ = HANDLE_METHODCALL($2, $4);};
 
-elist:          expression
-                | expression COMMA elist
-				|
+elist:          expression                  {$$ = $1;}
+                | expression COMMA elist    {$$ = HANDLE_ELIST_ADD($1, $3);}
+				|                           {$$ = (Expr*) 0;}
                 ;
 
 objectdef:      SQUARE_OPEN objectarg SQUARE_CLOSED  {$$ = $2;};
@@ -156,8 +156,8 @@ objectarg:      elist       {$$ = HANDLE_OBJECTDEF_TO_ELIST($1);}
                 | indexed   {$$ = HANDLE_OBJECTDEF_TO_INDEXED($1);}
                 ;
 
-indexed:        indexedelem
-                | indexedelem COMMA indexed
+indexed:        indexedelem                     {$$ = $1;}
+                | indexedelem COMMA indexed     {$$ = HANDLE_INDEXED_ADD($1, $3);}
                 ;
 
 indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED {$$ = HANDLE_INDEXELEM($2, $4);};
@@ -202,7 +202,7 @@ const:          NUM         {$$ = newExprConstNum($1);}
                 ;
 
 idlist:         IDENT                   {HANDLE_IDLIST_IDENT($1, yylineno);}
-                | IDENT COMMA idlist    {/* TODO */} 
+                | IDENT COMMA idlist    {HANDLE_IDLIST_IDENT($1, yylineno);} 
                 ;
 
 ifstmt:         IF PAR_OPEN expression PAR_CLOSED statement %prec LOWER_THAN_ELSE
