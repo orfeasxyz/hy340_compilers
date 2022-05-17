@@ -146,7 +146,7 @@ normcall:       PAR_OPEN elist PAR_CLOSED                      {$$ = HANDLE_NORM
 
 methodcall:     DOUBLE_DOT IDENT PAR_OPEN elist PAR_CLOSED     {$$ = HANDLE_METHODCALL($2, $4);};
 
-elist:          expression                  {$$ = $1;}
+elist:          expression                  {$$ = $1; $$->next = NULL;}
                 | expression COMMA elist    {$$ = HANDLE_ELIST_ADD($1, $3);}
 				|                           {$$ = (Expr*) 0;}
                 ;

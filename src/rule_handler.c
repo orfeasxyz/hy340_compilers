@@ -461,8 +461,8 @@ Expr* HANDLE_INDEXELEM(Expr* index, Expr* value){
 }
 
 Expr* HANDLE_ELIST_ADD(Expr* expression, Expr* elist){
-    elist->next = expression;       /* DEPENDS ON LEFT-TO-RIGHT OR RIGHT-TO-LEFT INPUT READING */
-    return elist;                   /* THIS IS FOR LEFT-TO-RIGHT AND RETURNS THE LIST INVERSED */
+    expression->next = elist;
+    return expression;
 }
 
 Expr* HANDLE_INDEXED_ADD(Expr* indexedelem, Expr* indexed){
@@ -476,9 +476,9 @@ Expr* HANDLE_INDEXED_ADD(Expr* indexedelem, Expr* indexed){
 Expr* HANDLE_OBJECTDEF_TO_ELIST(Expr* elist){
     Expr* t = newExpr(newtable_e);
     t->sym = newTemp();
-    emit(tablecreate, t, NULL, NULL, 0, t->sym->line);
+    emit(tablecreate, t, NULL, NULL, 0, 0);
     for(int i; elist; elist = elist->next){
-        emit(tablesetelem, t, newExprConstNum(i++), elist, 0, elist->sym->line);
+        emit(tablesetelem, t, newExprConstNum(i++), elist, 0, 0);
     }
 
     return t;
