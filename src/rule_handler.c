@@ -600,9 +600,9 @@ Expr* HANDLE_REL_OP(char* op, Expr* expr1, Expr* expr2){
     temp = newExpr(boolexpr_e);
     temp->sym = newTemp();
 
-    emit(switch_op(op), expr1, expr2, nextQuadLabel() + 3, 0, expr1->sym->line);
+    emit(switch_op(op), expr1, expr2, NULL, nextQuadLabel() + 3, expr1->sym->line);
     emit(assign, newExprConstBool(0), NULL, temp, 0, expr1->sym->line);
-    emit(jump, NULL, NULL, nextQuadLabel() + 2, 0, expr1->sym->line);
+    emit(jump, NULL, NULL, NULL, nextQuadLabel() + 2, expr1->sym->line);
     emit(assign, newExprConstBool(1), NULL, temp, 0, expr1->sym->line);
 
     return temp;
@@ -634,7 +634,7 @@ Expr* HANDLE_BOOL_OP(char* op, Expr* expr1, Expr* expr2){
 unsigned HANDLE_IFPREFIX(Expr* expression){
     unsigned temp;
 
-    emit(if_eq, expression, newExprConstBool(1), nextQuadLabel() + 2, 0, expression->sym->line);
+    emit(if_eq, expression, newExprConstBool(1), NULL, nextQuadLabel() + 2, expression->sym->line);
     temp = nextQuadLabel();
     emit(jump, NULL, NULL, 0, 0, expression->sym->line);
 
