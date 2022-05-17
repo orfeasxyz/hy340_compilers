@@ -542,12 +542,12 @@ Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
 
     if(check_arith_eligible(expr1) == 1  && check_arith_eligible(expr2) == 1){
         int result;
-        if(strcmp(op, ">") == 0) result = (expr1->numConst > expr2->numConst);
-        else if(strcmp(op, ">=") == 0) result = (expr1->numConst >= expr2->numConst);
-        else if(strcmp(op, "<") == 0) result = (expr1->numConst < expr2->numConst);
-        else if(strcmp(op, "<=") == 0) result = (expr1->numConst <= expr2->numConst);
-        else if(strcmp(op, "==") == 0) result = (expr1->numConst == expr2->numConst);
-        else if(strcmp(op, "!=") == 0) result = (expr1->numConst != expr2->numConst);
+        if(op == if_greater) result = (expr1->numConst > expr2->numConst);
+        else if(op == if_geatereq) result = (expr1->numConst >= expr2->numConst);
+        else if(op == if_less) result = (expr1->numConst < expr2->numConst);
+        else if(op == if_lesseq) result = (expr1->numConst <= expr2->numConst);
+        else if(op == if_eq) result = (expr1->numConst == expr2->numConst);
+        else if(op == if_noteq) result = (expr1->numConst != expr2->numConst);
         return newExprConstBool(result);
     }
 
