@@ -36,6 +36,9 @@ Expr* HANDLE_ELIST_ADD(Expr*, Expr*);
 Expr* HANDLE_INDEXED_ADD(Expr*, Expr*);
 Expr* HANDLE_ARITH_OP(char*, Expr*, Expr*);
 Expr* HANDLE_REL_OP(char*, Expr*, Expr*);
+Expr* HANDLE_BOOL_OP(char*, Expr*, Expr*);
+unsigned HANDLE_IFPREFIX(Expr*);
+unsigned HANDLE_ELSEPREFIX(int);
 
 
 #endif  // _RULE_HANDLERS_H_

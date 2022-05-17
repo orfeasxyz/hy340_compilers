@@ -592,4 +592,45 @@ Expr* HANDLE_REL_OP(char* op, Expr* expr1, Expr* expr2){
     return temp;
 }
 
+Expr* HANDLE_BOOL_OP(char* op, Expr* expr1, Expr* expr2){
+    Expr* temp;
+
+    if(expr1->type == assignexpr_e || expr1->type == var_e) {
+        fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in bool expression\n", expr1->sym->line, str_iopcodeName[expr1->type]);
+        return (Expr*) 0;
+    }
+
+    if(expr2->type == assignexpr_e || expr2->type == var_e) {
+        fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in bool expression\n", expr2->sym->line, str_iopcodeName[expr2->type]);
+        return (Expr*) 0;
+    }
+
+    temp = newExpr(boolexpr_e);
+    temp->sym = newTemp();
+    emit(switch_op(op), expr1, expr2, temp, 0, expr1->sym->line);
+
+    return temp;
+
+}
+
+// =======================================================================================
+
+unsigned HANDLE_IFPREFIX(Expr* expression){
+    unsigned temp;
+
+    emit(if_eq, expression, newExprConstBool(1), nextQuadLabel() + 2, 0, expression->sym->line);
+    temp = nextQuadLabel();
+    emit(jump, NULL, NULL, 0, 0, expression->sym->line);
+
+    return temp;
+}
+
+unsigned HANDLE_ELSEPREFIX(int lineno){
+    unsigned temp = nextQuadLabel();
+    
+    emit(jump, NULL, NULL, 0, 0, lineno);
+
+    return temp;
+}
+
 

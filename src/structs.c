@@ -171,7 +171,7 @@ Expr* newExprConstNum(double i){
 
 Expr* newExprConstBool(unsigned char bool){
     Expr* e = newExpr(constbool_e);
-    e->boolConst = bool;
+    e->boolConst = !!bool;
     return e;
 }
 
@@ -217,6 +217,8 @@ int boolVal(Expr *e) {
             return 1;
         case libraryfunc_e:
             return 1;
+        case newtable_e:
+            return 1;
         default:
             assert(0);
     }
@@ -226,11 +228,10 @@ char* getStringValueQuad(Expr* e){
     switch(e->type){
         case conststring_e:
             return e->strConst;
-        case constnum_e:{
+        case constnum_e:
             char* str = malloc(sizeof(char) * 32);
             sprintf(str, "%.1f", e->numConst);
             return str;
-        }
         case nil_e:
             return "nil";
         case tableitem_e:
@@ -241,11 +242,10 @@ char* getStringValueQuad(Expr* e){
             return e->sym->name;
         case boolexpr_e:
             return e->sym->name;
-        case arithmexpr_e:{
+        case arithmexpr_e:
             char* str = malloc(sizeof(char) * 32);
             sprintf(str, "%.1f", e->numConst);
             return str;
-        }
         case newtable_e:
             return e->sym->name;
         case constbool_e:

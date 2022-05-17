@@ -23,7 +23,7 @@
 %start program
 
 %union {
-	int bval;
+    unsigned labelval;
     double nval;
     char* sval;
 	unsigned int func_addr;
@@ -46,6 +46,7 @@
 %type<exprval> lvalue expression term assignexpr prim member call 
                objectdef const elist indexed indexedelem objectarg
 %type<callval> callsuffix normcall methodcall 
+%type<labelval> ifprefix elseprefix
 
 
 %right ASSIGN
@@ -205,8 +206,15 @@ idlist:         IDENT                   {HANDLE_IDLIST_IDENT($1, yylineno);}
                 | IDENT COMMA idlist    {HANDLE_IDLIST_IDENT($1, yylineno);} 
                 ;
 
-ifstmt:         IF PAR_OPEN expression PAR_CLOSED statement %prec LOWER_THAN_ELSE
-                | IF PAR_OPEN expression PAR_CLOSED statement ELSE statement
+ifprefix:       IF PAR_OPEN expression PAR_CLOSED   {$$ = HANDLE_IFPREFIX($3);}
+
+elseprefix:     ELSE                                {$$ = HANDLE_ELSEPREFIX(int yylineno);}
+
+ifstmt:         ifprefix statement {patchLabel(ifprefix, nextQuadLabel());} %prec LOWER_THAN_ELSE
+                | ifprefix statement elseprefix statement {
+                    patchLabel(ifprefix, elseprefix + 1);
+                    patchLabel(elseprefix, nextQuadLabel());
+                }
                 ;
 
 whilestmt:      WHILE PAR_OPEN expression PAR_CLOSED statement       
