@@ -498,19 +498,19 @@ Expr* HANDLE_OBJECTDEF_TO_INDEXED(Expr* indexed){
 // =======================================================================================
 
 iopcode switch_op(char* op){
-    if(op == "+") return add;
-    else if(op == "-") return sub;
-    else if(op == "*") return mul;
-    else if(op == "/") return mydiv;
-    else if(op == "%") return mod;
-    else if(op == ">") return if_greater;
-    else if(op == ">=") return if_geatereq;
-    else if(op == "<") return if_less;
-    else if(op == "<=") return if_lesseq;
-    else if(op == "==") return if_eq;
-    else if(op == "!=") return if_noteq;
-    else if(op == "&&") return and;
-    else if(op == "||") return or;
+    if(strcmp(op, "+") == 0) return add;
+    else if(strcmp(op, "-") == 0) return sub;
+    else if(strcmp(op, "*") == 0) return mul;
+    else if(strcmp(op, "/") == 0) return mydiv;
+    else if(strcmp(op, "%") == 0) return mod;
+    else if(strcmp(op, ">") == 0) return if_greater;
+    else if(strcmp(op, ">=") == 0) return if_geatereq;
+    else if(strcmp(op, "<") == 0) return if_less;
+    else if(strcmp(op, "<=") == 0) return if_lesseq;
+    else if(strcmp(op, "==") == 0) return if_eq;
+    else if(strcmp(op, "!=") == 0) return if_noteq;
+    else if(strcmp(op, "&&") == 0) return and;
+    else if(strcmp(op, "||") == 0) return or;
     else assert(0);
 }
 
@@ -558,14 +558,14 @@ Expr* HANDLE_ARITH_OP(char* op, Expr* expr1, Expr* expr2){
 Expr* HANDLE_REL_OP(char* op, Expr* expr1, Expr* expr2){
     Expr* temp;
 
-    if(check_arith_eligible(expr1) == 1 && check_arith_eligible(expr2) == 1){
+    if(check_arith_eligible(expr1) == 1  && check_arith_eligible(expr2) == 1){
         int result;
-        if(op == ">") result = (expr1 > expr2);
-        else if(op == ">=") result = (expr1 >= expr2);
-        else if(op == "<") result = (expr1 < expr2);
-        else if(op == "<=") result = (expr1 <= expr2);
-        else if(op == "==") result = (expr1 == expr2);
-        else if(op == "!=") result = (expr1 != expr2);
+        if(strcmp(op, ">") == 0) result = (expr1->numConst > expr2->numConst);
+        else if(strcmp(op, ">=") == 0) result = (expr1->numConst >= expr2->numConst);
+        else if(strcmp(op, "<") == 0) result = (expr1->numConst < expr2->numConst);
+        else if(strcmp(op, "<=") == 0) result = (expr1->numConst <= expr2->numConst);
+        else if(strcmp(op, "==") == 0) result = (expr1->numConst == expr2->numConst);
+        else if(strcmp(op, "!=") == 0) result = (expr1->numConst != expr2->numConst);
         return newExprConstBool(result);
     }
 
@@ -579,7 +579,23 @@ Expr* HANDLE_REL_OP(char* op, Expr* expr1, Expr* expr2){
         return (Expr*) 0;
     }
 
-    //HERE
+    if( (strcmp(op, "==") == 0 || strcmp(op, "!=") == 0) && (expr1->type == expr2->type) ){
+        int res;
+        if(expr1->type == constnum_e) res = expr2->numConst == expr1->numConst;
+        else if(expr1->type == constbool_e) res = expr2->boolConst == expr1->boolConst;
+        else if(expr1->type == conststring_e) res = strcmp(expr2->strConst, expr1->strConst) == 0;
+        else if(expr1->type == arithmexpr_e) res = expr2->numConst == expr1->numConst;
+        else if(expr1->type == boolexpr_e) res = expr2->boolConst == expr1->boolConst;
+        else if(expr1->type == newtable_e) res = 1; 
+        else if(expr1->type == programfunc_e) res = strcmp(expr2->sym->name, expr1->sym->name) == 0;
+        else if(expr1->type == libraryfunc_e) res = strcmp(expr2->sym->name, expr1->sym->name) == 0;
+
+        return (strcmp(op, "==") == 0 ? newExprConstBool(res) :  newExprConstBool(!res));
+    }
+
+    if((expr1->type == nil_e && expr2->type == tableitem_e) || (expr1->type == tableitem_e && expr2->type == nil_e)){
+        return newExprConstBool(1);
+    }
 
     temp = newExpr(boolexpr_e);
     temp->sym = newTemp();

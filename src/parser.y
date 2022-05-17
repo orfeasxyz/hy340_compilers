@@ -208,12 +208,12 @@ idlist:         IDENT                   {HANDLE_IDLIST_IDENT($1, yylineno);}
 
 ifprefix:       IF PAR_OPEN expression PAR_CLOSED   {$$ = HANDLE_IFPREFIX($3);}
 
-elseprefix:     ELSE                                {$$ = HANDLE_ELSEPREFIX(int yylineno);}
+elseprefix:     ELSE                                {$$ = HANDLE_ELSEPREFIX(yylineno);}
 
-ifstmt:         ifprefix statement {patchLabel(ifprefix, nextQuadLabel());} %prec LOWER_THAN_ELSE
+ifstmt:         ifprefix statement {patchLabel($1, nextQuadLabel());} %prec LOWER_THAN_ELSE
                 | ifprefix statement elseprefix statement {
-                    patchLabel(ifprefix, elseprefix + 1);
-                    patchLabel(elseprefix, nextQuadLabel());
+                    patchLabel($1, $3 + 1);
+                    patchLabel($3, nextQuadLabel());
                 }
                 ;
 
