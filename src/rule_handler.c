@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
+//TODO
+//TODO fix the expr2->sym->line!! WE HAVE TO CHECK FOR SYM BECAUSE sym is NULL!!
+//TODO 
+
 Expr* emitIfTableItem(Expr* e);
 
 int isVar(SymbolTableEntry* temp){
@@ -552,12 +556,12 @@ Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
     }
 
     if(check_arith_eligible(expr1) == -1) {
-        fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in relation expression\n", expr1->sym->line, str_iopcodeName[expr1->type]);
+        fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in relation expression\n", 0, str_iopcodeName[expr1->type]);
         return (Expr*) 0;
     }
 
     if(check_arith_eligible(expr2) == -1) {
-        fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in relation expression\n", expr2->sym->line, str_iopcodeName[expr2->type]);
+        fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in relation expression\n", 0, str_iopcodeName[expr2->type]);
         return (Expr*) 0;
     }
 
@@ -616,9 +620,9 @@ Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2){
 unsigned HANDLE_IFPREFIX(Expr* expression){
     unsigned temp;
 
-    emit(if_eq, expression, newExprConstBool(1), NULL, nextQuadLabel() + 2, expression->sym->line);
+    emit(if_eq, expression, newExprConstBool(1), NULL, nextQuadLabel() + 2, 0);
     temp = nextQuadLabel();
-    emit(jump, NULL, NULL, 0, 0, expression->sym->line);
+    emit(jump, NULL, NULL, 0, 0, 0);
 
     return temp;
 }

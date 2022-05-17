@@ -306,7 +306,7 @@ void printQuads(void) {
         iopcodeName(q),
         (q->result != NULL ? getStringValueQuad(q->result) : " "),
         (q->arg1 != NULL ? getStringValueQuad(q->arg1) : " "),
-        (quads->arg2 != NULL ? getStringValueQuad(q->arg2) : " "),
+        (q->arg2 != NULL ? getStringValueQuad(q->arg2) : " "),
         q->op == jump ? str_label : " ");
     }
 }
