@@ -622,7 +622,7 @@ unsigned HANDLE_IFPREFIX(Expr* expression){
 
     emit(if_eq, expression, newExprConstBool(1), NULL, nextQuadLabel() + 2, 0);
     temp = nextQuadLabel();
-    emit(jump, NULL, NULL, 0, 0, 0);
+    emit(jump, NULL, NULL, NULL, 0, 0);
 
     return temp;
 }
@@ -635,4 +635,35 @@ unsigned HANDLE_ELSEPREFIX(int lineno){
     return temp;
 }
 
+unsigned HANDLE_WHILEARGS(Expr* expression){
+    unsigned result;
+    emit(if_eq, expression, newExprConstBool(1), NULL, nextQuadLabel() + 2, 0);
+    result = nextQuadLabel();
+    emit(jump, NULL, NULL, NULL, 0, 0);
+}
 
+void HANDLE_WHILE(unsigned start, unsigned args){
+    emit(jump, NULL, NULL, NULL, start, 0);
+    patchLabel(args, nextQuadLabel());
+    // tba
+    // tba
+}
+
+ForLoopPrefix* HANDLE_FORPREFIX(unsigned M, Expr* expression){
+    ForLoopPrefix* temp;
+    temp->test = M;
+    temp->enter = nextQuadLabel();
+    emit(if_eq, expression, newExprConstBool(1), 0, 0, 0);
+
+    return temp;
+}
+
+void HANDLE_FORSTMT(ForLoopPrefix* prefix, unsigned N1, unsigned N2, unsigned N3){
+    patchLabel(prefix->enter, N2 + 1);
+    patchLabel(N1, nextQuadLabel());
+    patchLabel(N2, prefix->test);
+    patchLabel(N3, N1 + 1);
+
+    // tba
+    // tba
+}

@@ -39,6 +39,10 @@ Expr* HANDLE_REL_OP(iopcode, Expr*, Expr*);
 Expr* HANDLE_BOOL_OP(iopcode, Expr*, Expr*);
 unsigned HANDLE_IFPREFIX(Expr*);
 unsigned HANDLE_ELSEPREFIX(int);
+unsigned HANDLE_WHILEARGS(Expr*);
+void HANDLE_WHILE(unsigned, unsigned);
+ForLoopPrefix* HANDLE_FORPREFIX(unsigned, Expr*);
+void HANDLE_FORSTMT(ForLoopPrefix*, unsigned, unsigned, unsigned);
 
 
 #endif  // _RULE_HANDLERS_H_

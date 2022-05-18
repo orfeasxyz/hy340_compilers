@@ -28,6 +28,7 @@
     char* sval;
 	unsigned int func_addr;
 	char* lib_addr;
+    struct ForLoopPrefix* forprefixval;
     struct SymbolTableEntry* symval;
     struct Expr* exprval;
     struct Call* callval;
@@ -46,7 +47,8 @@
 %type<exprval> lvalue expression term assignexpr prim member call 
                objectdef const elist indexed indexedelem objectarg
 %type<callval> callsuffix normcall methodcall 
-%type<labelval> ifprefix elseprefix
+%type<labelval> ifprefix elseprefix whileprefix whileargs M N
+%type<forprefixval> forprefix
 
 
 %right ASSIGN
@@ -218,9 +220,18 @@ ifstmt:         ifprefix statement {patchLabel($1, nextQuadLabel());} %prec LOWE
                 }
                 ;
 
-whilestmt:      WHILE PAR_OPEN expression PAR_CLOSED statement       
+whileprefix:    WHILE                               {$$ = nextQuadLabel();};
 
-forstmt:        FOR PAR_OPEN elist SEMI_COLON expression SEMI_COLON elist PAR_CLOSED statement ;
+whileargs:      PAR_OPEN expression PAR_CLOSED      {$$ = HANDLE_WHILEARGS($2);}
+
+whilestmt:      whileprefix whileargs statement;    {HANDLE_WHILE($1, $2);}    
+
+N:              {$$ = nextQuadLabel(); emit(jump, NULL, NULL, NULL, 0, yylineno);};
+M:              {$$ = nextQuadLabel();};
+
+forprefix:      FOR PAR_OPEN elist SEMI_COLON M expression SEMI_COLON {$$ = HANDLE_FORPREFIX($5, $6);};
+
+forstmt:        forprefix N elist PAR_CLOSED N statement N {HANDLE_FORSTMT($1, $2, $5, $7);};
 
 returnstmt:     RETURN SEMI_COLON
                 | RETURN expression SEMI_COLON

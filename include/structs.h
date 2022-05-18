@@ -78,6 +78,11 @@ typedef struct SymbolTableEntry {
     unsigned totalLocals;
 } SymbolTableEntry;
 
+typedef struct ForLoopPrefix {
+    unsigned test;
+    unsigned enter;
+} ForLoopPrefix;
+
 typedef struct Expr {
 	ExprType			type;
 	SymbolTableEntry*	sym;
