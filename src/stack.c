@@ -5,6 +5,7 @@
 
 stack_T scopeOffsetStack = NULL;
 stack_T functionScopeStack = NULL;
+stack_T loopCounterStack = NULL;
 
 struct stack{
     int data;

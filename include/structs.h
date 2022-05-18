@@ -136,6 +136,8 @@ extern unsigned formalArgOffset;
 extern unsigned scopeSpaceCounter;
 
 extern unsigned tempCounter;
+extern unsigned funcCounter;
+extern unsigned loopCounter;
 
 char* newTempName();
 void resetTemp();

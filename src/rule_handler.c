@@ -6,6 +6,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#ifdef DEBUG
+#	define DPRINT(...) fprintf(stderr, __VA_ARGS__)
+#else
+#	define DPRINT(...)
+#endif
 
 //TODO
 //TODO fix the expr2->sym->line!! WE HAVE TO CHECK FOR SYM BECAUSE sym is NULL!!
@@ -203,7 +208,7 @@ char* HANDLE_FUNCTION_WITHOUT_NAME(int lineno){
     SymTable_T table = current_table;
     char* funcname = malloc(countDigits(anon_count) + 2);
 
-    sprintf(funcname, "$%d", anon_count);
+    sprintf(funcname, "$%d", anon_count++);
 
     temp = makeSymbol(funcname, lineno, scope);
     temp->type = USERFUNC;
@@ -620,6 +625,7 @@ Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2){
 unsigned HANDLE_IFPREFIX(Expr* expression){
     unsigned temp;
 
+	DPRINT("nextQuadLabel + 2 (label) = %d\n", nextQuadLabel() + 2); 
     emit(if_eq, expression, newExprConstBool(1), NULL, nextQuadLabel() + 2, 0);
     temp = nextQuadLabel();
     emit(jump, NULL, NULL, NULL, 0, 0);
@@ -640,17 +646,17 @@ unsigned HANDLE_WHILEARGS(Expr* expression){
     emit(if_eq, expression, newExprConstBool(1), NULL, nextQuadLabel() + 2, 0);
     result = nextQuadLabel();
     emit(jump, NULL, NULL, NULL, 0, 0);
+	return result;
 }
 
 void HANDLE_WHILE(unsigned start, unsigned args){
     emit(jump, NULL, NULL, NULL, start, 0);
     patchLabel(args, nextQuadLabel());
-    // tba
-    // tba
+    // TODO
 }
 
 ForLoopPrefix* HANDLE_FORPREFIX(unsigned M, Expr* expression){
-    ForLoopPrefix* temp;
+    ForLoopPrefix* temp = malloc(sizeof(ForLoopPrefix));
     temp->test = M;
     temp->enter = nextQuadLabel();
     emit(if_eq, expression, newExprConstBool(1), 0, 0, 0);

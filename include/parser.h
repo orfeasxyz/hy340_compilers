@@ -161,16 +161,17 @@ union YYSTYPE
 {
 #line 25 "parser.y"
 
-	int bval;
+    unsigned labelval;
     double nval;
     char* sval;
 	unsigned int func_addr;
 	char* lib_addr;
+    struct ForLoopPrefix* forprefixval;
     struct SymbolTableEntry* symval;
     struct Expr* exprval;
     struct Call* callval;
 
-#line 174 "parser.h"
+#line 175 "parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -8,8 +8,8 @@
 unsigned	scope = 0;
 unsigned	anon_count = 0;
 quad*		quads = (void*)0; // quad vector
-unsigned	total = 0;
-unsigned	currQuad = 0;
+unsigned	total = 1;
+unsigned	currQuad = 1;
 
 void expand (void) {
     assert(total == currQuad);
@@ -50,6 +50,9 @@ unsigned functionLocalOffset = 0;
 unsigned formalArgOffset = 0;
 unsigned scopeSpaceCounter = 1;
 unsigned tempCounter = 0;
+unsigned loopCounter = 0;
+unsigned funcCounter = 0;
+
 
 ScopeSpace currScopeSpace(void){
     if(scopeSpaceCounter == 1){
@@ -289,6 +292,22 @@ const char* str_iopcodeName[] = {
     "funcstart"
 };
 
+int isBranch(iopcode op) {
+	switch(op) {
+		case jump:
+		case if_lesseq:
+		case if_greater:
+		case if_eq:
+		case if_geatereq:
+		case if_noteq:
+		case if_less:
+			return 1;
+		default:
+			return 0;
+	}
+	return 0;
+}
+
 const char* iopcodeName(quad* q){
     return str_iopcodeName[q->op];
 }
@@ -296,17 +315,22 @@ const char* iopcodeName(quad* q){
 void printQuads(void) {
 	char str_label[16] = {0};
 	printf("%8s | %14s | %10s | %10s | %10s | %10s |\n", "quad#", "opcode", "result", "arg1", "arg2", "label");
-    for (int i = 0; i < currQuad; i++) {
+    for (int i = 1; i < currQuad; i++) {
         quad* q = &quads[i];
-		if (q->op == jump) {
-			sprintf(str_label, "%#x", q->label);
+
+		if (isBranch(q->op)) {
+			sprintf(str_label, "%d", q->label);
 		}
+		else {
+			strcpy(str_label, " ");
+		}
+
         printf("%8d | %14s | %10s | %10s | %10s | %10s |\n",
         i,
         iopcodeName(q),
         (q->result != NULL ? getStringValueQuad(q->result) : " "),
         (q->arg1 != NULL ? getStringValueQuad(q->arg1) : " "),
         (q->arg2 != NULL ? getStringValueQuad(q->arg2) : " "),
-        q->op == jump ? str_label : " ");
+        str_label);
     }
 }

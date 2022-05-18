@@ -11,5 +11,6 @@ stack_T stack_pop(stack_T);
 
 extern stack_T scopeOffsetStack;
 extern stack_T functionScopeStack;
+extern stack_T loopCounterStack;
 
 #endif // _STACK_H_

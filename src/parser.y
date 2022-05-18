@@ -4,9 +4,7 @@
 	#include <string.h>
 	#include <assert.h>
 	#include <stdbool.h>
-    #include "../include/symtable.h"
-    #include "../include/structs.h"
-    #include "../include/stack.h"
+    #include "../include/symtable.h" #include "../include/structs.h" #include "../include/stack.h"
 	#include "../include/rule_handler.h"
 	#include "../include/parser.h"
 
@@ -167,7 +165,20 @@ indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED {$$ = HANDLE
 
 block:          CURLY_OPEN {scope++; current_table = SymTable_next(current_table);} statements CURLY_CLOSED {scope--; SymTable_hide(current_table); current_table = SymTable_prev(current_table);};
 
-funcdef:        funcprefix funcargs funcbody {$$ = HANDLE_FUNCDEF($1, $3, yylineno);} ;
+funcdef:        funcprefix
+				{
+					funcCounter++;
+					loopCounterStack = stack_push(loopCounterStack, loopCounter);
+					loopCounter = 0;
+				}
+				funcargs
+				funcbody
+				{
+					$$ = HANDLE_FUNCDEF($1, $4, yylineno);
+					funcCounter--;
+					loopCounter = stack_top(loopCounterStack);
+					loopCounterStack = stack_pop(loopCounterStack);
+				};
 
 funcbody:       block {
                     $$ = currScopeOffset();
@@ -220,16 +231,16 @@ ifstmt:         ifprefix statement {patchLabel($1, nextQuadLabel());} %prec LOWE
                 }
                 ;
 
-whileprefix:    WHILE                               {$$ = nextQuadLabel();};
+whileprefix:    WHILE                               {$$ = nextQuadLabel(); loopCounter++;};
 
 whileargs:      PAR_OPEN expression PAR_CLOSED      {$$ = HANDLE_WHILEARGS($2);}
 
-whilestmt:      whileprefix whileargs statement;    {HANDLE_WHILE($1, $2);}    
+whilestmt:      whileprefix whileargs statement		{HANDLE_WHILE($1, $2); loopCounter--;}
 
 N:              {$$ = nextQuadLabel(); emit(jump, NULL, NULL, NULL, 0, yylineno);};
 M:              {$$ = nextQuadLabel();};
 
-forprefix:      FOR PAR_OPEN elist SEMI_COLON M expression SEMI_COLON {$$ = HANDLE_FORPREFIX($5, $6);};
+forprefix:      FOR {loopCounter++;} PAR_OPEN elist SEMI_COLON M expression SEMI_COLON {$$ = HANDLE_FORPREFIX($6, $7); loopCounter--;};
 
 forstmt:        forprefix N elist PAR_CLOSED N statement N {HANDLE_FORSTMT($1, $2, $5, $7);};
 
@@ -283,6 +294,17 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "There was an error reading the output file, make sure it exists and the path is written correnctly");
 		exit(0);
 	}
+
+	FILE *fptr = fopen(argv[1], "r");
+	char c;
+
+	printf("Source: \n");
+	c = fgetc(fptr);
+    while (c != EOF) {
+        printf ("%c", c);
+        c = fgetc(fptr);
+	}
+	printf("\n");
 
 	yyparse();
     SymTable_print(head);
