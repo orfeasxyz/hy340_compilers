@@ -83,6 +83,11 @@ typedef struct ForLoopPrefix {
     unsigned enter;
 } ForLoopPrefix;
 
+typedef struct stmt_t {
+	int breakList;
+	int contList;
+} stmt_t;
+
 typedef struct Expr {
 	ExprType			type;
 	SymbolTableEntry*	sym;
@@ -161,7 +166,12 @@ Expr* newExprConstBool(unsigned char b);
 void checkArith(Expr*, const char*);
 int boolVal(Expr *);
 char* getStringValueQuad(Expr*);
+void make_stmt(stmt_t *s);
+int newList(int i);
+int mergeList(int l1, int l2);
+void patchList(int list, int label);
 
+// Printing
 extern const char* str_iopcodeName[];
 const char* iopcodeName(quad*);
 void printQuads(void);

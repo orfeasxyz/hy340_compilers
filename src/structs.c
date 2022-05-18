@@ -189,6 +189,41 @@ SymbolTableEntry* makeSymbol(char* key, int lineno, int scope){
     return temp;
 }
 
+void make_stmt(stmt_t *s) {
+	s->breakList = s->contList = 0;
+}
+
+int newList(int i ) {
+	quads[i].label = 0;
+	return i;
+}
+
+int mergeList(int l1, int l2) {
+	if(!l1) {
+		return l2;
+	}
+	else if(!l2) {
+		return l1;
+	}
+	else {
+		int i = l1;
+		while (quads[i].label) {
+			i = quads[i].label;
+		}
+		quads[i].label = l2;
+		return l1;
+	}
+	return 0; // dummy return to avoid warning
+}
+
+void patchList(int list, int label) {
+	while (list) {
+		int next = quads[list].label;
+		quads[list].label = label;
+		list = next;
+	}
+}
+
 void checkArith(Expr* e, const char* context){
     if (e->type == constbool_e ||
         e->type == conststring_e ||
