@@ -282,9 +282,7 @@ char* getStringValueQuad(Expr* e){
         case boolexpr_e:
             return e->sym->name;
         case arithmexpr_e:{
-            char* str = malloc(sizeof(char) * 32);
-            sprintf(str, "%.1f", e->numConst);
-            return str;
+            return e->sym->name;
         }
         case newtable_e:
             return e->sym->name;

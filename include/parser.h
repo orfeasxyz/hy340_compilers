@@ -62,18 +62,18 @@ extern int yydebug;
     WHILE = 263,                   /* WHILE  */
     FOR = 264,                     /* FOR  */
     FUNCTION = 265,                /* FUNCTION  */
-    AND = 266,                     /* AND  */
-    NOT = 267,                     /* NOT  */
-    OR = 268,                      /* OR  */
-    LOCAL = 269,                   /* LOCAL  */
-    TRUE = 270,                    /* TRUE  */
-    FALSE = 271,                   /* FALSE  */
-    NIL = 272,                     /* NIL  */
-    ASSIGN = 273,                  /* ASSIGN  */
-    PLUS = 274,                    /* PLUS  */
-    CONTINUE = 275,                /* CONTINUE  */
-    BREAK = 276,                   /* BREAK  */
-    RETURN = 277,                  /* RETURN  */
+    RETURN = 266,                  /* RETURN  */
+    BREAK = 267,                   /* BREAK  */
+    CONTINUE = 268,                /* CONTINUE  */
+    AND = 269,                     /* AND  */
+    NOT = 270,                     /* NOT  */
+    OR = 271,                      /* OR  */
+    LOCAL = 272,                   /* LOCAL  */
+    TRUE = 273,                    /* TRUE  */
+    FALSE = 274,                   /* FALSE  */
+    NIL = 275,                     /* NIL  */
+    ASSIGN = 276,                  /* ASSIGN  */
+    PLUS = 277,                    /* PLUS  */
     MINUS = 278,                   /* MINUS  */
     MUL = 279,                     /* MUL  */
     DIV = 280,                     /* DIV  */
@@ -116,18 +116,18 @@ extern int yydebug;
 #define WHILE 263
 #define FOR 264
 #define FUNCTION 265
-#define AND 266
-#define NOT 267
-#define OR 268
-#define LOCAL 269
-#define TRUE 270
-#define FALSE 271
-#define NIL 272
-#define ASSIGN 273
-#define PLUS 274
-#define CONTINUE 275
-#define BREAK 276
-#define RETURN 277
+#define RETURN 266
+#define BREAK 267
+#define CONTINUE 268
+#define AND 269
+#define NOT 270
+#define OR 271
+#define LOCAL 272
+#define TRUE 273
+#define FALSE 274
+#define NIL 275
+#define ASSIGN 276
+#define PLUS 277
 #define MINUS 278
 #define MUL 279
 #define DIV 280
@@ -159,7 +159,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 23 "parser.y"
+#line 25 "parser.y"
 
     unsigned labelval;
     double nval;

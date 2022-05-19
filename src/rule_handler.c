@@ -267,8 +267,8 @@ Expr* HANDLE_TERM_TO_INC_LVALUE(Expr* lvalue, int lineno){
         emit(add, val, newExprConstNum(1), val, 0, lineno);
         emit(tablesetelem, lvalue, lvalue->index, val, 0, lineno);
     } else {
-        emit(assign, lvalue, NULL, temp, 0, lineno);
         emit(add, lvalue, newExprConstNum(1), lvalue, 0, lineno);
+        emit(assign, lvalue, NULL, temp, 0, lineno);
     }
 
     return temp;
@@ -311,8 +311,8 @@ Expr* HANDLE_TERM_TO_DEC_LVALUE(Expr* lvalue, int lineno){
         emit(sub, val, newExprConstNum(1), val, 0, lineno);
         emit(tablesetelem, lvalue, lvalue->index, val, 0, lineno);
     } else {
-        emit(assign, lvalue, NULL, temp, 0, lineno);
         emit(sub, lvalue, newExprConstNum(1), lvalue, 0, lineno);
+        emit(assign, lvalue, NULL, temp, 0, lineno);
     }
 
     return temp;
@@ -344,14 +344,14 @@ Expr* HANDLE_TERM_TO_UMINUS_EXPR(Expr* expression){
     checkArith(expression, "Uminus expression");
     Expr* temp = newExpr(arithmexpr_e);
     temp->sym = newTemp();
-    emit(uminus, expression, NULL, temp, 0, expression->sym->line);
+    emit(uminus, expression, NULL, temp, 0, 0);
     return temp;
 }
 
 Expr* HANDLE_TERM_TO_NOT_EXPR(Expr* expression){
     Expr* temp = newExpr(boolexpr_e);
     temp->sym = newTemp();
-    emit(not, expression, NULL, temp, 0, expression->sym->line);
+    emit(not, expression, NULL, temp, 0, 0);
     return temp;
 }
 
@@ -372,7 +372,7 @@ Expr* emitIfTableItem(Expr* e){
             e->index,
             result,
             0,
-            e->sym->line
+            0
         );
         return result;
     }
@@ -411,14 +411,14 @@ Expr* HANDLE_PRIM_TO_FUNCDEF(SymbolTableEntry* funcdef){
 Expr* makeCall (Expr* lvalue, Expr* reversed_elist) {
     Expr* func = emitIfTableItem(lvalue);
     while (reversed_elist) {
-        emit(param, reversed_elist, NULL, NULL, 0, lvalue->sym->line);
+        emit(param, reversed_elist, NULL, NULL, 0, 0);
         reversed_elist = reversed_elist->next;
     }
 
-    emit(call, func, NULL, NULL, 0, lvalue->sym->line);
+    emit(call, func, NULL, NULL, 0, 0);
     Expr* result = newExpr(var_e);
     result->sym = newTemp();
-    emit(getretval, NULL, NULL, result, 0, lvalue->sym->line);
+    emit(getretval, NULL, NULL, result, 0, 0);
     return result;
 }
 
@@ -496,9 +496,9 @@ Expr* HANDLE_OBJECTDEF_TO_ELIST(Expr* elist){
 Expr* HANDLE_OBJECTDEF_TO_INDEXED(Expr* indexed){
     Expr* t = newExpr(newtable_e);
     t->sym = newTemp();
-    emit(tablecreate, t, NULL, NULL, 0, indexed->sym->line);
+    emit(tablecreate, t, NULL, NULL, 0, 0);
     for(; indexed; indexed = indexed->next){
-        emit(tablesetelem, t, indexed->index, indexed, 0, indexed->sym->line);
+        emit(tablesetelem, t, indexed->index, indexed, 0, 0);
     }
 
     return t;
@@ -541,7 +541,7 @@ Expr* HANDLE_ARITH_OP(iopcode op, Expr* expr1, Expr* expr2){
 
     temp = newExpr(arithmexpr_e);
     temp->sym = newTemp();
-    emit(op, expr1, expr2, temp, 0, expr1->sym->line);
+    emit(op, expr1, expr2, temp, 0, 0);
 
     return temp;
 }
@@ -591,10 +591,10 @@ Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
     temp = newExpr(boolexpr_e);
     temp->sym = newTemp();
 
-    emit(op, expr1, expr2, NULL, nextQuadLabel() + 3, expr1->sym->line);
-    emit(assign, newExprConstBool(0), NULL, temp, 0, expr1->sym->line);
-    emit(jump, NULL, NULL, NULL, nextQuadLabel() + 2, expr1->sym->line);
-    emit(assign, newExprConstBool(1), NULL, temp, 0, expr1->sym->line);
+    emit(op, expr1, expr2, NULL, nextQuadLabel() + 3, 0);
+    emit(assign, newExprConstBool(0), NULL, temp, 0, 0);
+    emit(jump, NULL, NULL, NULL, nextQuadLabel() + 2, 0);
+    emit(assign, newExprConstBool(1), NULL, temp, 0, 0);
 
     return temp;
 }
@@ -614,7 +614,7 @@ Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2){
 
     temp = newExpr(boolexpr_e);
     temp->sym = newTemp();
-    emit(op, expr1, expr2, temp, 0, expr1->sym->line);
+    emit(op, expr1, expr2, temp, 0, 0);
 
     return temp;
 
@@ -625,7 +625,6 @@ Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2){
 unsigned HANDLE_IFPREFIX(Expr* expression){
     unsigned temp;
 
-	DPRINT("nextQuadLabel + 2 (label) = %d\n", nextQuadLabel() + 2); 
     emit(if_eq, expression, newExprConstBool(1), NULL, nextQuadLabel() + 2, 0);
     temp = nextQuadLabel();
     emit(jump, NULL, NULL, NULL, 0, 0);
@@ -649,10 +648,16 @@ unsigned HANDLE_WHILEARGS(Expr* expression){
 	return result;
 }
 
-void HANDLE_WHILE(unsigned start, unsigned args){
+void HANDLE_WHILE(unsigned start, unsigned args, stmt_t *stmt){
     emit(jump, NULL, NULL, NULL, start, 0);
     patchLabel(args, nextQuadLabel());
-    // TODO
+
+    if(stmt){
+        patchList(stmt->breakList, nextQuadLabel());
+        patchList(stmt->contList, start);
+    } else {
+        assert(0);
+    }
 }
 
 ForLoopPrefix* HANDLE_FORPREFIX(unsigned M, Expr* expression){
@@ -664,12 +669,34 @@ ForLoopPrefix* HANDLE_FORPREFIX(unsigned M, Expr* expression){
     return temp;
 }
 
-void HANDLE_FORSTMT(ForLoopPrefix* prefix, unsigned N1, unsigned N2, unsigned N3){
+void HANDLE_FORSTMT(ForLoopPrefix* prefix, unsigned N1, unsigned N2, unsigned N3, stmt_t* stmt){
     patchLabel(prefix->enter, N2 + 1);
     patchLabel(N1, nextQuadLabel());
     patchLabel(N2, prefix->test);
     patchLabel(N3, N1 + 1);
 
-    // tba
-    // tba
+    if(stmt){
+	    patchList(stmt->breakList, nextQuadLabel());
+	    patchList(stmt->contList, N1 + 1);
+    } else {
+        assert(0);
+    }
+}
+
+stmt_t* HANDLE_BREAK(void) {
+	stmt_t *temp = malloc(sizeof(stmt_t));
+
+	make_stmt(temp);
+	temp->breakList = newList(nextQuadLabel());
+	emit(jump, NULL, NULL, NULL, 0, 0);
+	return temp;
+}
+
+stmt_t* HANDLE_CONTINUE(void) {
+	stmt_t *temp = malloc(sizeof(stmt_t));
+
+	make_stmt(temp);
+	temp->contList = newList(nextQuadLabel());
+	emit(jump, NULL, NULL, NULL, 0, 0);
+	return temp;
 }

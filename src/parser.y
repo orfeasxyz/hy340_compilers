@@ -1,10 +1,12 @@
 %{
-    #include <stdlib.h>
-    #include <stdio.h>
+	#include <stdlib.h>
+	#include <stdio.h>
 	#include <string.h>
 	#include <assert.h>
 	#include <stdbool.h>
-    #include "../include/symtable.h" #include "../include/structs.h" #include "../include/stack.h"
+	#include "../include/symtable.h"
+	#include "../include/structs.h"
+	#include "../include/stack.h"
 	#include "../include/rule_handler.h"
 	#include "../include/parser.h"
 
@@ -30,6 +32,7 @@
     struct SymbolTableEntry* symval;
     struct Expr* exprval;
     struct Call* callval;
+	struct stmt_t* stmtval;
 }
 
 %token<nval> NUM
@@ -47,7 +50,7 @@
 %type<callval> callsuffix normcall methodcall 
 %type<labelval> ifprefix elseprefix whileprefix whileargs M N
 %type<forprefixval> forprefix
-
+%type<stmtval> break continue statement block statements statements_alt ifstmt
 
 %right ASSIGN
 %left OR
@@ -69,20 +72,28 @@
 program:        statements ;
 
 
-statements:     statements {resetTemp();} statement 
-                |
+statements:     statements_alt          { $$ = $1; }
+                |                       { $$ = (stmt_t*) 0; puts("hahaah");}
+                ;  
+
+statements_alt: statement                                 { $$ = $1; }
+                | statements_alt {resetTemp();} statement {
+                                            if($1) $$ = $1;
+                                            else if($3) $$ = $3;
+                                            else $$ = (stmt_t*) 0;
+                                        }
                 ;
 
-statement:      expression SEMI_COLON
-                | ifstmt
-                | whilestmt
-                | forstmt
-                | returnstmt
-                | BREAK SEMI_COLON
-                | CONTINUE SEMI_COLON
-                | block
-                | funcdef
-                | SEMI_COLON
+statement:      expression SEMI_COLON   {$$ = (stmt_t*) 0;}
+                | ifstmt                {$$ = $1;}
+                | whilestmt             {$$ = (stmt_t*) 0;}
+                | forstmt               {$$ = (stmt_t*) 0;}
+                | returnstmt            {$$ = (stmt_t*) 0;}
+                | continue              {$$ = $1;}
+                | break                 {$$ = $1;}
+                | block                 {$$ = $1;}
+                | funcdef               {$$ = (stmt_t*) 0;}
+                | SEMI_COLON            {$$ = (stmt_t*) 0;}
                 ;
 
 expression:     assignexpr                      {$$ = $1;}
@@ -103,18 +114,18 @@ expression:     assignexpr                      {$$ = $1;}
                 ;
 
 term:           PAR_OPEN expression PAR_CLOSED  {$$ = $2;}
-                | UMINUS expression             {$$ = HANDLE_TERM_TO_UMINUS_EXPR($2);}
+                | MINUS expression              {$$ = HANDLE_TERM_TO_UMINUS_EXPR($2);} %prec UMINUS
                 | NOT expression                {$$ = HANDLE_TERM_TO_NOT_EXPR($2);}
                 | INC lvalue                    {$$ = HANDLE_TERM_TO_INC_LVALUE($2, yylineno);}
                 | lvalue INC                    {$$ = HANDLE_TERM_TO_LVALUE_INC($1, yylineno);}
-                | DEC lvalue                    {HANDLE_TERM_TO_DEC_LVALUE($2, yylineno);}
-                | lvalue DEC                    {HANDLE_TERM_TO_LVALUE_DEC($1, yylineno);}
+                | DEC lvalue                    {$$ = HANDLE_TERM_TO_DEC_LVALUE($2, yylineno);}
+                | lvalue DEC                    {$$ = HANDLE_TERM_TO_LVALUE_DEC($1, yylineno);}
                 | prim                          {$$ = $1;}
                 ;
 
-assignexpr:     lvalue ASSIGN expression        {HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, $3, yylineno);};
+assignexpr:     lvalue ASSIGN expression        {$$ = HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, $3, yylineno);};
 
-prim:           lvalue                          {HANDLE_PRIM_TO_LVALUE($1, yylineno);}
+prim:           lvalue                          {$$ = HANDLE_PRIM_TO_LVALUE($1, yylineno);}
                 | call                          {$$ = $1;}
                 | objectdef                     {$$ = $1;}
                 | PAR_OPEN funcdef PAR_CLOSED   {$$ = HANDLE_PRIM_TO_FUNCDEF($2);}
@@ -163,7 +174,7 @@ indexed:        indexedelem                     {$$ = $1;}
 
 indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED {$$ = HANDLE_INDEXELEM($2, $4);};
 
-block:          CURLY_OPEN {scope++; current_table = SymTable_next(current_table);} statements CURLY_CLOSED {scope--; SymTable_hide(current_table); current_table = SymTable_prev(current_table);};
+block:          CURLY_OPEN {scope++; current_table = SymTable_next(current_table);} statements CURLY_CLOSED {scope--; SymTable_hide(current_table); current_table = SymTable_prev(current_table); $$ = $3;};
 
 funcdef:        funcprefix
 				{
@@ -224,10 +235,12 @@ ifprefix:       IF PAR_OPEN expression PAR_CLOSED   {$$ = HANDLE_IFPREFIX($3);}
 
 elseprefix:     ELSE                                {$$ = HANDLE_ELSEPREFIX(yylineno);}
 
-ifstmt:         ifprefix statement {patchLabel($1, nextQuadLabel());} %prec LOWER_THAN_ELSE
+ifstmt:         ifprefix statement {patchLabel($1, nextQuadLabel()); $$ = $2;} %prec LOWER_THAN_ELSE
                 | ifprefix statement elseprefix statement {
                     patchLabel($1, $3 + 1);
                     patchLabel($3, nextQuadLabel());
+                    $$ = $2;
+                    if(!$$) $$ = $4;
                 }
                 ;
 
@@ -235,18 +248,34 @@ whileprefix:    WHILE                               {$$ = nextQuadLabel(); loopC
 
 whileargs:      PAR_OPEN expression PAR_CLOSED      {$$ = HANDLE_WHILEARGS($2);}
 
-whilestmt:      whileprefix whileargs statement		{HANDLE_WHILE($1, $2); loopCounter--;}
+whilestmt:      whileprefix whileargs statement		{HANDLE_WHILE($1, $2, $3); loopCounter--;}
 
 N:              {$$ = nextQuadLabel(); emit(jump, NULL, NULL, NULL, 0, yylineno);};
 M:              {$$ = nextQuadLabel();};
 
-forprefix:      FOR {loopCounter++;} PAR_OPEN elist SEMI_COLON M expression SEMI_COLON {$$ = HANDLE_FORPREFIX($6, $7); loopCounter--;};
+forprefix:      FOR {loopCounter++;} PAR_OPEN elist SEMI_COLON M expression SEMI_COLON {$$ = HANDLE_FORPREFIX($6, $7);};
 
-forstmt:        forprefix N elist PAR_CLOSED N statement N {HANDLE_FORSTMT($1, $2, $5, $7);};
+forstmt:        forprefix N elist PAR_CLOSED N statement N {HANDLE_FORSTMT($1, $2, $5, $7, $6); loopCounter--;};
 
-returnstmt:     RETURN SEMI_COLON
-                | RETURN expression SEMI_COLON
+returnstmt:		RETURN SEMI_COLON               {emit(ret, NULL, NULL, NULL, 0, yylineno);}
+                | RETURN expression SEMI_COLON  {emit(ret, NULL, NULL, $2, 0, yylineno);}
                 ;
+
+break:			BREAK SEMI_COLON { 
+                        if(loopCounter > 0) $$ = HANDLE_BREAK(); 
+                        else {
+                            fprintf(stderr, "Line %d: Break outside loop\n", yylineno);
+                            $$ = (stmt_t*) 0;
+                        }
+                    }
+
+continue:		CONTINUE SEMI_COLON {
+                        if(loopCounter > 0) $$ = HANDLE_CONTINUE(); 
+                        else {
+                            fprintf(stderr, "Line %d: Continue outside loop\n", yylineno);
+                            $$ = (stmt_t*) 0;
+                        }
+                }
 
 %%
 
@@ -254,8 +283,6 @@ int yyerror(char *message){
     printf("Error on line %d: %s\n", yylineno, message);
     return -1;
 }
-
-
 
 int main(int argc, char **argv) {
     head = SymTable_new();

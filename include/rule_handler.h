@@ -40,9 +40,10 @@ Expr* HANDLE_BOOL_OP(iopcode, Expr*, Expr*);
 unsigned HANDLE_IFPREFIX(Expr*);
 unsigned HANDLE_ELSEPREFIX(int);
 unsigned HANDLE_WHILEARGS(Expr*);
-void HANDLE_WHILE(unsigned, unsigned);
+void HANDLE_WHILE(unsigned, unsigned, stmt_t*);
 ForLoopPrefix* HANDLE_FORPREFIX(unsigned, Expr*);
-void HANDLE_FORSTMT(ForLoopPrefix*, unsigned, unsigned, unsigned);
-
+void HANDLE_FORSTMT(ForLoopPrefix*, unsigned, unsigned, unsigned, stmt_t*);
+stmt_t* HANDLE_BREAK(void);
+stmt_t* HANDLE_CONTINUE(void);
 
 #endif  // _RULE_HANDLERS_H_
