@@ -1387,7 +1387,7 @@ yyreduce:
 
   case 4: /* statements: %empty  */
 #line 76 "parser.y"
-                                        { (yyval.stmtval) = (stmt_t*) 0; puts("hahaah");}
+                                        { (yyval.stmtval) = (stmt_t*) 0; }
 #line 1392 "parser.c"
     break;
 
@@ -1893,7 +1893,7 @@ yyreduce:
 
   case 84: /* const: NIL  */
 #line 224 "parser.y"
-                            {(yyval.exprval) = (struct Expr*) 0;}
+                            {(yyval.exprval) = newExpr(nil_e);}
 #line 1898 "parser.c"
     break;
 

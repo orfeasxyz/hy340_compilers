@@ -73,7 +73,7 @@ program:        statements ;
 
 
 statements:     statements_alt          { $$ = $1; }
-                |                       { $$ = (stmt_t*) 0; puts("hahaah");}
+                |                       { $$ = (stmt_t*) 0;}
                 ;  
 
 statements_alt: statement                                 { $$ = $1; }
@@ -221,7 +221,7 @@ funcname:       IDENT          {$$ = HANDLE_FUNCTION_WITH_NAME($1, yylineno);}
 
 const:          NUM         {$$ = newExprConstNum($1);}
                 | STRING    {$$ = newExprConstString($1);}
-                | NIL       {$$ = (struct Expr*) 0;}
+                | NIL       {$$ = newExpr(nil_e);}
                 | TRUE      {$$ = newExprConstBool(1);}
                 | FALSE     {$$ = newExprConstBool(0);}
                 ;

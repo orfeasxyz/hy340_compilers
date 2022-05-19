@@ -12,9 +12,6 @@
 #	define DPRINT(...)
 #endif
 
-//TODO
-//TODO fix the expr2->sym->line!! WE HAVE TO CHECK FOR SYM BECAUSE sym is NULL!!
-//TODO 
 
 Expr* emitIfTableItem(Expr* e);
 
@@ -422,15 +419,6 @@ Expr* makeCall (Expr* lvalue, Expr* reversed_elist) {
     return result;
 }
 
-Call* HANDLE_METHODCALL(char* name, Expr* elist){
-    Call* temp = malloc(sizeof(Call));
-
-    temp->elist = elist;
-    temp->method = 1;
-    temp->name = name;
-
-    return temp; 
-}
 
 Expr* HANDLE_CALL_ELIST(Expr* call, Expr* elist){
     return makeCall(call, elist);
@@ -462,6 +450,16 @@ Call* HANDLE_NORMCALL(Expr* elist){
     return temp;
 }
 
+Call* HANDLE_METHODCALL(char* name, Expr* elist){
+    Call* temp = malloc(sizeof(Call));
+
+    temp->elist = elist;
+    temp->method = 1;
+    temp->name = name;
+
+    return temp; 
+}
+
 // =======================================================================================
 
 Expr* HANDLE_INDEXELEM(Expr* index, Expr* value){
@@ -486,7 +484,7 @@ Expr* HANDLE_OBJECTDEF_TO_ELIST(Expr* elist){
     Expr* t = newExpr(newtable_e);
     t->sym = newTemp();
     emit(tablecreate, t, NULL, NULL, 0, 0);
-    for(int i; elist; elist = elist->next){
+    for(int i = 0; elist; elist = elist->next){
         emit(tablesetelem, t, newExprConstNum(i++), elist, 0, 0);
     }
 
@@ -526,16 +524,26 @@ Expr* HANDLE_ARITH_OP(iopcode op, Expr* expr1, Expr* expr2){
     Expr* temp;
 
     if(check_arith_eligible(expr1) == 1 && check_arith_eligible(expr2) == 1){
-        return newExprConstNum(expr1->numConst + expr2->numConst);
+        double res;
+        printf("%d\n", op);
+        switch(op){
+            case add:   res = expr1->numConst + expr2->numConst; break;
+            case sub:   res = expr1->numConst - expr2->numConst; break;
+            case mul:   res = expr1->numConst * expr2->numConst; break;
+            case mydiv: res = expr1->numConst / expr2->numConst; break;
+            case mod:   res = (long long)expr1->numConst % (long long)expr2->numConst; break;
+            default: assert(0);
+        }
+        return newExprConstNum(res);
     }
 
     if(check_arith_eligible(expr1) == -1) {
-        fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in arithmetic expression\n", expr1->sym->line, str_iopcodeName[expr1->type]);
+        fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in arithmetic expression\n", 0, str_iopcodeName[expr1->type]);
         return (Expr*) 0;
     }
 
     if(check_arith_eligible(expr2) == -1) {
-        fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in arithmetic expression\n", expr2->sym->line, str_iopcodeName[expr2->type]);
+        fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in arithmetic expression\n",  0, str_iopcodeName[expr2->type]);
         return (Expr*) 0;
     }
 
@@ -560,16 +568,6 @@ Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
         return newExprConstBool(result);
     }
 
-    if(check_arith_eligible(expr1) == -1) {
-        fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in relation expression\n", 0, str_iopcodeName[expr1->type]);
-        return (Expr*) 0;
-    }
-
-    if(check_arith_eligible(expr2) == -1) {
-        fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in relation expression\n", 0, str_iopcodeName[expr2->type]);
-        return (Expr*) 0;
-    }
-
     if((op == if_eq || op == if_noteq) && (expr1->type == expr2->type) ){
         int res;
         if(expr1->type == constnum_e) res = expr2->numConst == expr1->numConst;
@@ -581,7 +579,17 @@ Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
         else if(expr1->type == programfunc_e) res = strcmp(expr2->sym->name, expr1->sym->name) == 0;
         else if(expr1->type == libraryfunc_e) res = strcmp(expr2->sym->name, expr1->sym->name) == 0;
 
-        return (op == if_eq ? newExprConstBool(res) :  newExprConstBool(!res));
+        return (op == if_eq ? newExprConstBool(res) : newExprConstBool(!res));
+    }
+
+    if(check_arith_eligible(expr1) == -1) {
+        fprintf(stderr, "Expression 1 has type %s which is not allowed in relation expression\n", str_iopcodeName[expr1->type]);
+        return (Expr*) 0;
+    }
+
+    if(check_arith_eligible(expr2) == -1) {
+        fprintf(stderr, "Expression 2 has type %s which is not allowed in relation expression\n", str_iopcodeName[expr2->type]);
+        return (Expr*) 0;
     }
 
     if((expr1->type == nil_e && expr2->type == tableitem_e) || (expr1->type == tableitem_e && expr2->type == nil_e)){
@@ -602,22 +610,22 @@ Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
 Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2){
     Expr* temp;
 
-    if(expr1->type == assignexpr_e || expr1->type == var_e) {
-        fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in bool expression\n", expr1->sym->line, str_iopcodeName[expr1->type]);
+    if(expr1->type == assignexpr_e) {
+        fprintf(stderr, "Expression 1 has type %s which is not allowed in bool expression\n", str_iopcodeName[expr1->type]);
         return (Expr*) 0;
     }
 
-    if(expr2->type == assignexpr_e || expr2->type == var_e) {
-        fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in bool expression\n", expr2->sym->line, str_iopcodeName[expr2->type]);
+    if(expr2->type == assignexpr_e) {
+        fprintf(stderr, "Expression 2 has type %s which is not allowed in bool expression\n", str_iopcodeName[expr2->type]);
         return (Expr*) 0;
     }
 
     temp = newExpr(boolexpr_e);
     temp->sym = newTemp();
-    emit(op, expr1, expr2, temp, 0, 0);
+    if(op == and)  emit(op, expr1, expr2, newExprConstBool(boolVal(expr1) && boolVal(expr2)), 0, 0);
+    if(op == or)  emit(op, expr1, expr2, newExprConstBool(boolVal(expr1) || boolVal(expr2)), 0, 0); 
 
     return temp;
-
 }
 
 // =======================================================================================
