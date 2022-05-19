@@ -605,7 +605,7 @@ static const yytype_int16 yyrline[] =
      175,   177,   177,   180,   179,   194,   199,   202,   207,   201,
      218,   219,   222,   223,   224,   225,   226,   229,   230,   231,
      234,   236,   238,   239,   247,   249,   251,   253,   254,   256,
-     256,   258,   260,   261,   264,   272
+     256,   258,   260,   267,   276,   284
 };
 #endif
 
@@ -1387,7 +1387,7 @@ yyreduce:
 
   case 4: /* statements: %empty  */
 #line 76 "parser.y"
-                                        { (yyval.stmtval) = (stmt_t*) 0; }
+                                        { (yyval.stmtval) = (stmt_t*) 0;}
 #line 1392 "parser.c"
     break;
 
@@ -2000,42 +2000,54 @@ yyreduce:
 
   case 102: /* returnstmt: RETURN SEMI_COLON  */
 #line 260 "parser.y"
-                                                        {emit(ret, NULL, NULL, NULL, 0, yylineno);}
-#line 2005 "parser.c"
-    break;
-
-  case 103: /* returnstmt: RETURN expression SEMI_COLON  */
-#line 261 "parser.y"
-                                                {emit(ret, NULL, NULL, (yyvsp[-1].exprval), 0, yylineno);}
+                                                        {
+                                                    if(funcCounter == 0) {
+                                                        fprintf(stderr, "Line %d: Return used outside function", yylineno);
+                                                        exit(1);
+                                                    }
+                                                    emit(ret, NULL, NULL, NULL, 0, yylineno);
+                                                }
 #line 2011 "parser.c"
     break;
 
+  case 103: /* returnstmt: RETURN expression SEMI_COLON  */
+#line 267 "parser.y"
+                                                {
+                                                    if(funcCounter == 0) {
+                                                        fprintf(stderr, "Line %d: Return used outside function", yylineno);
+                                                        exit(1);
+                                                    }
+                                                    emit(ret, NULL, NULL, (yyvsp[-1].exprval), 0, yylineno);
+                                                }
+#line 2023 "parser.c"
+    break;
+
   case 104: /* break: BREAK SEMI_COLON  */
-#line 264 "parser.y"
+#line 276 "parser.y"
                                          { 
                         if(loopCounter > 0) (yyval.stmtval) = HANDLE_BREAK(); 
                         else {
                             fprintf(stderr, "Line %d: Break outside loop\n", yylineno);
-                            (yyval.stmtval) = (stmt_t*) 0;
+                            exit(1);
                         }
                     }
-#line 2023 "parser.c"
+#line 2035 "parser.c"
     break;
 
   case 105: /* continue: CONTINUE SEMI_COLON  */
-#line 272 "parser.y"
+#line 284 "parser.y"
                                             {
                         if(loopCounter > 0) (yyval.stmtval) = HANDLE_CONTINUE(); 
                         else {
                             fprintf(stderr, "Line %d: Continue outside loop\n", yylineno);
-                            (yyval.stmtval) = (stmt_t*) 0;
+                            exit(1);
                         }
                 }
-#line 2035 "parser.c"
+#line 2047 "parser.c"
     break;
 
 
-#line 2039 "parser.c"
+#line 2051 "parser.c"
 
       default: break;
     }
@@ -2229,7 +2241,7 @@ yyreturn:
   return yyresult;
 }
 
-#line 280 "parser.y"
+#line 292 "parser.y"
 
 
 int yyerror(char *message){

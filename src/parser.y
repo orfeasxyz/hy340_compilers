@@ -257,15 +257,27 @@ forprefix:      FOR {loopCounter++;} PAR_OPEN elist SEMI_COLON M expression SEMI
 
 forstmt:        forprefix N elist PAR_CLOSED N statement N {HANDLE_FORSTMT($1, $2, $5, $7, $6); loopCounter--;};
 
-returnstmt:		RETURN SEMI_COLON               {emit(ret, NULL, NULL, NULL, 0, yylineno);}
-                | RETURN expression SEMI_COLON  {emit(ret, NULL, NULL, $2, 0, yylineno);}
+returnstmt:		RETURN SEMI_COLON               {
+                                                    if(funcCounter == 0) {
+                                                        fprintf(stderr, "Line %d: Return used outside function", yylineno);
+                                                        exit(1);
+                                                    }
+                                                    emit(ret, NULL, NULL, NULL, 0, yylineno);
+                                                }
+                | RETURN expression SEMI_COLON  {
+                                                    if(funcCounter == 0) {
+                                                        fprintf(stderr, "Line %d: Return used outside function", yylineno);
+                                                        exit(1);
+                                                    }
+                                                    emit(ret, NULL, NULL, $2, 0, yylineno);
+                                                }
                 ;
 
 break:			BREAK SEMI_COLON { 
                         if(loopCounter > 0) $$ = HANDLE_BREAK(); 
                         else {
                             fprintf(stderr, "Line %d: Break outside loop\n", yylineno);
-                            $$ = (stmt_t*) 0;
+                            exit(1);
                         }
                     }
 
@@ -273,7 +285,7 @@ continue:		CONTINUE SEMI_COLON {
                         if(loopCounter > 0) $$ = HANDLE_CONTINUE(); 
                         else {
                             fprintf(stderr, "Line %d: Continue outside loop\n", yylineno);
-                            $$ = (stmt_t*) 0;
+                            exit(1);
                         }
                 }
 

@@ -81,7 +81,7 @@ Expr* HANDLE_LVALUE_TO_LOCAL_IDENT(char* key, int lineno){
 
     if((temp = SymTable_lookup_here(head, key)) && temp->type == LIBFUNC){
         fprintf(stderr, "Line %d: Library function %s can't be shadowed by local variable\n", lineno, temp->name);
-        return NULL;
+        exit(1);
     }
 
     temp = makeSymbol(key, lineno, scope);
@@ -100,13 +100,17 @@ Expr* HANDLE_LVALUE_TO_GLOBAL_IDENT(char* key, int lineno){
     if((temp = SymTable_lookup_here(head, key))) return makeExpr(temp);
 
     fprintf(stderr, "Line %d: Name %s was not found in the global scope but was referenced as ::%s\n", lineno, key ,key);
-
-    return (Expr*) 0;
+    exit(1);
 }
 
 // =======================================================================================
 
 Expr* HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION(Expr* lvalue, Expr* expression, int lineno){
+    if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack))){
+        fprintf(stderr, "Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lvalue->sym->name, lvalue->sym->scope, stack_top(functionScopeStack));
+        exit(1);
+    }
+
     Expr* temp;
 
     if(lvalue->type == tableitem_e){
@@ -151,13 +155,13 @@ char* HANDLE_IDLIST_IDENT(char* key, int lineno){
 
     if((temp = SymTable_lookup_here(table, key))){
         fprintf(stderr, "Line %d: Formal argument %s already defined in the same id_list\n", lineno, key);
-        return NULL;
+        exit(1);
     }
 
     if((temp = SymTable_lookup(table, key))){
         if(!isVar(temp)){
             fprintf(stderr, "Line %d: Function with name %s is active, can't initialize formal argument with same name\n", lineno, key);
-            return NULL;
+            exit(1);
         }
     }
 
@@ -178,17 +182,17 @@ char* HANDLE_FUNCTION_WITH_NAME(char* key, int lineno){
     if((temp = SymTable_lookup(table, key))){
         if(isVar(temp)){
             fprintf(stderr, "Line %d: Can't redefine variable %s as function\n", lineno, key);
-            return NULL;
+            exit(1);
         }
 
         if(temp->type == LIBFUNC){
             fprintf(stderr, "Line %d: Can't overshadow library function %s\n", lineno, key);
-            return NULL;
+            exit(1);
         }
 
         if(temp->scope == scope){
             fprintf(stderr, "Line %d: Can't redefine the same function %s\n", lineno, key);
-            return NULL;
+            exit(1);
         }
     } 
 
@@ -252,8 +256,10 @@ SymbolTableEntry* HANDLE_FUNCDEF(SymbolTableEntry* funcprefix, unsigned funcbody
 Expr* HANDLE_TERM_TO_INC_LVALUE(Expr* lvalue, int lineno){
     if(!lvalue) return (Expr*) 0;
 
-    if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack))) 
+    if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack))){
         fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, lvalue->sym->name, lvalue->sym->scope, stack_top(functionScopeStack));
+        exit(1);
+    }
 
     checkArith(lvalue, "INC LVALUE");
     Expr* temp = newExpr(var_e);
@@ -274,8 +280,10 @@ Expr* HANDLE_TERM_TO_INC_LVALUE(Expr* lvalue, int lineno){
 Expr* HANDLE_TERM_TO_LVALUE_INC(Expr* lvalue, int lineno){
     if(!lvalue) return (Expr*) 0;
 
-    if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack)))
+    if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack))){
         fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, lvalue->sym->name, lvalue->sym->scope, stack_top(functionScopeStack));
+        exit(1);
+    }
 
     checkArith(lvalue, "LVALUE INC");
     Expr* temp;
@@ -296,10 +304,12 @@ Expr* HANDLE_TERM_TO_LVALUE_INC(Expr* lvalue, int lineno){
 Expr* HANDLE_TERM_TO_DEC_LVALUE(Expr* lvalue, int lineno){
     if(!lvalue) return (Expr*) 0;
 
-    if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack)))
+    if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack))){
         fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, lvalue->sym->name, lvalue->sym->scope, stack_top(functionScopeStack));
+        exit(1);
+    }
 
-    checkArith(lvalue, "DEC LVALUE");
+    checkArith(lvalue, "DEC LVALUE");   
     Expr* temp = newExpr(var_e);
     temp->sym = newTemp();
     if(lvalue->type == tableitem_e){
@@ -318,8 +328,10 @@ Expr* HANDLE_TERM_TO_DEC_LVALUE(Expr* lvalue, int lineno){
 Expr* HANDLE_TERM_TO_LVALUE_DEC(Expr* lvalue, int lineno){
     if(!lvalue) return (Expr*) 0;
 
-    if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack)))
+    if(!isLegal(lvalue->sym->scope, stack_top(functionScopeStack))){
         fprintf(stderr, "Line %d: Variable %s at scope %d is inaccessible due to function declaration at scope %d\n", lineno, lvalue->sym->name, lvalue->sym->scope, stack_top(functionScopeStack));
+        exit(1);
+    }
 
     checkArith(lvalue, "LVALUE DEC");
     Expr* temp;
@@ -435,7 +447,8 @@ Expr* HANDLE_CALL_LVALUE_SUFFIX(Expr* lvalue, Call* callsuffix){
     if(callsuffix->method){
         Expr* t = lvalue;
         lvalue = emitIfTableItem(memberItem(t, callsuffix->name));
-        callsuffix->elist->next = t;
+        if(callsuffix->elist) callsuffix->elist->next = t;
+        else callsuffix->elist = t;
     }
     return makeCall(lvalue, callsuffix->elist);
 }
@@ -525,7 +538,6 @@ Expr* HANDLE_ARITH_OP(iopcode op, Expr* expr1, Expr* expr2){
 
     if(check_arith_eligible(expr1) == 1 && check_arith_eligible(expr2) == 1){
         double res;
-        printf("%d\n", op);
         switch(op){
             case add:   res = expr1->numConst + expr2->numConst; break;
             case sub:   res = expr1->numConst - expr2->numConst; break;
@@ -539,12 +551,12 @@ Expr* HANDLE_ARITH_OP(iopcode op, Expr* expr1, Expr* expr2){
 
     if(check_arith_eligible(expr1) == -1) {
         fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in arithmetic expression\n", 0, str_iopcodeName[expr1->type]);
-        return (Expr*) 0;
+        exit(1);
     }
 
     if(check_arith_eligible(expr2) == -1) {
         fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in arithmetic expression\n",  0, str_iopcodeName[expr2->type]);
-        return (Expr*) 0;
+        exit(1);
     }
 
     temp = newExpr(arithmexpr_e);
@@ -584,12 +596,12 @@ Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
 
     if(check_arith_eligible(expr1) == -1) {
         fprintf(stderr, "Expression 1 has type %s which is not allowed in relation expression\n", str_iopcodeName[expr1->type]);
-        return (Expr*) 0;
+        exit(1);
     }
 
     if(check_arith_eligible(expr2) == -1) {
         fprintf(stderr, "Expression 2 has type %s which is not allowed in relation expression\n", str_iopcodeName[expr2->type]);
-        return (Expr*) 0;
+        exit(1);
     }
 
     if((expr1->type == nil_e && expr2->type == tableitem_e) || (expr1->type == tableitem_e && expr2->type == nil_e)){
@@ -612,18 +624,19 @@ Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2){
 
     if(expr1->type == assignexpr_e) {
         fprintf(stderr, "Expression 1 has type %s which is not allowed in bool expression\n", str_iopcodeName[expr1->type]);
-        return (Expr*) 0;
+        exit(1);
     }
 
     if(expr2->type == assignexpr_e) {
         fprintf(stderr, "Expression 2 has type %s which is not allowed in bool expression\n", str_iopcodeName[expr2->type]);
-        return (Expr*) 0;
+        exit(1);
     }
 
     temp = newExpr(boolexpr_e);
     temp->sym = newTemp();
-    if(op == and)  emit(op, expr1, expr2, newExprConstBool(boolVal(expr1) && boolVal(expr2)), 0, 0);
-    if(op == or)  emit(op, expr1, expr2, newExprConstBool(boolVal(expr1) || boolVal(expr2)), 0, 0); 
+    if(expr1->type == var_e || expr2->type == var_e) emit(op, expr1, expr1, temp, 0, 0);
+    else if(op == and)  emit(and, expr1, expr2, newExprConstBool(boolVal(expr1) && boolVal(expr2)), 0, 0);
+    else if(op == or)  emit(or, expr1, expr2, newExprConstBool(boolVal(expr1) || boolVal(expr2)), 0, 0); 
 
     return temp;
 }
@@ -663,8 +676,6 @@ void HANDLE_WHILE(unsigned start, unsigned args, stmt_t *stmt){
     if(stmt){
         patchList(stmt->breakList, nextQuadLabel());
         patchList(stmt->contList, start);
-    } else {
-        assert(0);
     }
 }
 
@@ -686,8 +697,6 @@ void HANDLE_FORSTMT(ForLoopPrefix* prefix, unsigned N1, unsigned N2, unsigned N3
     if(stmt){
 	    patchList(stmt->breakList, nextQuadLabel());
 	    patchList(stmt->contList, N1 + 1);
-    } else {
-        assert(0);
     }
 }
 
