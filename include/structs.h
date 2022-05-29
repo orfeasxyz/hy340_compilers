@@ -30,7 +30,6 @@ typedef enum iopcode {
     funcstart
 } iopcode;
 
-
 typedef enum SymbolType {
     VAR_GLOBAL,
     VAR_LOCAL,
@@ -101,6 +100,7 @@ typedef struct quad {
 	Expr*		arg2;
 	unsigned	label;
 	unsigned	line;
+    unsigned    taddress;
 } quad;
 
 typedef struct Call {

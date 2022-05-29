@@ -3,11 +3,104 @@
 
 #include "structs.h"
 
+typedef enum vmopcode {
+    assign_v,
+    add_v,
+    sub_v,
+    mul_v,
+    div_v,
+    mod_v,
+    uminus_v,
+    and_v,
+    or_v,
+    not_v,
+    jump_v,
+    jeq_v,
+    jne_v,
+    jle_v,
+    jge_v,
+    jlt_v,
+    jgt_v,
+    call_v,
+    pusharg_v,
+    funcenter_v,
+    funcexit_v,
+    newtable_v,
+    tablegetelem_v,
+    tablesetelem_v,
+    nop_v
+} vmopcode;
+
+typedef enum vmarg_t {
+    label_a,
+    global_a,
+    formal_a,
+    local_a,
+    number_a,
+    string_a,
+    bool_a,
+    nil_a,
+    userfunc_a,
+    libfunc_a,
+    retval_a,
+} vmarg_t;
+
+typedef struct vmarg {
+    vmarg_t type;
+    unsigned val;
+} vmarg;
+
+typedef struct instruction {
+    vmopcode op;
+    vmarg result;
+    vmarg arg1;
+    vmarg arg2;
+    unsigned srcLine;
+} instruction;
+
+extern instruction*	instructions;
+extern unsigned	total_instructions;
+extern unsigned	currInstruction;
+
+#define EXPAND_INSTRUCTION_SIZE 1024
+#define CURR_INSTRUCTION_SIZE	(total_instructions*sizeof(instruction))
+#define NEW_INSTRUCTION_SIZE	(EXPAND_INSTRUCTION_SIZE*sizeof(instruction)+CURR_INSTRUCTION_SIZE)
+
+void expand_instruction();
+void emit_instruction (instruction);
+
+typedef struct userfunc {
+    unsigned address;
+    unsigned localSize;
+    char* id;
+} userfunc;
+
+typedef struct incomplete_jump {
+    unsigned instrNo;
+    unsigned iaddress;
+    incomplete_jump* next;
+} incomplete_jump;
+
+void add_incomplete_jump(unsigned instrNo, unsigned iaddress);
+
+extern incomplete_jump* ij_head;
+extern unsigned ij_total;
+
+extern double* numConsts;
+extern unsigned totalNumConsts;
+extern char** strConsts;
+extern unsigned totalStrConsts;
+extern char** nameLibfuncs;
+extern unsigned totalNameLibfuncs;
+extern userfunc* userFuncs;
+extern unsigned totalUserFuncs;
+
 unsigned consts_newstring(char*);
 unsigned consts_newnumber(double);
 unsigned newused(char*);
 unsigned newfunc(SymbolTableEntry*);
-// new oeparant func ...
+void make_operand(Expr*, vmarg*);
+unsigned nextInstructionLabel(void);
 
 void generate_ADD(quad*);
 void generate_SUB(quad*);
@@ -67,6 +160,6 @@ generate_func_t generators[] = {
     generate_FUNCSTART
 };
 
-void generate(void);
+void generate_all(void);
 
 #endif _TARGET_H_
