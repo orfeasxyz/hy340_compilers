@@ -79,7 +79,7 @@ typedef struct userfunc {
 typedef struct incomplete_jump {
     unsigned instrNo;
     unsigned iaddress;
-    incomplete_jump* next;
+    struct incomplete_jump* next;
 } incomplete_jump;
 
 void add_incomplete_jump(unsigned instrNo, unsigned iaddress);

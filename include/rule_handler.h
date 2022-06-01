@@ -36,7 +36,7 @@ Expr* HANDLE_ELIST_ADD(Expr*, Expr*);
 Expr* HANDLE_INDEXED_ADD(Expr*, Expr*);
 Expr* HANDLE_ARITH_OP(iopcode, Expr*, Expr*);
 Expr* HANDLE_REL_OP(iopcode, Expr*, Expr*);
-Expr* HANDLE_BOOL_OP(iopcode, Expr*, Expr*);
+Expr* HANDLE_BOOL_OP(iopcode, Expr*, Expr*, unsigned);
 unsigned HANDLE_IFPREFIX(Expr*);
 unsigned HANDLE_ELSEPREFIX(int);
 unsigned HANDLE_WHILEARGS(Expr*);

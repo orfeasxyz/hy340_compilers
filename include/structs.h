@@ -77,8 +77,8 @@ typedef struct ForLoopPrefix {
 } ForLoopPrefix;
 
 typedef struct stmt_t {
-	int breakList;
-	int contList;
+    int breakList;
+    int contList;
 } stmt_t;
 
 typedef struct Expr {
@@ -88,6 +88,8 @@ typedef struct Expr {
     double numConst;
     char* strConst;
     unsigned char boolConst;
+    int trueList;
+    int falseList;
 
     struct Expr* next;
 } Expr;
@@ -135,6 +137,7 @@ extern unsigned loopCounter;
 char* newTempName();
 void resetTemp();
 SymbolTableEntry* newTemp();
+void makeBoolStmt(Expr*);
 
 SymbolTableEntry* makeSymbol(char*, int, int);
 ScopeSpace currScopeSpace(void);
@@ -154,7 +157,7 @@ Expr* newExprConstBool(unsigned char b);
 void checkArith(Expr*, const char*);
 int boolVal(Expr*);
 char* getStringValueQuad(Expr*);
-void make_stmt(stmt_t *s);
+void make_stmt(stmt_t* s);
 int newList(int i);
 int mergeList(int l1, int l2);
 void patchList(int list, int label);

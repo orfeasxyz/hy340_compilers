@@ -84,7 +84,7 @@ statements_alt: statement                                 { $$ = $1; }
                                         }
                 ;
 
-statement:      expression SEMI_COLON   {$$ = (stmt_t*) 0;}
+statement:      expression SEMI_COLON   {$$ = (stmt_t*) 0; makeBoolStmt($1);}
                 | ifstmt                {$$ = $1;}
                 | whilestmt             {$$ = (stmt_t*) 0;}
                 | forstmt               {$$ = (stmt_t*) 0;}
@@ -106,10 +106,10 @@ expression:     assignexpr                      {$$ = $1;}
                 | expression GET expression     {$$ = HANDLE_REL_OP(if_geatereq, $1, $3);}
                 | expression LT expression      {$$ = HANDLE_REL_OP(if_less, $1, $3);}
                 | expression LET expression     {$$ = HANDLE_REL_OP(if_lesseq, $1, $3);}
-                | expression EQUAL expression   {$$ = HANDLE_REL_OP(if_eq, $1, $3);}
-                | expression NEQUAL expression  {$$ = HANDLE_REL_OP(if_noteq, $1, $3);}
-                | expression AND expression     {$$ = HANDLE_BOOL_OP(and, $1, $3);}
-                | expression OR expression      {$$ = HANDLE_BOOL_OP(or, $1, $3);}
+                | expression EQUAL expression   {makeBoolStmt($1); makeBoolStmt($3); $$ = HANDLE_REL_OP(if_eq, $1, $3);}
+                | expression NEQUAL expression  {makeBoolStmt($1); makeBoolStmt($3); $$ = HANDLE_REL_OP(if_noteq, $1, $3);}
+                | expression AND M expression   {$$ = HANDLE_BOOL_OP(and, $1, $4, $3);}
+                | expression OR M expression    {$$ = HANDLE_BOOL_OP(or, $1, $4, $3);}
                 | term                          {$$ = $1;}
                 ;
 
@@ -123,7 +123,7 @@ term:           PAR_OPEN expression PAR_CLOSED  {$$ = $2;}
                 | prim                          {$$ = $1;}
                 ;
 
-assignexpr:     lvalue ASSIGN expression        {$$ = HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, $3, yylineno);};
+assignexpr:     lvalue ASSIGN expression        {makeBoolStmt($3); $$ = HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, $3, yylineno);};
 
 prim:           lvalue                          {$$ = HANDLE_PRIM_TO_LVALUE($1, yylineno);}
                 | call                          {$$ = $1;}
@@ -157,7 +157,7 @@ normcall:       PAR_OPEN elist PAR_CLOSED                      {$$ = HANDLE_NORM
 
 methodcall:     DOUBLE_DOT IDENT PAR_OPEN elist PAR_CLOSED     {$$ = HANDLE_METHODCALL($2, $4);};
 
-elist:          expression                  {$$ = $1; $$->next = NULL;}
+elist:          expression                  {makeBoolStmt($1); $$ = $1; $$->next = NULL;}
                 | expression COMMA elist    {$$ = HANDLE_ELIST_ADD($1, $3);}
 				|                           {$$ = (Expr*) 0;}
                 ;
@@ -172,7 +172,7 @@ indexed:        indexedelem                     {$$ = $1;}
                 | indexedelem COMMA indexed     {$$ = HANDLE_INDEXED_ADD($1, $3);}
                 ;
 
-indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED {$$ = HANDLE_INDEXELEM($2, $4);};
+indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED {makeBoolStmt($4); $$ = HANDLE_INDEXELEM($2, $4);};
 
 block:          CURLY_OPEN {scope++; current_table = SymTable_next(current_table);} statements CURLY_CLOSED {scope--; SymTable_hide(current_table); current_table = SymTable_prev(current_table); $$ = $3;};
 
@@ -231,7 +231,7 @@ idlist:         IDENT                   {HANDLE_IDLIST_IDENT($1, yylineno);}
                 |
                 ;
 
-ifprefix:       IF PAR_OPEN expression PAR_CLOSED   {$$ = HANDLE_IFPREFIX($3);}
+ifprefix:       IF PAR_OPEN expression PAR_CLOSED   {makeBoolStmt($3); $$ = HANDLE_IFPREFIX($3);}
 
 elseprefix:     ELSE                                {$$ = HANDLE_ELSEPREFIX(yylineno);}
 
@@ -246,14 +246,14 @@ ifstmt:         ifprefix statement {patchLabel($1, nextQuadLabel()); $$ = $2;} %
 
 whileprefix:    WHILE                               {$$ = nextQuadLabel(); loopCounter++;};
 
-whileargs:      PAR_OPEN expression PAR_CLOSED      {$$ = HANDLE_WHILEARGS($2);}
+whileargs:      PAR_OPEN expression PAR_CLOSED      {makeBoolStmt($2); $$ = HANDLE_WHILEARGS($2);}
 
 whilestmt:      whileprefix whileargs statement		{HANDLE_WHILE($1, $2, $3); loopCounter--;}
 
 N:              {$$ = nextQuadLabel(); emit(jump, NULL, NULL, NULL, 0, yylineno);};
 M:              {$$ = nextQuadLabel();};
 
-forprefix:      FOR {loopCounter++;} PAR_OPEN elist SEMI_COLON M expression SEMI_COLON {$$ = HANDLE_FORPREFIX($6, $7);};
+forprefix:      FOR {loopCounter++;} PAR_OPEN elist SEMI_COLON M expression SEMI_COLON {makeBoolStmt($7); $$ = HANDLE_FORPREFIX($6, $7);};
 
 forstmt:        forprefix N elist PAR_CLOSED N statement N {HANDLE_FORSTMT($1, $2, $5, $7, $6); loopCounter--;};
 
@@ -265,6 +265,7 @@ returnstmt:		RETURN SEMI_COLON               {
                                                     emit(ret, NULL, NULL, NULL, 0, yylineno);
                                                 }
                 | RETURN expression SEMI_COLON  {
+                                                    makeBoolStmt($2);
                                                     if(funcCounter == 0) {
                                                         fprintf(stderr, "Line %d: Return used outside function", yylineno);
                                                         exit(1);
@@ -334,6 +335,9 @@ int main(int argc, char **argv) {
 		exit(0);
 	}
 
+	yyparse();
+    SymTable_print(head);
+
 	FILE *fptr = fopen(argv[1], "r");
 	char c;
 
@@ -345,8 +349,6 @@ int main(int argc, char **argv) {
 	}
 	printf("\n");
 
-	yyparse();
-    SymTable_print(head);
     printQuads();
     return 0;	
 }

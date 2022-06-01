@@ -53,6 +53,15 @@ unsigned tempCounter = 0;
 unsigned loopCounter = 0;
 unsigned funcCounter = 0;
 
+void makeBoolStmt(Expr* e){
+    if(e->type == boolexpr_e){
+        patchList(e->trueList, nextQuadLabel());
+        emit(assign, newExprConstBool(1), NULL, e, 0, 0);
+        emit(jump, NULL, NULL, NULL, nextQuadLabel() + 2, 0);
+        patchList(e->falseList, nextQuadLabel());
+        emit(assign, newExprConstBool(0), NULL, e, 0, 0);
+    }
+}
 
 ScopeSpace currScopeSpace(void){
     if(scopeSpaceCounter == 1){
@@ -172,9 +181,9 @@ Expr* newExprConstNum(double i){
     return e;
 }
 
-Expr* newExprConstBool(unsigned char bool){
+Expr* newExprConstBool(unsigned char boolean){
     Expr* e = newExpr(constbool_e);
-    e->boolConst = !!bool;
+    e->boolConst = !!boolean;
     return e;
 }
 
@@ -248,10 +257,6 @@ int boolVal(Expr *e) {
             return 0;
         case tableitem_e:
             return 1;
-        case arithmexpr_e:
-            return e->numConst != 0;
-        case boolexpr_e:
-            return e->boolConst;
         case programfunc_e:
             return 1;
         case libraryfunc_e:

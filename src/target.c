@@ -211,7 +211,7 @@ void generate_TABLESETELEM(quad* q){
     generate(tablesetelem_v, q);
 }
 
-void genereate_ASSIGN(quad* q){
+void generate_ASSIGN(quad* q){
     generate(assign_v, q);
 }
 
@@ -366,7 +366,7 @@ void generate_CALL(quad* q){
     emit_instruction(inst);
 }
 
-void generate_RETVAL(quad* q){
+void generate_GETRETVAL(quad* q){
     q->taddress = nextInstructionLabel();
     instruction inst;
     inst.op = assign_v;
@@ -407,6 +407,18 @@ void generate_FUNCEND(quad *quad) {
     SymbolTableEntry *f = func_top();
     func_pop();
     backPatchReturnList();
+}
+
+
+void generate_RETURN(quad* q){
+
+}
+
+unsigned consts_newstring(char* ss){
+    return 0;
+}
+unsigned consts_newnumber(double dd){
+    return 0;
 }
 
 /*  TODO

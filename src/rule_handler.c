@@ -357,10 +357,22 @@ Expr* HANDLE_TERM_TO_UMINUS_EXPR(Expr* expression){
     return temp;
 }
 
-Expr* HANDLE_TERM_TO_NOT_EXPR(Expr* expression){
+void notBoolExpr(Expr* expression){
+    expression->trueList = newList(nextQuadLabel());
+    expression->falseList = newList(nextQuadLabel() + 1);
+    emit(if_eq, expression, newExprConstBool(1), NULL, 0, 0);
+    emit(jump, NULL, NULL, NULL, 0, 0);
+}
+
+Expr* HANDLE_TERM_TO_NOT_EXPR(Expr* expression)
+{
     Expr* temp = newExpr(boolexpr_e);
     temp->sym = newTemp();
-    emit(not, expression, NULL, temp, 0, 0);
+
+    if (expression->type == var_e ||  expression->type == assignexpr_e) notBoolExpr(expression);
+    temp->trueList = expression->falseList;
+    temp->falseList = expression->trueList;
+
     return temp;
 }
 
@@ -533,6 +545,21 @@ int check_arith_eligible(Expr* temp){
     }
 }
 
+int check_bool_eligible(Expr* temp){
+    switch(temp->type){
+        case programfunc_e:
+        case libraryfunc_e:
+        case newtable_e:
+        case constbool_e:
+        case conststring_e:
+        case constnum_e:
+        case nil_e:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 Expr* HANDLE_ARITH_OP(iopcode op, Expr* expr1, Expr* expr2){
     Expr* temp;
 
@@ -570,73 +597,105 @@ Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
     Expr* temp;
 
     if(check_arith_eligible(expr1) == 1  && check_arith_eligible(expr2) == 1){
-        int result;
-        if(op == if_greater) result = (expr1->numConst > expr2->numConst);
-        else if(op == if_geatereq) result = (expr1->numConst >= expr2->numConst);
-        else if(op == if_less) result = (expr1->numConst < expr2->numConst);
-        else if(op == if_lesseq) result = (expr1->numConst <= expr2->numConst);
-        else if(op == if_eq) result = (expr1->numConst == expr2->numConst);
-        else if(op == if_noteq) result = (expr1->numConst != expr2->numConst);
-        return newExprConstBool(result);
-    }
-
-    if((op == if_eq || op == if_noteq) && (expr1->type == expr2->type) ){
         int res;
-        if(expr1->type == constnum_e) res = expr2->numConst == expr1->numConst;
-        else if(expr1->type == constbool_e) res = expr2->boolConst == expr1->boolConst;
-        else if(expr1->type == conststring_e) res = strcmp(expr2->strConst, expr1->strConst) == 0;
-        else if(expr1->type == arithmexpr_e) res = expr2->numConst == expr1->numConst;
-        else if(expr1->type == boolexpr_e) res = expr2->boolConst == expr1->boolConst;
-        else if(expr1->type == newtable_e) res = 1; 
-        else if(expr1->type == programfunc_e) res = strcmp(expr2->sym->name, expr1->sym->name) == 0;
-        else if(expr1->type == libraryfunc_e) res = strcmp(expr2->sym->name, expr1->sym->name) == 0;
+        if(op == if_greater)		res = (expr1->numConst > expr2->numConst);
+        else if(op == if_geatereq)	res = (expr1->numConst >= expr2->numConst);
+        else if(op == if_less)		res = (expr1->numConst < expr2->numConst);
+        else if(op == if_lesseq)	res = (expr1->numConst <= expr2->numConst);
+        else if(op == if_eq)		res = (expr1->numConst == expr2->numConst);
+        else if(op == if_noteq)		res = (expr1->numConst != expr2->numConst);
 
-        return (op == if_eq ? newExprConstBool(res) : newExprConstBool(!res));
+        return newExprConstBool(res);
     }
 
-    if(check_arith_eligible(expr1) == -1) {
+    if((op == if_eq || op == if_noteq)){
+        int res;
+
+        if((expr1->type == nil_e && expr2->type == tableitem_e) || (expr1->type == tableitem_e && expr2->type == nil_e)){
+            switch (op) {
+                case if_eq:     return newExprConstBool(0);
+                case if_noteq:  return newExprConstBool(1);
+                default: ;
+            }
+        }
+
+        if(expr1->type == expr2->type){
+            switch (expr1->type) {
+                case constnum_e:        res = expr2->numConst == expr1->numConst;               break;
+                case conststring_e:     res = strcmp(expr2->strConst, expr1->strConst) == 0;    break;
+                case newtable_e:        res = 1;                                                break;
+                case programfunc_e:     res = strcmp(expr2->sym->name, expr1->sym->name) == 0;  break;
+                case libraryfunc_e:     res = strcmp(expr2->sym->name, expr1->sym->name) == 0;  break;
+                case constbool_e:       res = expr2->boolConst == expr1->boolConst;             break;
+                default: goto QUIT;
+            }
+
+            return (op == if_eq ? newExprConstBool(res) : newExprConstBool(!res));
+        }
+    }
+
+    QUIT:
+
+
+    if(check_arith_eligible(expr1) == -1 && op != if_eq && op != if_noteq) {
         fprintf(stderr, "Expression 1 has type %s which is not allowed in relation expression\n", str_iopcodeName[expr1->type]);
         exit(1);
     }
 
-    if(check_arith_eligible(expr2) == -1) {
+    if(check_arith_eligible(expr2) == -1 && op != if_eq && op != if_noteq) {
         fprintf(stderr, "Expression 2 has type %s which is not allowed in relation expression\n", str_iopcodeName[expr2->type]);
         exit(1);
     }
 
-    if((expr1->type == nil_e && expr2->type == tableitem_e) || (expr1->type == tableitem_e && expr2->type == nil_e)){
-        return newExprConstBool(1);
-    }
-
     temp = newExpr(boolexpr_e);
     temp->sym = newTemp();
+	temp->trueList = newList(nextQuadLabel());
+	temp->falseList = newList(nextQuadLabel()+1);
 
-    emit(op, expr1, expr2, NULL, nextQuadLabel() + 3, 0);
-    emit(assign, newExprConstBool(0), NULL, temp, 0, 0);
-    emit(jump, NULL, NULL, NULL, nextQuadLabel() + 2, 0);
-    emit(assign, newExprConstBool(1), NULL, temp, 0, 0);
+    emit(op, expr1, expr2, NULL, 0, 0);
+    emit(jump, NULL, NULL, NULL, 0, 0);
 
     return temp;
 }
 
-Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2){
+Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2, unsigned M){
     Expr* temp;
+    int isVar = 0;
 
-    if(expr1->type == assignexpr_e) {
-        fprintf(stderr, "Expression 1 has type %s which is not allowed in bool expression\n", str_iopcodeName[expr1->type]);
-        exit(1);
+	if (expr1->type == var_e ||  expr1->type == assignexpr_e) {
+        notBoolExpr(expr1);
+        isVar = 1;
+	}
+
+    if (expr2->type == var_e || expr2->type == assignexpr_e){
+        notBoolExpr(expr2);
+        isVar = 1;
     }
 
-    if(expr2->type == assignexpr_e) {
-        fprintf(stderr, "Expression 2 has type %s which is not allowed in bool expression\n", str_iopcodeName[expr2->type]);
-        exit(1);
+    patchList((op == and ? expr1->trueList : expr1->falseList), M);
+
+	if(!isVar && check_bool_eligible(expr1) && check_bool_eligible(expr2)){
+		switch (op) {
+			case and:	temp = newExprConstBool(boolVal(expr1) && boolVal(expr2)); break;
+			case or:	temp = newExprConstBool(boolVal(expr1) || boolVal(expr2)); break;
+			default:	assert(0);
+		}
+	} else {
+        temp = newExpr(boolexpr_e);
+        temp->sym = newTemp();
     }
 
-    temp = newExpr(boolexpr_e);
-    temp->sym = newTemp();
-    if(expr1->type == var_e || expr2->type == var_e) emit(op, expr1, expr1, temp, 0, 0);
-    else if(op == and)  emit(and, expr1, expr2, newExprConstBool(boolVal(expr1) && boolVal(expr2)), 0, 0);
-    else if(op == or)  emit(or, expr1, expr2, newExprConstBool(boolVal(expr1) || boolVal(expr2)), 0, 0); 
+	switch (op) {
+		case and:
+			temp->trueList = expr2->trueList;
+			temp->falseList = mergeList(expr1->falseList, expr2->falseList);
+			break;
+		case or:
+			temp->falseList = expr2->falseList;
+			temp->trueList = mergeList(expr1->trueList, expr2->trueList);
+			break;
+		default:	assert(0);
+	}
 
     return temp;
 }
