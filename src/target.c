@@ -1,8 +1,37 @@
-#include "structs.h"
-#include "target.h"
+#include "../include/structs.h"
+#include "../include/target.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 incomplete_jump* ij_head = (incomplete_jump*) 0;
 unsigned ij_total = 0;
+
+typedef struct func_stack_s{
+    SymbolTableEntry *entry;
+    struct func_stack_s *next;
+} func_stack_t;
+
+static func_stack_t *__func_top = NULL;
+
+static void func_push(SymbolTableEntry *entry) {
+    func_stack_t *new = malloc(sizeof(struct func_stack_s));
+    new->entry  = entry;
+    new->next   = __func_top;
+    __func_top  = new;
+}
+
+static SymbolTableEntry* func_top() {
+    assert(__func_top);
+    return __func_top->entry;
+}
+
+static void func_pop() {
+    assert(__func_top);
+    func_stack_t *temp = __func_top;
+    __func_top = __func_top->next;
+    free(temp);
+}
 
 void add_incomplete_jump(unsigned instrNo, unsigned iaddress){
     incomplete_jump* ij = (incomplete_jump*) malloc(sizeof(incomplete_jump));
@@ -77,12 +106,12 @@ void make_operand(Expr* e, vmarg* arg){
             break;
         }
         case conststring_e: {
-            arg->val = e->strConst;
+            arg->val = consts_newstring(e->strConst);
             arg->type = string_a;
             break;
         }
         case constnum_e: {
-            arg->val = e->numConst;
+            arg->val = consts_newnumber(e->numConst);
             arg->type = number_a;
             break;
         }
@@ -294,12 +323,12 @@ void generate_AND(quad* q) {
     make_operand(q->arg1, &inst.arg1);
     make_booloperand(&inst.arg2, 1);
     inst.result.type = label_a;
-    inst.result.val = next_instruction_label() + 4;
+    inst.result.val = nextInstructionLabel() + 4;
     emit_instruction(inst);
 
     make_operand(q->arg2, &inst.arg1);
-    inst.result.val = next_instruction_label() + 3;
-    emit_instr(inst);
+    inst.result.val = nextInstructionLabel() + 3;
+    emit_instruction(inst);
 
     inst.op = assign_v;
     make_booloperand(&inst.arg1, 0);
@@ -311,7 +340,7 @@ void generate_AND(quad* q) {
     reset_operand(&inst.arg1);
     reset_operand(&inst.arg2);
     inst.result.type = label_a;
-    inst.result.val = next_instruction_label() + 2;
+    inst.result.val = nextInstructionLabel() + 2;
     emit_instruction(inst);
 
     inst.op = assign_v;
@@ -346,9 +375,42 @@ void generate_RETVAL(quad* q){
     emit_instruction(inst);
 }
 
-/*  TODO 
+void generate_FUNCSTART(quad *quad) {
+    SymbolTableEntry *f = quad->result->sym;
+    f->iadress = nextInstructionLabel();
+    quad->taddress = nextInstructionLabel();
 
-    generate_FUNCSTART(quad* q)
+    func_push(f);
+    instruction instr = {0};
+    instr.srcLine   = quad->line;
+    instr.op        = funcenter_v;
+    make_operand(quad->result, &instr.result);
+    make_booloperand(&instr.arg2, 1);
+    emit_instruction(instr);
+}
+
+void patch_incomplete_jumps() { 
+    for (incomplete_jump *ij = ij_head; ij; ij = ij->next) {
+        instructions[ij->instrNo].result.type = label_a;
+        instructions[ij->instrNo].result.val = 
+            (ij->iaddress == nextQuadLabel()) ? 
+            nextInstructionLabel() :
+            quads[ij->iaddress].taddress;
+    }
+}
+
+void backPatchReturnList() {
+    // TODO
+}
+
+void generate_FUNCEND(quad *quad) {
+    SymbolTableEntry *f = func_top();
+    func_pop();
+    backPatchReturnList();
+}
+
+/*  TODO
+
     generate_FUNCEND(quad* q)
     generate_RETURN(quad* q)
 

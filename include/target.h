@@ -58,16 +58,17 @@ typedef struct instruction {
     unsigned srcLine;
 } instruction;
 
-extern instruction*	instructions;
-extern unsigned	total_instructions;
-extern unsigned	currInstruction;
+extern instruction* instructions;
+extern unsigned total_instructions;
+extern unsigned currInstruction;
 
 #define EXPAND_INSTRUCTION_SIZE 1024
-#define CURR_INSTRUCTION_SIZE	(total_instructions*sizeof(instruction))
-#define NEW_INSTRUCTION_SIZE	(EXPAND_INSTRUCTION_SIZE*sizeof(instruction)+CURR_INSTRUCTION_SIZE)
+#define CURR_INSTRUCTION_SIZE (total_instructions * sizeof(instruction))
+#define NEW_INSTRUCTION_SIZE \
+    (EXPAND_INSTRUCTION_SIZE * sizeof(instruction) + CURR_INSTRUCTION_SIZE)
 
 void expand_instruction();
-void emit_instruction (instruction);
+void emit_instruction(instruction);
 
 typedef struct userfunc {
     unsigned address;
@@ -109,7 +110,7 @@ void generate_DIV(quad*);
 void generate_MOD(quad*);
 void generate_NEWTABLE(quad*);
 void generate_TABLEGETELEM(quad*);
-void generate_TABLESETELEM(quad*);   
+void generate_TABLESETELEM(quad*);
 void generate_ASSIGN(quad*);
 void generate_NOP(quad*);
 void generate_JUMP(quad*);
@@ -132,34 +133,16 @@ void generate_FUNCEND(quad*);
 typedef void (*generate_func_t)(quad*);
 
 generate_func_t generators[] = {
-    generate_ASSIGN,
-    generate_JUMP,
-    generate_MUL,
-    generate_NOP,
-    generate_NOT,
-    generate_IF_LESSEQ,
-    generate_IF_GREATER,
-    generate_RETURN,
-    generate_FUNCEND,
-    generate_TABLEGETELEM,
-    generate_ADD,
-    generate_DIV,
-    generate_AND,
-    generate_IF_EQ,
-    generate_IF_GREATEREQ,
-    generate_CALL,
-    generate_GETRETVAL,
-    generate_NEWTABLE,
-    generate_TABLESETELEM,
-    generate_SUB,
-    generate_MOD,
-    generate_OR,
-    generate_IF_NOTEQ,
-    generate_IF_LESS,
-    generate_PARAM,
-    generate_FUNCSTART
-};
+    generate_ASSIGN,       generate_JUMP,      generate_MUL,
+    generate_NOP,          generate_NOT,       generate_IF_LESSEQ,
+    generate_IF_GREATER,   generate_RETURN,    generate_FUNCEND,
+    generate_TABLEGETELEM, generate_ADD,       generate_DIV,
+    generate_AND,          generate_IF_EQ,     generate_IF_GREATEREQ,
+    generate_CALL,         generate_GETRETVAL, generate_NEWTABLE,
+    generate_TABLESETELEM, generate_SUB,       generate_MOD,
+    generate_OR,           generate_IF_NOTEQ,  generate_IF_LESS,
+    generate_PARAM,        generate_FUNCSTART};
 
 void generate_all(void);
 
-#endif _TARGET_H_
+#endif  // _TARGET_H_
