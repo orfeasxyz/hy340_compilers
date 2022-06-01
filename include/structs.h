@@ -1,35 +1,31 @@
 #ifndef _STRUCTS_H_
 #define _STRUCTS_H_
 
-typedef enum iopcode { 
-    assign, 
+typedef enum iopcode {
+    assign,
     jump,
-    mul, 
-    uminus, 
-    not, 
-    if_lesseq, 
-    if_greater, 
-    ret, 
-    funcend, 
-    tablegetelem,  
-    add, 
-    mydiv, //conflict with stdlib.h
-    and, 
-    if_eq, 
+    mul,
+    uminus,
+    not,
+    if_lesseq,
+    if_greater,
+    ret,
+    funcend,
+    tablegetelem,
+    add,
+    mydiv,  // conflict with stdlib.h
+    and,
+    if_eq,
     if_geatereq,
     call,
-    getretval, 
-    tablecreate, 
+    getretval,
+    tablecreate,
     tablesetelem,
-    sub, 
-    mod, 
-    or, 
-    if_noteq, 
-    if_less, 
-    param, 
-    funcstart
+    sub,
+    mod,
+    or
+    , if_noteq, if_less, param, funcstart
 } iopcode;
-
 
 typedef enum SymbolType {
     VAR_GLOBAL,
@@ -39,29 +35,25 @@ typedef enum SymbolType {
     LIBFUNC
 } SymbolType;
 
-typedef enum ScopeSpace {
-    programvar,
-    functionlocal,
-    formalarg
-} ScopeSpace;
+typedef enum ScopeSpace { programvar, functionlocal, formalarg } ScopeSpace;
 
 typedef enum ExprType {
-	var_e,
-	tableitem_e,
+    var_e,
+    tableitem_e,
 
-	programfunc_e,
-	libraryfunc_e,
+    programfunc_e,
+    libraryfunc_e,
 
-	arithmexpr_e,
-	boolexpr_e,
-	assignexpr_e,
-	newtable_e,
+    arithmexpr_e,
+    boolexpr_e,
+    assignexpr_e,
+    newtable_e,
 
-	constnum_e,
-	constbool_e,
-	conststring_e,
+    constnum_e,
+    constbool_e,
+    conststring_e,
 
-	nil_e
+    nil_e
 } ExprType;
 
 typedef struct SymbolTableEntry {
@@ -69,13 +61,14 @@ typedef struct SymbolTableEntry {
     ScopeSpace space;
     char* name;
     unsigned scope;
-    unsigned offset; // scopespace offset
+    unsigned offset;  // scopespace offset
     unsigned line;
     SymbolType type;
 
-    //function exlusives
+    // function exlusives
     unsigned iadress;
     unsigned totalLocals;
+    unsigned returnList;
 } SymbolTableEntry;
 
 typedef struct ForLoopPrefix {
@@ -89,48 +82,43 @@ typedef struct stmt_t {
 } stmt_t;
 
 typedef struct Expr {
-	ExprType			type;
-	SymbolTableEntry*	sym;
-	struct Expr*	    index;
-	double			    numConst;
-	char*			    strConst;
-	unsigned char	    boolConst;
+    ExprType type;
+    SymbolTableEntry* sym;
+    struct Expr* index;
+    double numConst;
+    char* strConst;
+    unsigned char boolConst;
 
-	struct Expr*	    next;
+    struct Expr* next;
 } Expr;
 
 typedef struct quad {
-	iopcode	    op;
-	Expr*		result;
-	Expr*		arg1;
-	Expr*		arg2;
-	unsigned	label;
-	unsigned	line;
+    iopcode op;
+    Expr* result;
+    Expr* arg1;
+    Expr* arg2;
+    unsigned label;
+    unsigned line;
+    unsigned taddress;
 } quad;
 
 typedef struct Call {
-    Expr*           elist;
-    unsigned char   method;
-    char*           name;
+    Expr* elist;
+    unsigned char method;
+    char* name;
 } Call;
 
-extern quad*	quads;
-extern unsigned	total;
-extern unsigned	currQuad;
+extern quad* quads;
+extern unsigned total;
+extern unsigned currQuad;
 
 #define EXPAND_SIZE 1024
-#define CURR_SIZE	(total*sizeof(quad))
-#define NEW_SIZE	(EXPAND_SIZE*sizeof(quad)+CURR_SIZE)
+#define CURR_SIZE (total * sizeof(quad))
+#define NEW_SIZE (EXPAND_SIZE * sizeof(quad) + CURR_SIZE)
 
 void expand();
-void emit (
-	iopcode     op,
-	Expr*	    arg1,
-	Expr*	    arg2,
-	Expr*		result,
-	unsigned	label,
-	unsigned	line
-);
+void emit(iopcode op, Expr* arg1, Expr* arg2, Expr* result, unsigned label,
+          unsigned line);
 
 extern unsigned scope;
 extern unsigned anon_count;
@@ -164,7 +152,7 @@ Expr* newExprConstString(char*);
 Expr* newExprConstNum(double);
 Expr* newExprConstBool(unsigned char b);
 void checkArith(Expr*, const char*);
-int boolVal(Expr *);
+int boolVal(Expr*);
 char* getStringValueQuad(Expr*);
 void make_stmt(stmt_t *s);
 int newList(int i);
@@ -176,5 +164,4 @@ extern const char* str_iopcodeName[];
 const char* iopcodeName(quad*);
 void printQuads(void);
 
-
-#endif // _STRUCTS_H_
+#endif  // _STRUCTS_H_
