@@ -228,6 +228,12 @@ SymbolTableEntry* HANDLE_FUNCPREFIX(char* func_name, int lineno){
     arg->sym = temp;
     arg->strConst = temp->name;
 
+    // Adds jump before funcstart to jump to funcend
+    stmt_t *jump_to_end = malloc(sizeof(stmt_t));
+	make_stmt(jump_to_end);
+	jump_to_end->breakList = newList(nextQuadLabel());
+    emit(jump, NULL, NULL, NULL, 0, lineno);
+
     emit(funcstart, arg, NULL, NULL, 0, lineno);
     scopeOffsetStack = stack_push(scopeOffsetStack, currScopeOffset());
     enterScopeSpace();
