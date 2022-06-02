@@ -7,9 +7,14 @@
 incomplete_jump* ij_head = (incomplete_jump*) 0;
 unsigned ij_total = 0;
 
+typedef struct return_list_s{
+    unsigned line;
+    struct return_list_s* next;
+} return_list_t;
+
 typedef struct func_symbol_s{
     SymbolTableEntry *func;
-    int returnList;
+    struct return_list_s* returnList;
 } func_symbol_t;
 
 typedef struct func_stack_s{
@@ -412,22 +417,30 @@ void patch_incomplete_jumps() {
     }
 }
 
-static void backPatchReturnList() {
-    // TODO
+static void backPatchReturnList(return_list_t* rl, unsigned label) {
+    for (; rl; rl = rl->next) {
+        instructions[rl->line].result.val = label;
+    }
 }
 
 static void append(func_symbol_t* entry, unsigned index){
-    // TODO
+    return_list_t* new_entry = (return_list_t*) malloc(sizeof(return_list_t));
+    new_entry->line = index;
+    new_entry->next = entry->returnList;
+    entry->returnList = new_entry;
 }
 
-
-
-void generate_FUNCEND(quad *quad) {
+void generate_FUNCEND(quad *q) {
     SymbolTableEntry *f = func_top();
+    backPatchReturnList(f, nextInstructionLabel());
     func_pop();
-    backPatchReturnList();
-}
 
+    q->taddress = nextInstructionLabel();
+    instruction inst = {0};
+    inst.op = funcexit_v;
+    make_operand(q->result, &inst.result);
+    emit_instruction(inst);
+}
 
 void generate_RETURN(quad* q){
     q->taddress = nextInstructionLabel();
@@ -439,7 +452,13 @@ void generate_RETURN(quad* q){
     emit_instruction(inst);
 
     func_symbol_t* f = func_top();
+    append(f, nextInstructionLabel());
 
+    inst.op = jump;
+    reset_operand(&inst.arg1);
+    reset_operand(&inst.arg2);
+    inst.result.type = label_a;
+    emit_instruction(inst);
 }
 
 unsigned consts_newstring(char* ss){
@@ -448,10 +467,3 @@ unsigned consts_newstring(char* ss){
 unsigned consts_newnumber(double dd){
     return 0;
 }
-
-/*  TODO
-
-    generate_FUNCEND(quad* q)
-    generate_RETURN(quad* q)
-
-*/
