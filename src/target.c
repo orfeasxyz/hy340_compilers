@@ -7,21 +7,33 @@
 incomplete_jump* ij_head = (incomplete_jump*) 0;
 unsigned ij_total = 0;
 
+typedef struct func_symbol_s{
+    SymbolTableEntry *func;
+    int returnList;
+} func_symbol_t;
+
 typedef struct func_stack_s{
-    SymbolTableEntry *entry;
+    struct func_symbol_s *entry;
     struct func_stack_s *next;
 } func_stack_t;
 
 static func_stack_t *__func_top = NULL;
 
-static void func_push(SymbolTableEntry *entry) {
-    func_stack_t *new = malloc(sizeof(struct func_stack_s));
-    new->entry  = entry;
-    new->next   = __func_top;
-    __func_top  = new;
+static struct func_symbol_s* makeFuncSymbol(SymbolTableEntry *func){
+    struct func_symbol_s *new = malloc(sizeof(struct func_symbol_s));
+    new->func = func;
+    new->returnList = 0;
+    return new;
 }
 
-static SymbolTableEntry* func_top() {
+static void func_push(SymbolTableEntry *entry) {
+    func_stack_t *new = malloc(sizeof(struct func_stack_s));
+    new->entry = makeFuncSymbol(entry);
+    new->next  = __func_top;
+    __func_top = new;
+}
+
+static struct func_symbol_s* func_top() {
     assert(__func_top);
     return __func_top->entry;
 }
@@ -30,6 +42,7 @@ static void func_pop() {
     assert(__func_top);
     func_stack_t *temp = __func_top;
     __func_top = __func_top->next;
+    free(temp->entry);
     free(temp);
 }
 
@@ -399,9 +412,15 @@ void patch_incomplete_jumps() {
     }
 }
 
-void backPatchReturnList() {
+static void backPatchReturnList() {
     // TODO
 }
+
+static void append(func_symbol_t* entry, unsigned index){
+    // TODO
+}
+
+
 
 void generate_FUNCEND(quad *quad) {
     SymbolTableEntry *f = func_top();
@@ -411,6 +430,15 @@ void generate_FUNCEND(quad *quad) {
 
 
 void generate_RETURN(quad* q){
+    q->taddress = nextInstructionLabel();
+    instruction inst;
+
+    inst.op = assign_v;
+    make_operand(q->arg1, &inst.arg1);
+    make_revaloperand(&inst.result);
+    emit_instruction(inst);
+
+    func_symbol_t* f = func_top();
 
 }
 
