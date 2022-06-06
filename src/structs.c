@@ -204,6 +204,9 @@ void make_stmt(stmt_t *s) {
 }
 
 int newList(int i ) {
+    if (currQuad == total) {
+        expand();
+    }
 	quads[i].label = 0;
 	return i;
 }

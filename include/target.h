@@ -89,17 +89,48 @@ extern unsigned ij_total;
 
 extern double* numConsts;
 extern unsigned totalNumConsts;
+extern unsigned currNumConsts;
+#define EXPAND_NUMCONST_SIZE 1024
+#define CURR_NUMCONST_SIZE (totalNumConsts * sizeof(double))
+#define NEW_NUMCONST_SIZE \
+    (EXPAND_NUMCONST_SIZE * sizeof(double) + CURR_NUMCONST_SIZE)
+
+void expand_numconst();
+
 extern char** strConsts;
 extern unsigned totalStrConsts;
+extern unsigned currStrConsts;
+#define EXPAND_STRCONST_SIZE 1024
+#define CURR_STRCONST_SIZE (totalStrConsts * sizeof(char*))
+#define NEW_STRCONST_SIZE \
+    (EXPAND_STRCONST_SIZE * sizeof(char*) + CURR_STRCONST_SIZE)
+
+void expand_strconst();
+
 extern char** nameLibfuncs;
 extern unsigned totalNameLibfuncs;
+extern unsigned currNameLibfuncs;
+#define EXPAND_NAMELIBFUNCS_SIZE 1024
+#define CURR_NAMELIBFUNCS_SIZE (totalNameLibfuncs * sizeof(char*))
+#define NEW_NAMELIBFUNCS_SIZE \
+    (EXPAND_NAMELIBFUNCS_SIZE * sizeof(char*) + CURR_NAMELIBFUNCS_SIZE)
+
+void expand_namelibfuncs();
+
 extern userfunc* userFuncs;
 extern unsigned totalUserFuncs;
+extern unsigned currUserFuncs;
+#define EXPAND_USERFUNCS_SIZE 1024
+#define CURR_USERFUNCS_SIZE (totalUserFuncs * sizeof(userfunc))
+#define NEW_USERFUNCS_SIZE \
+    (EXPAND_USERFUNCS_SIZE * sizeof(userfunc) + CURR_USERFUNCS_SIZE)
+
+void expand_userfuncs();
 
 unsigned consts_newstring(char*);
 unsigned consts_newnumber(double);
-unsigned newused(char*);
-unsigned newfunc(SymbolTableEntry*);
+unsigned libfuncs_newused(char*);
+unsigned userfuncs_newfunc(SymbolTableEntry*);
 void make_operand(Expr*, vmarg*);
 unsigned nextInstructionLabel(void);
 
@@ -132,16 +163,6 @@ void generate_FUNCEND(quad*);
 
 typedef void (*generate_func_t)(quad*);
 
-generate_func_t generators[] = {
-    generate_ASSIGN,       generate_JUMP,      generate_MUL,
-    generate_NOP,          generate_NOT,       generate_IF_LESSEQ,
-    generate_IF_GREATER,   generate_RETURN,    generate_FUNCEND,
-    generate_TABLEGETELEM, generate_ADD,       generate_DIV,
-    generate_AND,          generate_IF_EQ,     generate_IF_GREATEREQ,
-    generate_CALL,         generate_GETRETVAL, generate_NEWTABLE,
-    generate_TABLESETELEM, generate_SUB,       generate_MOD,
-    generate_OR,           generate_IF_NOTEQ,  generate_IF_LESS,
-    generate_PARAM,        generate_FUNCSTART};
 
 void generate_all(void);
 

@@ -158,7 +158,7 @@ char* HANDLE_IDLIST_IDENT(char* key, int lineno){
         exit(1);
     }
 
-    if((temp = SymTable_lookup(table, key))){
+    if((temp = SymTable_lookup_here(table, key))){
         if(!isVar(temp)){
             fprintf(stderr, "Line %d: Function with name %s is active, can't initialize formal argument with same name\n", lineno, key);
             exit(1);
@@ -228,13 +228,7 @@ SymbolTableEntry* HANDLE_FUNCPREFIX(char* func_name, int lineno){
     arg->sym = temp;
     arg->strConst = temp->name;
 
-    // Adds jump before funcstart to jump to funcend
-    stmt_t *jump_to_end = malloc(sizeof(stmt_t));
-	make_stmt(jump_to_end);
-	jump_to_end->breakList = newList(nextQuadLabel());
-    emit(jump, NULL, NULL, NULL, 0, lineno);
-
-    emit(funcstart, arg, NULL, NULL, 0, lineno);
+    emit(funcstart, NULL, NULL, arg, 0, lineno);
     scopeOffsetStack = stack_push(scopeOffsetStack, currScopeOffset());
     enterScopeSpace();
     resetFormalArgsOffset();
@@ -253,7 +247,7 @@ SymbolTableEntry* HANDLE_FUNCDEF(SymbolTableEntry* funcprefix, unsigned funcbody
     funcprefix->totalLocals = funcbody;
     scopeOffsetStack = stack_pop(scopeOffsetStack);
     restoreCurrScopeOffset(stack_top(scopeOffsetStack));
-    emit(funcend, arg, NULL, NULL, 0, lineno);
+    emit(funcend, NULL, NULL, arg, 0, lineno);
 	return funcprefix;
 }
 

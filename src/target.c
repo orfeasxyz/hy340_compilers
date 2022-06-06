@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+
 
 incomplete_jump* ij_head = (incomplete_jump*) 0;
 unsigned ij_total = 0;
@@ -43,6 +45,9 @@ static struct func_symbol_s* func_top() {
     return __func_top->entry;
 }
 
+
+static void append(func_symbol_t* entry, unsigned index);
+
 static void func_pop() {
     assert(__func_top);
     func_stack_t *temp = __func_top;
@@ -62,9 +67,6 @@ void add_incomplete_jump(unsigned instrNo, unsigned iaddress){
 
 static unsigned i;
 
-void generate_all(void){
-    for(i = 0; i < total; i++) (*generators[quads[i].op])(quads + i);
-}
 
 unsigned currProcessedQuad() {
     return i;
@@ -76,7 +78,7 @@ unsigned	currInstruction = 0;
 
 void expand_instruction(){
     assert(total_instructions == currInstruction);
-    instruction *p = malloc(NEW_INSTRUCTION_SIZE);
+    instruction *p = calloc(1, NEW_INSTRUCTION_SIZE);
     if (instructions) {
         memcpy(p, instructions, CURR_INSTRUCTION_SIZE);
         free(instructions);
@@ -84,6 +86,103 @@ void expand_instruction(){
     instructions = p;
     total_instructions += EXPAND_INSTRUCTION_SIZE;
 }
+
+double* numConsts = (double*) 0;
+unsigned totalNumConsts = 0;
+unsigned currNumConsts = 0;
+void expand_numconst(){
+    assert(totalNumConsts == currNumConsts);
+    double *p = calloc(1, NEW_NUMCONST_SIZE);
+    if (numConsts) {
+        memcpy(p, numConsts, CURR_NUMCONST_SIZE);
+        free(numConsts);
+    }
+    numConsts = p;
+    totalNumConsts += EXPAND_NUMCONST_SIZE;
+}
+
+unsigned consts_newnumber(double n){
+    unsigned address;
+    if (currNumConsts == totalNumConsts) expand_numconst();
+    address = currNumConsts;
+    numConsts[currNumConsts++] = n;
+    return address;
+}
+
+char** strConsts = (char**) 0;
+unsigned totalStrConsts = 0;
+unsigned currStrConsts = 0;
+void expand_strconst(){
+    assert(totalStrConsts == currStrConsts);
+    char **p = calloc(1, NEW_STRCONST_SIZE);
+    if (strConsts) {
+        memcpy(p, strConsts, CURR_STRCONST_SIZE);
+        free(strConsts);
+    }
+    strConsts = p;
+    totalStrConsts += EXPAND_STRCONST_SIZE;
+}
+
+unsigned consts_newstring(char* s){
+    unsigned address;
+    if (currStrConsts == totalStrConsts) expand_strconst();
+    address = currStrConsts;
+    strConsts[currStrConsts++] = (char*)strdup(s);
+    return address;
+}
+
+char** nameLibfuncs = (char**) 0;
+unsigned totalNameLibfuncs = 0;
+unsigned currNameLibfuncs = 0;
+void expand_namelibfuncs(){
+    assert(totalNameLibfuncs == currNameLibfuncs);
+    char **p = calloc(1, NEW_NAMELIBFUNCS_SIZE);
+    if (nameLibfuncs) {
+        memcpy(p, nameLibfuncs, CURR_NAMELIBFUNCS_SIZE);
+        free(nameLibfuncs);
+    }
+    nameLibfuncs = p;
+    totalNameLibfuncs += EXPAND_NAMELIBFUNCS_SIZE;
+}
+
+unsigned libfuncs_newused(char* name){
+    unsigned i, address;
+    if (currNameLibfuncs == totalNameLibfuncs) expand_namelibfuncs();
+    for(i=0; i<currNameLibfuncs; i++)  if (strcmp(nameLibfuncs[i], name) == 0) return i;
+    address = currNameLibfuncs;
+    nameLibfuncs[currNameLibfuncs++] = (char*)strdup(name);
+    return address;
+}
+
+userfunc* userFuncs = (userfunc*) 0;
+unsigned totalUserFuncs = 0;
+unsigned currUserFuncs = 0;
+void expand_userFuncs(){
+    assert(totalUserFuncs == currUserFuncs);
+    userfunc* p = calloc(1, NEW_USERFUNCS_SIZE);
+    if (userFuncs) {
+        memcpy(p, userFuncs, CURR_USERFUNCS_SIZE);
+        free(userFuncs);
+    }
+    userFuncs = p;
+    totalUserFuncs += EXPAND_USERFUNCS_SIZE;
+}
+
+unsigned userfuncs_newfunc(SymbolTableEntry *func){
+    unsigned address, i;
+    if (currUserFuncs == totalUserFuncs) expand_userFuncs();
+    address = currUserFuncs;
+    for(i = 0; i < currUserFuncs; i++){
+        if (userFuncs[i].address == func->iadress)
+           return i;
+    }
+    userfunc* newFunc = userFuncs + currUserFuncs++;
+    newFunc->address =  func->iadress;
+    newFunc->localSize = func->totalLocals;
+    newFunc->id = (char*)strdup(func->name);
+    return address;
+}
+
 
 unsigned nextInstructionLabel(void){
     return currInstruction;
@@ -101,11 +200,13 @@ void emit_instruction(instruction inst){
 }
 
 void make_operand(Expr* e, vmarg* arg){
+    if(!e) return;
     switch(e->type){
         case var_e:
         case tableitem_e:
         case arithmexpr_e:
         case boolexpr_e:
+        case assignexpr_e:
         case newtable_e: {
             arg->val = e->sym->offset;
 
@@ -138,12 +239,12 @@ void make_operand(Expr* e, vmarg* arg){
             break;
         }
         case programfunc_e: {
-            arg->val = e->sym->iadress;
+            arg->val = userfuncs_newfunc(e->sym);
             arg->type = userfunc_a;
             break;
         }
         case libraryfunc_e: {
-            arg->val = e->sym->iadress;
+            arg->val = libfuncs_newused(e->sym->name);
             arg->type = libfunc_a;
             break;
         }
@@ -399,12 +500,22 @@ void generate_FUNCSTART(quad *quad) {
     quad->taddress = nextInstructionLabel();
 
     func_push(f);
-    instruction instr = {0};
-    instr.srcLine   = quad->line;
-    instr.op        = funcenter_v;
-    make_operand(quad->result, &instr.result);
-    make_booloperand(&instr.arg2, 1);
-    emit_instruction(instr);
+    instruction inst = {0};
+
+    append(func_top(), nextInstructionLabel());
+    inst.op = jump_v;
+    inst.result.type = label_a;
+    reset_operand(&inst.arg1);
+    reset_operand(&inst.arg2);
+    emit_instruction(inst);
+
+    inst.srcLine   = quad->line;
+    inst.op        = funcenter_v;
+    reset_operand(&inst.arg1);
+    reset_operand(&inst.arg2);
+    make_operand(quad->result, &inst.result);
+    make_booloperand(&inst.arg2, 1);
+    emit_instruction(inst);
 }
 
 void patch_incomplete_jumps() { 
@@ -431,8 +542,8 @@ static void append(func_symbol_t* entry, unsigned index){
 }
 
 void generate_FUNCEND(quad *q) {
-    SymbolTableEntry *f = func_top();
-    backPatchReturnList(f, nextInstructionLabel());
+    func_symbol_t *f = func_top();
+    backPatchReturnList(f->returnList, nextInstructionLabel());
     func_pop();
 
     q->taddress = nextInstructionLabel();
@@ -447,23 +558,141 @@ void generate_RETURN(quad* q){
     instruction inst;
 
     inst.op = assign_v;
-    make_operand(q->arg1, &inst.arg1);
     make_revaloperand(&inst.result);
+    make_operand(q->result, &inst.arg1);
+    if(!q->result){
+        inst.arg1.type = nil_a;
+        inst.arg1.val = 0;
+    }
     emit_instruction(inst);
 
     func_symbol_t* f = func_top();
     append(f, nextInstructionLabel());
 
-    inst.op = jump;
+    inst.op = jump_v;
     reset_operand(&inst.arg1);
     reset_operand(&inst.arg2);
     inst.result.type = label_a;
     emit_instruction(inst);
 }
 
-unsigned consts_newstring(char* ss){
-    return 0;
+generate_func_t generators[] = {
+    generate_ASSIGN,       generate_JUMP,      generate_MUL,
+    generate_NOP,          generate_NOT,       generate_IF_LESSEQ,
+    generate_IF_GREATER,   generate_RETURN,    generate_FUNCEND,
+    generate_TABLEGETELEM, generate_ADD,       generate_DIV,
+    generate_AND,          generate_IF_EQ,     generate_IF_GREATEREQ,
+    generate_CALL,         generate_GETRETVAL, generate_NEWTABLE,
+    generate_TABLESETELEM, generate_SUB,       generate_MOD,
+    generate_OR,           generate_IF_NOTEQ,  generate_IF_LESS,
+    generate_PARAM,        generate_FUNCSTART};
+
+
+
+//vmopcode to string_printer
+char* vmopcodeToString[] = {
+    "assign_v",
+    "add_v",
+    "sub_v",
+    "mul_v",
+    "div_v",
+    "mod_v",
+    "uminus_v",
+    "and_v",
+    "or_v",
+    "not_v",
+    "jump_v",
+    "jeq_v",
+    "jne_v",
+    "jle_v",
+    "jge_v",
+    "jlt_v",
+    "jgt_v",
+    "call_v",
+    "pusharg_v",
+    "funcenter_v",
+    "funcexit_v",
+    "newtable_v",
+    "tablegetelem_v",
+    "tablesetelem_v",
+    "nop_v"
+ };
+
+char* vmarg_t_to_string[] = {
+    "label_a",
+    "global_a",
+    "formal_a",
+    "local_a",
+    "number_a",
+    "string_a",
+    "bool_a",
+    "nil_a",
+    "userfunc_a",
+    "libfunc_a",
+    "retval_a"
+};
+
+void print_vmarg(vmarg arg){
+    fprintf(stdout," [%s: %d ] ", vmarg_t_to_string[arg.type], arg.val);
 }
-unsigned consts_newnumber(double dd){
-    return 0;
+
+void print_target() {
+    int i;
+    instruction inst;
+    for(i = 0; i < currInstruction; i++) {
+        inst = instructions[i];
+        printf("%d: %s ", i, vmopcodeToString[inst.op]);
+        switch(inst.op) {
+            case jump_v:
+            case funcenter_v:
+            case funcexit_v:
+                print_vmarg(inst.result);
+                break;
+            case pusharg_v:
+            case call_v:
+                print_vmarg(inst.arg1);
+                break;
+            case newtable_v:
+                print_vmarg(inst.arg1);
+                break;
+            case assign_v:
+                print_vmarg(inst.result);
+                print_vmarg(inst.arg1);
+                break;
+            default:
+                print_vmarg(inst.result);
+                print_vmarg(inst.arg1);
+                print_vmarg(inst.arg2);
+        }
+        printf("\n");
+    }
+}
+
+void print_arrays(){
+    int i;
+    printf("Num Consts:\n");
+    for(i=0; i<currNumConsts; i++){
+        printf("%d: %f\n", i, numConsts[i]);
+    }
+    printf("Str Consts:\n");
+    for(i=0; i<currStrConsts; i++){
+        printf("%d: %s\n", i, strConsts[i]);
+    }
+    printf("User Funcs:\n");
+    for(i=0; i<currUserFuncs; i++){
+        printf("%d: Name: %s Address: %d\n", i, userFuncs[i].id, userFuncs[i].address);
+    }
+    printf("Lib Funcs:\n");
+    for(i=0; i<currNameLibfuncs; i++){
+        printf("%d: Name: %s\n", i, nameLibfuncs[i]);
+    }
+
+}
+
+void generate_all(void){
+    for(i = 1; i < nextQuadLabel(); i++) (*generators[quads[i].op])(quads + i);
+    patch_incomplete_jumps();
+    print_arrays();
+    printf("\n\n");
+    print_target();
 }
