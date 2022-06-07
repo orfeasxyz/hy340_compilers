@@ -10,6 +10,7 @@
 	#include "../include/rule_handler.h"
 	#include "../include/parser.h"
     #include "../include/target.h"
+    #include "../include/binary.h"
 
     int yyerror(char* message);
     int yylex(void);
@@ -352,5 +353,6 @@ int main(int argc, char **argv) {
 
     printQuads();
     generate_all();
+    create_binary("MhtsosKavlas.ascb");
     return 0;	
 }

@@ -576,16 +576,21 @@ void generate_RETURN(quad* q){
     emit_instruction(inst);
 }
 
+void generate_UMINUS(quad* q){
+    q->arg2 = newExprConstNum(-1);
+    generate_MUL(q);
+}
+
 generate_func_t generators[] = {
     generate_ASSIGN,       generate_JUMP,      generate_MUL,
-    generate_NOP,          generate_NOT,       generate_IF_LESSEQ,
+    generate_UMINUS,          generate_NOT,       generate_IF_LESSEQ,
     generate_IF_GREATER,   generate_RETURN,    generate_FUNCEND,
     generate_TABLEGETELEM, generate_ADD,       generate_DIV,
     generate_AND,          generate_IF_EQ,     generate_IF_GREATEREQ,
     generate_CALL,         generate_GETRETVAL, generate_NEWTABLE,
     generate_TABLESETELEM, generate_SUB,       generate_MOD,
     generate_OR,           generate_IF_NOTEQ,  generate_IF_LESS,
-    generate_PARAM,        generate_FUNCSTART};
+    generate_PARAM,        generate_FUNCSTART, generate_NOP};
 
 
 

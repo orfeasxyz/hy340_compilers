@@ -160,6 +160,7 @@ void generate_GETRETVAL(quad*);
 void generate_FUNCSTART(quad*);
 void generate_RETURN(quad*);
 void generate_FUNCEND(quad*);
+void generate_UMINUS(quad*);
 
 typedef void (*generate_func_t)(quad*);
 

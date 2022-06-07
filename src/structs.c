@@ -159,7 +159,13 @@ SymbolTableEntry* newTemp(){
     char* name = newTempName();
     SymbolTableEntry* sym = SymTable_lookup(current_table, name);
     if(sym) return sym;
-    return makeSymbol(name, 0, scope);
+    SymbolTableEntry* temp;
+    temp = makeSymbol(name, 0, scope);
+    temp->type = (scope ? VAR_LOCAL : VAR_GLOBAL);
+    temp->space = currScopeSpace();
+    temp->offset = currScopeOffset();
+    incCurrScopeOffset();
+    return temp;
 }
 
 Expr* newExpr(ExprType t){
