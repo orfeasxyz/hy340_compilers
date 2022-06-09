@@ -658,7 +658,7 @@ void print_target() {
                 print_vmarg(inst.arg1);
                 break;
             case newtable_v:
-                print_vmarg(inst.arg1);
+                print_vmarg(inst.result);
                 break;
             case assign_v:
                 print_vmarg(inst.result);
