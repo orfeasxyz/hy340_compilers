@@ -498,8 +498,8 @@ Expr* HANDLE_ELIST_ADD(Expr* expression, Expr* elist){
 }
 
 Expr* HANDLE_INDEXED_ADD(Expr* indexedelem, Expr* indexed){
-    indexed->next = indexedelem;
-    return indexed;                 /* SAME AS ABOVE !!! */
+    indexedelem->next = indexed; 
+    return indexedelem;              /* SAME AS ABOVE !!! */
 }
 
 // =======================================================================================
@@ -508,7 +508,7 @@ Expr* HANDLE_INDEXED_ADD(Expr* indexedelem, Expr* indexed){
 Expr* HANDLE_OBJECTDEF_TO_ELIST(Expr* elist){
     Expr* t = newExpr(newtable_e);
     t->sym = newTemp();
-    emit(tablecreate, t, NULL, NULL, 0, 0);
+    emit(tablecreate, NULL, NULL, t, 0, 0);
     for(int i = 0; elist; elist = elist->next){
         emit(tablesetelem, t, newExprConstNum(i++), elist, 0, 0);
     }
@@ -519,7 +519,7 @@ Expr* HANDLE_OBJECTDEF_TO_ELIST(Expr* elist){
 Expr* HANDLE_OBJECTDEF_TO_INDEXED(Expr* indexed){
     Expr* t = newExpr(newtable_e);
     t->sym = newTemp();
-    emit(tablecreate, t, NULL, NULL, 0, 0);
+    emit(tablecreate, NULL, NULL, t, 0, 0);
     for(; indexed; indexed = indexed->next){
         emit(tablesetelem, t, indexed->index, indexed, 0, 0);
     }
