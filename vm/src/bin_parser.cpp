@@ -1,4 +1,4 @@
-#include "binary.h"
+#include "bin_parser.h"
 #include <vector>
 #include <string>
 #include <iostream>

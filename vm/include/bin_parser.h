@@ -1,5 +1,5 @@
-#ifndef BINARY_H
-#define BINARY_H
+#ifndef BIN_PARSER_H
+#define BIN_PARSER_C
 #include <vector>
 #include <string>
 
@@ -71,4 +71,4 @@ extern std::vector<instruction>	instructions;
 
  void parseBinary(char *filename);
 
-#endif
+#endif	// BIN_PARSER_H
