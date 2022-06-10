@@ -86,7 +86,7 @@ statements_alt: statement                                 { $$ = $1; }
                                         }
                 ;
 
-statement:      expression SEMI_COLON   {$$ = (stmt_t*) 0; makeBoolStmt($1);}
+statement:      expression SEMI_COLON   {$$ = (stmt_t*) 0; makeBoolStmt($1, yylineno);}
                 | ifstmt                {$$ = $1;}
                 | whilestmt             {$$ = (stmt_t*) 0;}
                 | forstmt               {$$ = (stmt_t*) 0;}
@@ -110,8 +110,8 @@ expression:     assignexpr                      {$$ = $1;}
                 | expression LET expression     {$$ = HANDLE_REL_OP(if_lesseq, $1, $3, yylineno);}
                 | expression EQUAL expression   {makeBoolStmt($1, yylineno); makeBoolStmt($3, yylineno); $$ = HANDLE_REL_OP(if_eq, $1, $3, yylineno);}
                 | expression NEQUAL expression  {makeBoolStmt($1, yylineno); makeBoolStmt($3, yylineno); $$ = HANDLE_REL_OP(if_noteq, $1, $3, yylineno);}
-                | expression AND M expression   {$$ = HANDLE_BOOL_OP(and, $1, $4, $3);}
-                | expression OR M expression    {$$ = HANDLE_BOOL_OP(or, $1, $4, $3);}
+                | expression AND M expression   {$$ = HANDLE_BOOL_OP(and, $1, $4, $3, yylineno);}
+                | expression OR M expression    {$$ = HANDLE_BOOL_OP(or, $1, $4, $3, yylineno);}
                 | term                          {$$ = $1;}
                 ;
 
@@ -257,7 +257,7 @@ M:              {$$ = nextQuadLabel();};
 
 forprefix:      FOR {loopCounter++;} PAR_OPEN elist SEMI_COLON M expression SEMI_COLON {makeBoolStmt($7, yylineno); $$ = HANDLE_FORPREFIX($6, $7, yylineno);};
 
-forstmt:        forprefix N elist PAR_CLOSED N statement N {HANDLE_FORSTMT($1, $2, $5, $7, $6, yylineno); loopCounter--;};
+forstmt:        forprefix N elist PAR_CLOSED N statement N {HANDLE_FORSTMT($1, $2, $5, $7, $6); loopCounter--;};
 
 returnstmt:		RETURN SEMI_COLON               {
                                                     if(funcCounter == 0) {

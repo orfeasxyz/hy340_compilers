@@ -351,7 +351,7 @@ Expr* HANDLE_TERM_TO_LVALUE_DEC(Expr* lvalue, int lineno){
 
 Expr* HANDLE_TERM_TO_UMINUS_EXPR(Expr* expression, int lineno){
     checkArith(expression, "Uminus expression");
-    Expr* temp = newExpr(arithmexpr_e, lineno);
+    Expr* temp = newExpr(arithmexpr_e);
     temp->sym = newTemp(lineno);
     emit(uminus, expression, NULL, temp, 0, lineno);
     return temp;
@@ -366,7 +366,7 @@ void notBoolExpr(Expr* expression, int lineno){
 
 Expr* HANDLE_TERM_TO_NOT_EXPR(Expr* expression, int lineno)
 {
-    Expr* temp = newExpr(boolexpr_e, lineno);
+    Expr* temp = newExpr(boolexpr_e);
     temp->sym = newTemp(lineno);
 
     if (expression->type == var_e ||  expression->type == assignexpr_e) notBoolExpr(expression, lineno);

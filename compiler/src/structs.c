@@ -362,7 +362,7 @@ const char* iopcodeName(quad* q){
 
 void printQuads(void) {
 	char str_label[16] = {0};
-	printf("%8s | %14s | %10s | %10s | %10s | %10s |\n", "quad#", "opcode", "result", "arg1", "arg2", "label");
+	printf("%8s | %14s | %10s | %10s | %10s | %10s | %10s |\n", "quad#", "opcode", "result", "arg1", "arg2", "label", "line");
     for (int i = 1; i < currQuad; i++) {
         quad* q = &quads[i];
 
@@ -373,12 +373,13 @@ void printQuads(void) {
 			strcpy(str_label, " ");
 		}
 
-        printf("%8d | %14s | %10s | %10s | %10s | %10s |\n",
+        printf("%8d | %14s | %10s | %10s | %10s | %10s | %10d |\n",
         i,
         iopcodeName(q),
         (q->result != NULL ? getStringValueQuad(q->result) : " "),
         (q->arg1 != NULL ? getStringValueQuad(q->arg1) : " "),
         (q->arg2 != NULL ? getStringValueQuad(q->arg2) : " "),
-        str_label);
+        str_label,
+        q->line);
     }
 }
