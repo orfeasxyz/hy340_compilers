@@ -1,4 +1,4 @@
-#include "bin_parser.h"
+#include "parser.h"
 #include <cassert>
 
 #ifdef DEBUG

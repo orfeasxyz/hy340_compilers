@@ -1,4 +1,6 @@
-#include "bin_parser.h"
+#include "parser.h"
+#include "structs.h" // strConsts, numConsts, userFuncs, libFuncs, instructions
+#include "environment.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -11,12 +13,6 @@
 #else
 #	define DLOG_V(v)
 #endif
-
-std::vector<userfunc>		userFuncs;
-std::vector<instruction>	instructions;
-std::vector<std::string>	libFuncs;
-std::vector<double>			numConsts;
-std::vector<std::string>	strConsts;
 
 static std::string vmopcode_str[] = {
     "assign_v",
@@ -68,7 +64,7 @@ std::string vmarg2str(vmarg_e vma) {
 	return vmarg_str[vma];
 }
 
-std::ostream& operator<<(std::ostream& os, const vmarg_t vma) {
+std::ostream& operator<<(std::ostream& os, const vmarg vma) {
 	return os << "[" << vmarg2str(vma.type) << ", " << vma.val << "]";
 }
 

@@ -4,40 +4,92 @@
 #include <map>
 #include <string>
 
-#define AVM_STACKSIZE		4096
-#define AVM_TABLE_HASHSIZE	211
+enum vmopcode_e {
+    assign_v,
+    add_v,
+    sub_v,
+    mul_v,
+    div_v,
+    mod_v,
+    uminus_v,
+    and_v,
+    or_v,
+    not_v,
+    jump_v,
+    jeq_v,
+    jne_v,
+    jle_v,
+    jge_v,
+    jlt_v,
+    jgt_v,
+    call_v,
+    pusharg_v,
+    funcenter_v,
+    funcexit_v, newtable_v,
+    tablegetelem_v,
+    tablesetelem_v,
+    nop_v
+};
+
+enum vmarg_e {
+    label_a,
+    global_a,
+    formal_a,
+    local_a,
+    number_a,
+    string_a,
+    bool_a,
+    nil_a,
+    userFunc_a,
+    libFunc_a,
+    retval_a,
+};
+
+struct vmarg {
+    vmarg_e type;
+    unsigned val;
+};
+
+struct instruction {
+    vmopcode_e	op;
+    vmarg		result;
+    vmarg		arg1;
+    vmarg		arg2;
+    unsigned	srcLine;
+};
+
+struct userfunc {
+    unsigned address;
+    unsigned localSize;
+	std::string id;
+};
 
 enum avm_memcell_e {
 	undef_m,
 	number_m,
 	string_m,
-	bool_m,
-	table_m,
-	userfunc_m,
-	libfunc_m,
+	bool_m, table_m,
+	userFunc_m,
+	libFunc_m,
 	nil_m
 };
 
 struct avm_table;
 struct avm_memcell {
 	avm_memcell_e type;
-	union {
+	union { 
 		double		numVal;
 		char*		strVal;
 		bool		boolVal;
 		avm_table*	tableVal;
-		unsigned	funcVal;
+		unsigned	userFuncVal;
 		char*		libFuncVal;
 	} data;
 };
 
-extern avm_memcell stack[AVM_STACKSIZE];
-void avm_stackinit(void);
-
-using strIndexedTable = std::map<std::string, avm_memcell*>;
-using numIndexedTable = std::map<unsigned, avm_memcell*>;
-
 struct avm_table {
+	using strIndexedTable = std::map<std::string, avm_memcell*>;
+	using numIndexedTable = std::map<unsigned, avm_memcell*>;
 	unsigned		refCounter;
 	strIndexedTable	strIndexed;
 	numIndexedTable	numIndexed;

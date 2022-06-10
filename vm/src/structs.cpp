@@ -2,15 +2,8 @@
 #include <cassert>
 #include <cstring>
 
-avm_memcell stack[AVM_STACKSIZE];
 
-void avm_stackinit(void) {
-	memset(stack, 0, sizeof(stack));
-	for (auto &cell : stack) {
-		cell.type = undef_m;
-	}
-}
-
+// ----- avm_table procedures -----
 avm_table* avm_tablenew (void) {
 	avm_table *res = new avm_table;
 	res->refCounter = 0;
