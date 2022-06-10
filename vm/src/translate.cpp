@@ -1,5 +1,5 @@
-#include "translate.h"
-#include "environment.h"
+#include "../include/translate.h"
+#include "../include/environment.h"
 #include <cassert>
 #include <cstring>
 

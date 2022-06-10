@@ -65,13 +65,14 @@ struct userfunc {
 };
 
 enum avm_memcell_e {
-	undef_m,
 	number_m,
 	string_m,
-	bool_m, table_m,
+	bool_m,
+    table_m,
 	userFunc_m,
 	libFunc_m,
-	nil_m
+	nil_m,
+    undef_m
 };
 
 struct avm_table;
