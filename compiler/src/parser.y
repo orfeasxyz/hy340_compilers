@@ -99,25 +99,25 @@ statement:      expression SEMI_COLON   {$$ = (stmt_t*) 0; makeBoolStmt($1);}
                 ;
 
 expression:     assignexpr                      {$$ = $1;}
-                | expression PLUS expression    {$$ = HANDLE_ARITH_OP(add, $1, $3);}
-                | expression MINUS expression   {$$ = HANDLE_ARITH_OP(sub, $1, $3);}
-                | expression MUL expression     {$$ = HANDLE_ARITH_OP(mul, $1, $3);}
-                | expression DIV expression     {$$ = HANDLE_ARITH_OP(mydiv, $1, $3);}
-                | expression MOD expression     {$$ = HANDLE_ARITH_OP(mod, $1, $3);}
-                | expression GT expression      {$$ = HANDLE_REL_OP(if_greater, $1, $3);}
-                | expression GET expression     {$$ = HANDLE_REL_OP(if_geatereq, $1, $3);}
-                | expression LT expression      {$$ = HANDLE_REL_OP(if_less, $1, $3);}
-                | expression LET expression     {$$ = HANDLE_REL_OP(if_lesseq, $1, $3);}
-                | expression EQUAL expression   {makeBoolStmt($1); makeBoolStmt($3); $$ = HANDLE_REL_OP(if_eq, $1, $3);}
-                | expression NEQUAL expression  {makeBoolStmt($1); makeBoolStmt($3); $$ = HANDLE_REL_OP(if_noteq, $1, $3);}
+                | expression PLUS expression    {$$ = HANDLE_ARITH_OP(add, $1, $3, yylineno);}
+                | expression MINUS expression   {$$ = HANDLE_ARITH_OP(sub, $1, $3, yylineno);}
+                | expression MUL expression     {$$ = HANDLE_ARITH_OP(mul, $1, $3, yylineno);}
+                | expression DIV expression     {$$ = HANDLE_ARITH_OP(mydiv, $1, $3, yylineno);}
+                | expression MOD expression     {$$ = HANDLE_ARITH_OP(mod, $1, $3, yylineno);}
+                | expression GT expression      {$$ = HANDLE_REL_OP(if_greater, $1, $3, yylineno);}
+                | expression GET expression     {$$ = HANDLE_REL_OP(if_geatereq, $1, $3, yylineno);}
+                | expression LT expression      {$$ = HANDLE_REL_OP(if_less, $1, $3, yylineno);}
+                | expression LET expression     {$$ = HANDLE_REL_OP(if_lesseq, $1, $3, yylineno);}
+                | expression EQUAL expression   {makeBoolStmt($1, yylineno); makeBoolStmt($3, yylineno); $$ = HANDLE_REL_OP(if_eq, $1, $3, yylineno);}
+                | expression NEQUAL expression  {makeBoolStmt($1, yylineno); makeBoolStmt($3, yylineno); $$ = HANDLE_REL_OP(if_noteq, $1, $3, yylineno);}
                 | expression AND M expression   {$$ = HANDLE_BOOL_OP(and, $1, $4, $3);}
                 | expression OR M expression    {$$ = HANDLE_BOOL_OP(or, $1, $4, $3);}
                 | term                          {$$ = $1;}
                 ;
 
 term:           PAR_OPEN expression PAR_CLOSED  {$$ = $2;}
-                | MINUS expression              {$$ = HANDLE_TERM_TO_UMINUS_EXPR($2);} %prec UMINUS
-                | NOT expression                {$$ = HANDLE_TERM_TO_NOT_EXPR($2);}
+                | MINUS expression              {$$ = HANDLE_TERM_TO_UMINUS_EXPR($2, yylineno);} %prec UMINUS
+                | NOT expression                {$$ = HANDLE_TERM_TO_NOT_EXPR($2, yylineno);}
                 | INC lvalue                    {$$ = HANDLE_TERM_TO_INC_LVALUE($2, yylineno);}
                 | lvalue INC                    {$$ = HANDLE_TERM_TO_LVALUE_INC($1, yylineno);}
                 | DEC lvalue                    {$$ = HANDLE_TERM_TO_DEC_LVALUE($2, yylineno);}
@@ -125,7 +125,7 @@ term:           PAR_OPEN expression PAR_CLOSED  {$$ = $2;}
                 | prim                          {$$ = $1;}
                 ;
 
-assignexpr:     lvalue ASSIGN expression        {makeBoolStmt($3); $$ = HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, $3, yylineno);};
+assignexpr:     lvalue ASSIGN expression        {makeBoolStmt($3, yylineno); $$ = HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION($1, $3, yylineno);};
 
 prim:           lvalue                          {$$ = HANDLE_PRIM_TO_LVALUE($1, yylineno);}
                 | call                          {$$ = $1;}
@@ -140,15 +140,15 @@ lvalue:         IDENT                   {$$ = HANDLE_LVALUE_TO_IDENT($1, yylinen
                 | member                {$$ = $1;}
                 ;
 
-member:         lvalue DOT IDENT                                {$$ = HANDLE_MEMBER_TO_LVALUE_DOT_IDENT($1, $3);}
-                | lvalue SQUARE_OPEN expression SQUARE_CLOSED   {$$ = HANDLE_MEMBER_TO_LVALUE_SQUARE_EXPR($1, $3);}
-                | call DOT IDENT                                {$$ = HANDLE_MEMBER_TO_LVALUE_DOT_IDENT($1, $3);}
-                | call SQUARE_OPEN expression SQUARE_CLOSED     {$$ = HANDLE_MEMBER_TO_LVALUE_SQUARE_EXPR($1, $3);}        
+member:         lvalue DOT IDENT                                {$$ = HANDLE_MEMBER_TO_LVALUE_DOT_IDENT($1, $3, yylineno);}
+                | lvalue SQUARE_OPEN expression SQUARE_CLOSED   {$$ = HANDLE_MEMBER_TO_LVALUE_SQUARE_EXPR($1, $3, yylineno);}
+                | call DOT IDENT                                {$$ = HANDLE_MEMBER_TO_LVALUE_DOT_IDENT($1, $3, yylineno);}
+                | call SQUARE_OPEN expression SQUARE_CLOSED     {$$ = HANDLE_MEMBER_TO_LVALUE_SQUARE_EXPR($1, $3, yylineno);}        
                 ;
 
-call:           call PAR_OPEN elist PAR_CLOSED                              {$$ = HANDLE_CALL_ELIST($1, $3);}
-                | lvalue callsuffix                                         {$$ = HANDLE_CALL_LVALUE_SUFFIX($1, $2);}
-                | PAR_OPEN funcdef PAR_CLOSED PAR_OPEN elist PAR_CLOSED     {$$ = HANDLE_CALL_FUNCDEF_ELIST($2, $5);}
+call:           call PAR_OPEN elist PAR_CLOSED                              {$$ = HANDLE_CALL_ELIST($1, $3, yylineno);}
+                | lvalue callsuffix                                         {$$ = HANDLE_CALL_LVALUE_SUFFIX($1, $2, yylineno);}
+                | PAR_OPEN funcdef PAR_CLOSED PAR_OPEN elist PAR_CLOSED     {$$ = HANDLE_CALL_FUNCDEF_ELIST($2, $5, yylineno);}
                 ;
 
 callsuffix:     normcall        {$$ = $1;}
@@ -159,22 +159,22 @@ normcall:       PAR_OPEN elist PAR_CLOSED                      {$$ = HANDLE_NORM
 
 methodcall:     DOUBLE_DOT IDENT PAR_OPEN elist PAR_CLOSED     {$$ = HANDLE_METHODCALL($2, $4);};
 
-elist:          expression                  {makeBoolStmt($1); $$ = $1; $$->next = NULL;}
+elist:          expression                  {makeBoolStmt($1, yylineno); $$ = $1; $$->next = NULL;}
                 | expression COMMA elist    {$$ = HANDLE_ELIST_ADD($1, $3);}
 				|                           {$$ = (Expr*) 0;}
                 ;
 
 objectdef:      SQUARE_OPEN objectarg SQUARE_CLOSED  {$$ = $2;};
 
-objectarg:      elist       {$$ = HANDLE_OBJECTDEF_TO_ELIST($1);}
-                | indexed   {$$ = HANDLE_OBJECTDEF_TO_INDEXED($1);}
+objectarg:      elist       {$$ = HANDLE_OBJECTDEF_TO_ELIST($1, yylineno);}
+                | indexed   {$$ = HANDLE_OBJECTDEF_TO_INDEXED($1, yylineno);}
                 ;
 
 indexed:        indexedelem                     {$$ = $1;}
                 | indexedelem COMMA indexed     {$$ = HANDLE_INDEXED_ADD($1, $3);}
                 ;
 
-indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED {makeBoolStmt($4); $$ = HANDLE_INDEXELEM($2, $4);};
+indexedelem:    CURLY_OPEN expression COLON expression CURLY_CLOSED {makeBoolStmt($4, yylineno); $$ = HANDLE_INDEXELEM($2, $4);};
 
 block:          CURLY_OPEN {scope++; current_table = SymTable_next(current_table);} statements CURLY_CLOSED {scope--; SymTable_hide(current_table); current_table = SymTable_prev(current_table); $$ = $3;};
 
@@ -233,7 +233,7 @@ idlist:         IDENT                   {HANDLE_IDLIST_IDENT($1, yylineno);}
                 |
                 ;
 
-ifprefix:       IF PAR_OPEN expression PAR_CLOSED   {makeBoolStmt($3); $$ = HANDLE_IFPREFIX($3);}
+ifprefix:       IF PAR_OPEN expression PAR_CLOSED   {makeBoolStmt($3, yylineno); $$ = HANDLE_IFPREFIX($3, yylineno);}
 
 elseprefix:     ELSE                                {$$ = HANDLE_ELSEPREFIX(yylineno);}
 
@@ -248,16 +248,16 @@ ifstmt:         ifprefix statement {patchLabel($1, nextQuadLabel()); $$ = $2;} %
 
 whileprefix:    WHILE                               {$$ = nextQuadLabel(); loopCounter++;};
 
-whileargs:      PAR_OPEN expression PAR_CLOSED      {makeBoolStmt($2); $$ = HANDLE_WHILEARGS($2);}
+whileargs:      PAR_OPEN expression PAR_CLOSED      {makeBoolStmt($2, yylineno); $$ = HANDLE_WHILEARGS($2, yylineno);}
 
-whilestmt:      whileprefix whileargs statement		{HANDLE_WHILE($1, $2, $3); loopCounter--;}
+whilestmt:      whileprefix whileargs statement		{HANDLE_WHILE($1, $2, $3, yylineno); loopCounter--;}
 
 N:              {$$ = nextQuadLabel(); emit(jump, NULL, NULL, NULL, 0, yylineno);};
 M:              {$$ = nextQuadLabel();};
 
-forprefix:      FOR {loopCounter++;} PAR_OPEN elist SEMI_COLON M expression SEMI_COLON {makeBoolStmt($7); $$ = HANDLE_FORPREFIX($6, $7);};
+forprefix:      FOR {loopCounter++;} PAR_OPEN elist SEMI_COLON M expression SEMI_COLON {makeBoolStmt($7, yylineno); $$ = HANDLE_FORPREFIX($6, $7, yylineno);};
 
-forstmt:        forprefix N elist PAR_CLOSED N statement N {HANDLE_FORSTMT($1, $2, $5, $7, $6); loopCounter--;};
+forstmt:        forprefix N elist PAR_CLOSED N statement N {HANDLE_FORSTMT($1, $2, $5, $7, $6, yylineno); loopCounter--;};
 
 returnstmt:		RETURN SEMI_COLON               {
                                                     if(funcCounter == 0) {
@@ -267,7 +267,7 @@ returnstmt:		RETURN SEMI_COLON               {
                                                     emit(ret, NULL, NULL, NULL, 0, yylineno);
                                                 }
                 | RETURN expression SEMI_COLON  {
-                                                    makeBoolStmt($2);
+                                                    makeBoolStmt($2, yylineno);
                                                     if(funcCounter == 0) {
                                                         fprintf(stderr, "Line %d: Return used outside function", yylineno);
                                                         exit(1);
@@ -277,7 +277,7 @@ returnstmt:		RETURN SEMI_COLON               {
                 ;
 
 break:			BREAK SEMI_COLON { 
-                        if(loopCounter > 0) $$ = HANDLE_BREAK(); 
+                        if(loopCounter > 0) $$ = HANDLE_BREAK(yylineno); 
                         else {
                             fprintf(stderr, "Line %d: Break outside loop\n", yylineno);
                             exit(1);
@@ -285,7 +285,7 @@ break:			BREAK SEMI_COLON {
                     }
 
 continue:		CONTINUE SEMI_COLON {
-                        if(loopCounter > 0) $$ = HANDLE_CONTINUE(); 
+                        if(loopCounter > 0) $$ = HANDLE_CONTINUE(yylineno); 
                         else {
                             fprintf(stderr, "Line %d: Continue outside loop\n", yylineno);
                             exit(1);

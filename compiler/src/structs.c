@@ -53,13 +53,13 @@ unsigned tempCounter = 0;
 unsigned loopCounter = 0;
 unsigned funcCounter = 0;
 
-void makeBoolStmt(Expr* e){
+void makeBoolStmt(Expr* e, int lineno){
     if(e->type == boolexpr_e){
         patchList(e->trueList, nextQuadLabel());
-        emit(assign, newExprConstBool(1), NULL, e, 0, 0);
-        emit(jump, NULL, NULL, NULL, nextQuadLabel() + 2, 0);
+        emit(assign, newExprConstBool(1), NULL, e, 0, lineno);
+        emit(jump, NULL, NULL, NULL, nextQuadLabel() + 2, lineno);
         patchList(e->falseList, nextQuadLabel());
-        emit(assign, newExprConstBool(0), NULL, e, 0, 0);
+        emit(assign, newExprConstBool(0), NULL, e, 0, lineno);
     }
 }
 
@@ -155,12 +155,12 @@ char* newTempName(){
 
 void resetTemp() {tempCounter = 0;}
 
-SymbolTableEntry* newTemp(){
+SymbolTableEntry* newTemp(int lineno){
     char* name = newTempName();
     SymbolTableEntry* sym = SymTable_lookup(current_table, name);
     if(sym) return sym;
     SymbolTableEntry* temp;
-    temp = makeSymbol(name, 0, scope);
+    temp = makeSymbol(name, lineno, scope);
     temp->type = (scope ? VAR_LOCAL : VAR_GLOBAL);
     temp->space = currScopeSpace();
     temp->offset = currScopeOffset();

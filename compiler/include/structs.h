@@ -136,8 +136,8 @@ extern unsigned loopCounter;
 
 char* newTempName();
 void resetTemp();
-SymbolTableEntry* newTemp();
-void makeBoolStmt(Expr*);
+SymbolTableEntry* newTemp(int);
+void makeBoolStmt(Expr*, int);
 
 SymbolTableEntry* makeSymbol(char*, int, int);
 ScopeSpace currScopeSpace(void);

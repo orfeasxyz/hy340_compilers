@@ -13,7 +13,7 @@
 #endif
 
 
-Expr* emitIfTableItem(Expr* e);
+Expr* emitIfTableItem(Expr* e, int lineno);
 
 int isVar(SymbolTableEntry* temp){
     return temp->type == VAR_FORMAL || temp->type == VAR_GLOBAL || temp->type == VAR_LOCAL;
@@ -122,7 +122,7 @@ Expr* HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION(Expr* lvalue, Expr* expressi
             0,
             lineno
         );
-        temp = emitIfTableItem(lvalue);
+        temp = emitIfTableItem(lvalue, lineno);
         temp->type = assignexpr_e;
     } else {
         emit(
@@ -134,7 +134,7 @@ Expr* HANDLE_ASSIGNEXPR_TO_LVALUE_ASSIGN_EXPRESSION(Expr* lvalue, Expr* expressi
             lineno
         );
         temp = newExpr(assignexpr_e);
-        temp->sym = newTemp();
+        temp->sym = newTemp(lineno);
         emit(
             assign,
             lvalue,
@@ -263,9 +263,9 @@ Expr* HANDLE_TERM_TO_INC_LVALUE(Expr* lvalue, int lineno){
 
     checkArith(lvalue, "INC LVALUE");
     Expr* temp = newExpr(var_e);
-    temp->sym = newTemp();
+    temp->sym = newTemp(lineno);
     if(lvalue->type == tableitem_e){
-        Expr* val = emitIfTableItem(lvalue);
+        Expr* val = emitIfTableItem(lvalue, lineno);
         emit(assign, val, NULL, temp, 0, lineno);
         emit(add, val, newExprConstNum(1), val, 0, lineno);
         emit(tablesetelem, lvalue, lvalue->index, val, 0, lineno);
@@ -288,13 +288,13 @@ Expr* HANDLE_TERM_TO_LVALUE_INC(Expr* lvalue, int lineno){
     checkArith(lvalue, "LVALUE INC");
     Expr* temp;
     if(lvalue->type == tableitem_e){
-        temp = emitIfTableItem(lvalue);
+        temp = emitIfTableItem(lvalue, lineno);
         emit(add, temp, newExprConstNum(1), temp, 0, lineno);
         emit(tablesetelem, lvalue, lvalue->index, temp, 0, lineno);
     } else {
         emit(add, lvalue, newExprConstNum(1), lvalue, 0, lineno);
         temp = newExpr(arithmexpr_e);
-        temp->sym = newTemp();
+        temp->sym = newTemp(lineno);
         emit(assign, lvalue, NULL, temp, 0, lineno);
     }
 
@@ -311,9 +311,9 @@ Expr* HANDLE_TERM_TO_DEC_LVALUE(Expr* lvalue, int lineno){
 
     checkArith(lvalue, "DEC LVALUE");   
     Expr* temp = newExpr(var_e);
-    temp->sym = newTemp();
+    temp->sym = newTemp(lineno);
     if(lvalue->type == tableitem_e){
-        Expr* val = emitIfTableItem(lvalue);
+        Expr* val = emitIfTableItem(lvalue, lineno);
         emit(assign, val, NULL, temp, 0, lineno);
         emit(sub, val, newExprConstNum(1), val, 0, lineno);
         emit(tablesetelem, lvalue, lvalue->index, val, 0, lineno);
@@ -336,40 +336,40 @@ Expr* HANDLE_TERM_TO_LVALUE_DEC(Expr* lvalue, int lineno){
     checkArith(lvalue, "LVALUE DEC");
     Expr* temp;
     if(lvalue->type == tableitem_e){
-        temp = emitIfTableItem(lvalue);
+        temp = emitIfTableItem(lvalue, lineno);
         emit(sub, temp, newExprConstNum(1), temp, 0, lineno);
         emit(tablesetelem, lvalue, lvalue->index, temp, 0, lineno);
     } else {
         emit(sub, lvalue, newExprConstNum(1), lvalue, 0, lineno);
         temp = newExpr(arithmexpr_e);
-        temp->sym = newTemp();
+        temp->sym = newTemp(lineno);
         emit(assign, lvalue, NULL, temp, 0, lineno);
     }
 
     return temp;
 }
 
-Expr* HANDLE_TERM_TO_UMINUS_EXPR(Expr* expression){
+Expr* HANDLE_TERM_TO_UMINUS_EXPR(Expr* expression, int lineno){
     checkArith(expression, "Uminus expression");
-    Expr* temp = newExpr(arithmexpr_e);
-    temp->sym = newTemp();
-    emit(uminus, expression, NULL, temp, 0, 0);
+    Expr* temp = newExpr(arithmexpr_e, lineno);
+    temp->sym = newTemp(lineno);
+    emit(uminus, expression, NULL, temp, 0, lineno);
     return temp;
 }
 
-void notBoolExpr(Expr* expression){
+void notBoolExpr(Expr* expression, int lineno){
     expression->trueList = newList(nextQuadLabel());
     expression->falseList = newList(nextQuadLabel() + 1);
-    emit(if_eq, expression, newExprConstBool(1), NULL, 0, 0);
-    emit(jump, NULL, NULL, NULL, 0, 0);
+    emit(if_eq, expression, newExprConstBool(1), NULL, 0, lineno);
+    emit(jump, NULL, NULL, NULL, 0, lineno);
 }
 
-Expr* HANDLE_TERM_TO_NOT_EXPR(Expr* expression)
+Expr* HANDLE_TERM_TO_NOT_EXPR(Expr* expression, int lineno)
 {
-    Expr* temp = newExpr(boolexpr_e);
-    temp->sym = newTemp();
+    Expr* temp = newExpr(boolexpr_e, lineno);
+    temp->sym = newTemp(lineno);
 
-    if (expression->type == var_e ||  expression->type == assignexpr_e) notBoolExpr(expression);
+    if (expression->type == var_e ||  expression->type == assignexpr_e) notBoolExpr(expression, lineno);
     temp->trueList = expression->falseList;
     temp->falseList = expression->trueList;
 
@@ -377,42 +377,42 @@ Expr* HANDLE_TERM_TO_NOT_EXPR(Expr* expression)
 }
 
 Expr* HANDLE_PRIM_TO_LVALUE(Expr* lvalue, int lineno){
-    return emitIfTableItem(lvalue);
+    return emitIfTableItem(lvalue, lineno);
 }
 
 // =======================================================================================
 
-Expr* emitIfTableItem(Expr* e){
+Expr* emitIfTableItem(Expr* e, int lineno){
     if(e->type != tableitem_e) return e;
     else{
         Expr* result = newExpr(var_e);
-        result->sym = newTemp();
+        result->sym = newTemp(lineno);
         emit(
             tablegetelem,
             e,
             e->index,
             result,
             0,
-            0
+            lineno
         );
         return result;
     }
 }
 
-Expr* memberItem (Expr* lv, char* name) {
-    lv = emitIfTableItem(lv); 
+Expr* memberItem (Expr* lv, char* name, int lineno) {
+    lv = emitIfTableItem(lv, lineno); 
     Expr* ti = newExpr(tableitem_e);
     ti->sym = lv->sym;
     ti->index = newExprConstString(name);
     return ti;
 }
 
-Expr* HANDLE_MEMBER_TO_LVALUE_DOT_IDENT(Expr* lvalue, char* name){
-    return memberItem(lvalue, name);
+Expr* HANDLE_MEMBER_TO_LVALUE_DOT_IDENT(Expr* lvalue, char* name, int lineno){
+    return memberItem(lvalue, name, lineno);
 }
 
-Expr* HANDLE_MEMBER_TO_LVALUE_SQUARE_EXPR(Expr* lvalue, Expr* expression){
-    lvalue = emitIfTableItem(lvalue);
+Expr* HANDLE_MEMBER_TO_LVALUE_SQUARE_EXPR(Expr* lvalue, Expr* expression, int lineno){
+    lvalue = emitIfTableItem(lvalue, lineno);
     Expr* temp = newExpr(tableitem_e);
     temp->sym = lvalue->sym;
     temp->index = expression->index;
@@ -429,40 +429,40 @@ Expr* HANDLE_PRIM_TO_FUNCDEF(SymbolTableEntry* funcdef){
 
 // =======================================================================================
 
-Expr* makeCall (Expr* lvalue, Expr* reversed_elist) {
-    Expr* func = emitIfTableItem(lvalue);
+Expr* makeCall (Expr* lvalue, Expr* reversed_elist, int lineno) {
+    Expr* func = emitIfTableItem(lvalue, lineno);
     while (reversed_elist) {
-        emit(param, reversed_elist, NULL, NULL, 0, 0);
+        emit(param, reversed_elist, NULL, NULL, 0, lineno);
         reversed_elist = reversed_elist->next;
     }
 
-    emit(call, func, NULL, NULL, 0, 0);
+    emit(call, func, NULL, NULL, 0, lineno);
     Expr* result = newExpr(var_e);
-    result->sym = newTemp();
-    emit(getretval, NULL, NULL, result, 0, 0);
+    result->sym = newTemp(lineno);
+    emit(getretval, NULL, NULL, result, 0, lineno);
     return result;
 }
 
 
-Expr* HANDLE_CALL_ELIST(Expr* call, Expr* elist){
-    return makeCall(call, elist);
+Expr* HANDLE_CALL_ELIST(Expr* call, Expr* elist, int lineno){
+    return makeCall(call, elist, lineno);
 }
 
-Expr* HANDLE_CALL_FUNCDEF_ELIST(SymbolTableEntry* funcdef, Expr* elist){
+Expr* HANDLE_CALL_FUNCDEF_ELIST(SymbolTableEntry* funcdef, Expr* elist, int lineno){
     Expr* func = newExpr(programfunc_e);
     func->sym = funcdef;
-    return makeCall(func, elist);
+    return makeCall(func, elist, lineno);
 }
 
-Expr* HANDLE_CALL_LVALUE_SUFFIX(Expr* lvalue, Call* callsuffix){
-    lvalue = emitIfTableItem(lvalue);
+Expr* HANDLE_CALL_LVALUE_SUFFIX(Expr* lvalue, Call* callsuffix, int lineno){
+    lvalue = emitIfTableItem(lvalue, lineno);
     if(callsuffix->method){
         Expr* t = lvalue;
-        lvalue = emitIfTableItem(memberItem(t, callsuffix->name));
+        lvalue = emitIfTableItem(memberItem(t, callsuffix->name, lineno), lineno);
         if(callsuffix->elist) callsuffix->elist->next = t;
         else callsuffix->elist = t;
     }
-    return makeCall(lvalue, callsuffix->elist);
+    return makeCall(lvalue, callsuffix->elist, lineno);
 }
 
 Call* HANDLE_NORMCALL(Expr* elist){
@@ -505,23 +505,23 @@ Expr* HANDLE_INDEXED_ADD(Expr* indexedelem, Expr* indexed){
 // =======================================================================================
 
 
-Expr* HANDLE_OBJECTDEF_TO_ELIST(Expr* elist){
+Expr* HANDLE_OBJECTDEF_TO_ELIST(Expr* elist, int lineno){
     Expr* t = newExpr(newtable_e);
-    t->sym = newTemp();
-    emit(tablecreate, NULL, NULL, t, 0, 0);
+    t->sym = newTemp(lineno);
+    emit(tablecreate, NULL, NULL, t, 0, lineno);
     for(int i = 0; elist; elist = elist->next){
-        emit(tablesetelem, t, newExprConstNum(i++), elist, 0, 0);
+        emit(tablesetelem, t, newExprConstNum(i++), elist, 0, lineno);
     }
 
     return t;
 }
 
-Expr* HANDLE_OBJECTDEF_TO_INDEXED(Expr* indexed){
+Expr* HANDLE_OBJECTDEF_TO_INDEXED(Expr* indexed, int lineno){
     Expr* t = newExpr(newtable_e);
-    t->sym = newTemp();
-    emit(tablecreate, NULL, NULL, t, 0, 0);
+    t->sym = newTemp(lineno);
+    emit(tablecreate, NULL, NULL, t, 0, lineno);
     for(; indexed; indexed = indexed->next){
-        emit(tablesetelem, t, indexed->index, indexed, 0, 0);
+        emit(tablesetelem, t, indexed->index, indexed, 0, lineno);
     }
 
     return t;
@@ -560,7 +560,7 @@ int check_bool_eligible(Expr* temp){
     }
 }
 
-Expr* HANDLE_ARITH_OP(iopcode op, Expr* expr1, Expr* expr2){
+Expr* HANDLE_ARITH_OP(iopcode op, Expr* expr1, Expr* expr2, int lineno){
     Expr* temp;
 
     if(check_arith_eligible(expr1) == 1 && check_arith_eligible(expr2) == 1){
@@ -587,13 +587,13 @@ Expr* HANDLE_ARITH_OP(iopcode op, Expr* expr1, Expr* expr2){
     }
 
     temp = newExpr(arithmexpr_e);
-    temp->sym = newTemp();
-    emit(op, expr1, expr2, temp, 0, 0);
+    temp->sym = newTemp(lineno);
+    emit(op, expr1, expr2, temp, 0, lineno);
 
     return temp;
 }
 
-Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
+Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2, int lineno){
     Expr* temp;
 
     if(check_arith_eligible(expr1) == 1  && check_arith_eligible(expr2) == 1){
@@ -648,27 +648,27 @@ Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2){
     }
 
     temp = newExpr(boolexpr_e);
-    temp->sym = newTemp();
+    temp->sym = newTemp(lineno);
 	temp->trueList = newList(nextQuadLabel());
 	temp->falseList = newList(nextQuadLabel()+1);
 
-    emit(op, expr1, expr2, NULL, 0, 0);
-    emit(jump, NULL, NULL, NULL, 0, 0);
+    emit(op, expr1, expr2, NULL, 0, lineno);
+    emit(jump, NULL, NULL, NULL, 0, lineno);
 
     return temp;
 }
 
-Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2, unsigned M){
+Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2, unsigned M, int lineno){
     Expr* temp;
     int isVar = 0;
 
 	if (expr1->type == var_e ||  expr1->type == assignexpr_e) {
-        notBoolExpr(expr1);
+        notBoolExpr(expr1, lineno);
         isVar = 1;
 	}
 
     if (expr2->type == var_e || expr2->type == assignexpr_e){
-        notBoolExpr(expr2);
+        notBoolExpr(expr2, lineno);
         isVar = 1;
     }
 
@@ -682,7 +682,7 @@ Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2, unsigned M){
 		}
 	} else {
         temp = newExpr(boolexpr_e);
-        temp->sym = newTemp();
+        temp->sym = newTemp(lineno);
     }
 
 	switch (op) {
@@ -702,12 +702,12 @@ Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2, unsigned M){
 
 // =======================================================================================
 
-unsigned HANDLE_IFPREFIX(Expr* expression){
+unsigned HANDLE_IFPREFIX(Expr* expression, int lineno){
     unsigned temp;
 
-    emit(if_eq, expression, newExprConstBool(1), NULL, nextQuadLabel() + 2, 0);
+    emit(if_eq, expression, newExprConstBool(1), NULL, nextQuadLabel() + 2, lineno);
     temp = nextQuadLabel();
-    emit(jump, NULL, NULL, NULL, 0, 0);
+    emit(jump, NULL, NULL, NULL, 0, lineno);
 
     return temp;
 }
@@ -720,16 +720,16 @@ unsigned HANDLE_ELSEPREFIX(int lineno){
     return temp;
 }
 
-unsigned HANDLE_WHILEARGS(Expr* expression){
+unsigned HANDLE_WHILEARGS(Expr* expression, int lineno){
     unsigned result;
-    emit(if_eq, expression, newExprConstBool(1), NULL, nextQuadLabel() + 2, 0);
+    emit(if_eq, expression, newExprConstBool(1), NULL, nextQuadLabel() + 2, lineno);
     result = nextQuadLabel();
-    emit(jump, NULL, NULL, NULL, 0, 0);
+    emit(jump, NULL, NULL, NULL, 0, lineno);
 	return result;
 }
 
-void HANDLE_WHILE(unsigned start, unsigned args, stmt_t *stmt){
-    emit(jump, NULL, NULL, NULL, start, 0);
+void HANDLE_WHILE(unsigned start, unsigned args, stmt_t *stmt, int lineno){
+    emit(jump, NULL, NULL, NULL, start, lineno);
     patchLabel(args, nextQuadLabel());
 
     if(stmt){
@@ -738,11 +738,11 @@ void HANDLE_WHILE(unsigned start, unsigned args, stmt_t *stmt){
     }
 }
 
-ForLoopPrefix* HANDLE_FORPREFIX(unsigned M, Expr* expression){
+ForLoopPrefix* HANDLE_FORPREFIX(unsigned M, Expr* expression, int lineno){
     ForLoopPrefix* temp = malloc(sizeof(ForLoopPrefix));
     temp->test = M;
     temp->enter = nextQuadLabel();
-    emit(if_eq, expression, newExprConstBool(1), 0, 0, 0);
+    emit(if_eq, expression, newExprConstBool(1), 0, 0, lineno);
 
     return temp;
 }
@@ -759,20 +759,20 @@ void HANDLE_FORSTMT(ForLoopPrefix* prefix, unsigned N1, unsigned N2, unsigned N3
     }
 }
 
-stmt_t* HANDLE_BREAK(void) {
+stmt_t* HANDLE_BREAK(int lineno) {
 	stmt_t *temp = malloc(sizeof(stmt_t));
 
 	make_stmt(temp);
 	temp->breakList = newList(nextQuadLabel());
-	emit(jump, NULL, NULL, NULL, 0, 0);
+	emit(jump, NULL, NULL, NULL, 0, lineno);
 	return temp;
 }
 
-stmt_t* HANDLE_CONTINUE(void) {
+stmt_t* HANDLE_CONTINUE(int lineno) {
 	stmt_t *temp = malloc(sizeof(stmt_t));
 
 	make_stmt(temp);
 	temp->contList = newList(nextQuadLabel());
-	emit(jump, NULL, NULL, NULL, 0, 0);
+	emit(jump, NULL, NULL, NULL, 0, lineno);
 	return temp;
 }
