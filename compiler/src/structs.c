@@ -279,8 +279,11 @@ int boolVal(Expr *e) {
 
 char* getStringValueQuad(Expr* e){
     switch(e->type){
-        case conststring_e:
-            return e->strConst;
+        case conststring_e:{
+            char* str = malloc(sizeof(char) * (strlen(e->strConst) + 3));
+            sprintf(str, "\"%s\"", e->strConst);
+            return str;
+        }
         case constnum_e:{
             char* str = malloc(sizeof(char) * 32);
             sprintf(str, "%.1f", e->numConst);
