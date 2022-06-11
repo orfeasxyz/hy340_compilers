@@ -496,8 +496,8 @@ void generate_GETRETVAL(quad* q){
 
 void generate_FUNCSTART(quad *quad) {
     SymbolTableEntry *f = quad->result->sym;
-    f->iadress = nextInstructionLabel();
-    quad->taddress = nextInstructionLabel();
+    f->iadress = nextInstructionLabel() + 1;
+    quad->taddress = nextInstructionLabel() + 1;
 
     func_push(f);
     instruction inst = {0};
@@ -507,6 +507,7 @@ void generate_FUNCSTART(quad *quad) {
     inst.result.type = label_a;
     reset_operand(&inst.arg1);
     reset_operand(&inst.arg2);
+    reset_operand(&inst.result);
     emit_instruction(inst);
 
     inst.srcLine   = quad->line;
@@ -514,7 +515,6 @@ void generate_FUNCSTART(quad *quad) {
     reset_operand(&inst.arg1);
     reset_operand(&inst.arg2);
     make_operand(quad->result, &inst.result);
-    make_booloperand(&inst.arg2, 1);
     emit_instruction(inst);
 }
 
@@ -529,9 +529,10 @@ void patch_incomplete_jumps() {
 }
 
 static void backPatchReturnList(return_list_t* rl, unsigned label) {
-    for (; rl; rl = rl->next) {
+    for (; rl->next; rl = rl->next) {
         instructions[rl->line].result.val = label;
     }
+    instructions[rl->line].result.val = label + 1;
 }
 
 static void append(func_symbol_t* entry, unsigned index){

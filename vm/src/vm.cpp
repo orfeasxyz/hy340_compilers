@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 	parseBinary(argv[1]);
 	
 	// Init
-	sp = AVM_STACK_SIZE-1;
+	sp = AVM_STACK_SIZE-2;
 	bp = sp;
 	pc = 0;
 	executionFinished = false;
@@ -31,10 +31,11 @@ int main(int argc, char **argv) {
 	avm_stackinit();
 	while (!executionFinished) {
 		DPRINTF("executionFinished = %s\n", executionFinished ? "True" : "False");
-		execute_cycle();
 		DPRINTF("pc = %u\n", pc);
 		DPRINTF("sp = %u\n", sp);
 		DPRINTF("bp = %u\n", bp);
+		DPRINTF("retval = %lf\n", retval.data.numVal);
+		execute_cycle();
 	}
 
 	return 0;

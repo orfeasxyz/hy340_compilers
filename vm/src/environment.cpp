@@ -74,9 +74,9 @@ void avm_memcellclear (avm_memcell *m) {
 // ----- Translate operands -----
 avm_memcell* avm_translate_op (vmarg *arg, avm_memcell *reg) {
 	switch (arg->type) {
-		case global_a:	return &stack[AVM_STACK_SIZE-1-arg->val];
-		case local_a:	return &stack[bp-arg->val];
-		case formal_a:	return &stack[bp+AVM_STACKENV_SIZE+1+arg->val];
+		case global_a:	return &stack[AVM_STACK_SIZE - 1 - arg->val];
+		case local_a:	return &stack[bp - arg->val];
+		case formal_a:	return &stack[bp + AVM_STACKENV_SIZE + 1 + arg->val];
 		case retval_a:	return &retval;
 		case number_a:	{
 			reg->type = number_m;
@@ -99,7 +99,7 @@ avm_memcell* avm_translate_op (vmarg *arg, avm_memcell *reg) {
 		}
 		case userFunc_a:	{
 			reg->type = userFunc_m;
-			reg->data.userFuncVal = arg->val;
+			reg->data.userFuncVal = userFuncs[arg->val].address;
 			return reg;
 		}
 		case libFunc_a:	{

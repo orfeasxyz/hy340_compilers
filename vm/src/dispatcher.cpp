@@ -135,11 +135,18 @@ void execute_arithmetic(instruction *instr){
     lv->data.numVal = op(rv1->data.numVal, rv2->data.numVal);
 }
 
+void execute_jump(instruction *instr) {
+    assert(instr->result.type == label_a);
+    if (!executionFinished) {
+        pc = instr->result.val;
+    }
+}
+
 // ----- Equaulity operations dispatcher -----
 typedef bool (*equality_func_t)(avm_memcell*, avm_memcell*);
 
 static bool num_equal (avm_memcell *lhs, avm_memcell *rhs) {
-    return lhs->data.numVal == lhs->data.numVal;
+    return lhs->data.numVal == rhs->data.numVal;
 }
 
 static bool str_equal (avm_memcell *lhs, avm_memcell *rhs) {
@@ -207,12 +214,6 @@ static equality_func_t equalityFuncs[] = {
     undef_equal
 };
 
-void execute_jump(instruction *instr) {
-    assert(instr->result.type == label_a);
-    if (!executionFinished) {
-        pc = instr->result.val;
-    }
-}
 
 void execute_jeq (instruction *instr) {
     assert(instr->result.type == label_a);
@@ -236,7 +237,7 @@ void execute_jeq (instruction *instr) {
                     avm_tostring(rv1), avm_tostring(rv2));
     }
     else { // type can be: num, str, table, userFunc, libFunc
-        res = equalityFuncs[rv1->type];
+        res = equalityFuncs[rv1->type](rv1, rv2);
     }
 
     if (!executionFinished and res) {
@@ -253,23 +254,23 @@ void execute_jne (instruction *instr) {
     bool res = false;
 
     if (rv1->type == undef_m or rv2->type == undef_m) {
-        avm_error("Cannot perform unequality comparison with 'undef' operands\n");
+        avm_error("Cannot perform equality comparison with 'undef' operands\n");
     }
-    else if (rv1->type == nil_m or rv2->type == nil_m) { // atleast one == nil
-        res = rv1->type != nil_m or rv2->type != nil_m;  // atleast one != nil
+    else if (rv1->type == nil_m or rv2->type == nil_m) {
+        res = rv1->type == nil_m and rv2->type == nil_m;
     }
     else if (rv1->type == bool_m or rv2->type == bool_m) {
-        res = (avm_tobool(rv1) != avm_tobool(rv2));
+        res = (avm_tobool(rv1) == avm_tobool(rv2));
     }
     else if (rv1->type != rv2->type) {
-        avm_error(  "Cannot perform unequality comparison %s == %s\n",
+        avm_error(  "Cannot perform equality comparison %s == %s\n",
                     avm_tostring(rv1), avm_tostring(rv2));
     }
     else { // type can be: num, str, table, userFunc, libFunc
-        res = not equalityFuncs[rv1->type];
+        res = equalityFuncs[rv1->type](rv1, rv2);
     }
 
-    if (!executionFinished and res) {
+    if (!executionFinished and not res) {
         pc = instr->result.val;
     }
 }
@@ -343,8 +344,8 @@ void execute_pusharg (instruction *instr) {
     assert(arg);
 
     ++totalActuals;
-    avm_decsp();
     avm_assign(&stack[sp], arg);
+    avm_decsp();
 }
 
 void execute_funcenter (instruction *instr) {

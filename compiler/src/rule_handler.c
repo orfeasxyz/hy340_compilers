@@ -167,6 +167,9 @@ char* HANDLE_IDLIST_IDENT(char* key, int lineno){
 
     temp = makeSymbol(key, lineno, scope);
     temp->type = VAR_FORMAL;
+    temp->space = currScopeSpace();
+    temp->offset = currScopeOffset();
+    incCurrScopeOffset();
 
     SymTable_insert(table, key, temp);
 
@@ -242,8 +245,9 @@ SymbolTableEntry* HANDLE_FUNCDEF(SymbolTableEntry* funcprefix, unsigned funcbody
     arg->sym = funcprefix;
     arg->strConst = funcprefix->name;
 
-    functionScopeStack = stack_pop(functionScopeStack);
     exitScopeSpace();
+    
+    functionScopeStack = stack_pop(functionScopeStack);
     funcprefix->totalLocals = funcbody;
     scopeOffsetStack = stack_pop(scopeOffsetStack);
     restoreCurrScopeOffset(stack_top(scopeOffsetStack));
@@ -431,9 +435,18 @@ Expr* HANDLE_PRIM_TO_FUNCDEF(SymbolTableEntry* funcdef){
 
 Expr* makeCall (Expr* lvalue, Expr* reversed_elist, int lineno) {
     Expr* func = emitIfTableItem(lvalue, lineno);
+    Expr *reversed_reversed_elist = NULL;
+
     while (reversed_elist) {
-        emit(param, reversed_elist, NULL, NULL, 0, lineno);
-        reversed_elist = reversed_elist->next;
+        Expr *next = reversed_elist->next;
+        reversed_elist->next = reversed_reversed_elist;
+        reversed_reversed_elist = reversed_elist;
+        reversed_elist = next;
+    }
+
+    while (reversed_reversed_elist) {
+        emit(param, reversed_reversed_elist, NULL, NULL, 0, lineno);
+        reversed_reversed_elist = reversed_reversed_elist->next;
     }
 
     emit(call, func, NULL, NULL, 0, lineno);

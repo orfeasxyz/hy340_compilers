@@ -300,6 +300,7 @@ int yyerror(char *message){
 }
 
 int main(int argc, char **argv) {
+    FILE *fout;
     head = SymTable_new();
     current_table = head;
 
@@ -332,7 +333,7 @@ int main(int argc, char **argv) {
 	}
 
 	// If an output file was given, redirect what would be printed in stdout to that file
-	if(argc == 3 && !freopen(argv[2], "w", stdout)) {
+	if(argc == 3 && !(fout = fopen(argv[2], "wb"))) {
 		fprintf(stderr, "There was an error reading the output file, make sure it exists and the path is written correnctly");
 		exit(0);
 	}
@@ -353,6 +354,6 @@ int main(int argc, char **argv) {
 
     printQuads();
     generate_all();
-    create_binary("MhtsosKavlas.ascb");
+    create_binary(fout);
     return 0;	
 }
