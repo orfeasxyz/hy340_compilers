@@ -583,7 +583,7 @@ void generate_UMINUS(quad* q){
 
 generate_func_t generators[] = {
     generate_ASSIGN,       generate_JUMP,      generate_MUL,
-    generate_UMINUS,          generate_NOT,       generate_IF_LESSEQ,
+    generate_UMINUS,       generate_NOT,       generate_IF_LESSEQ,
     generate_IF_GREATER,   generate_RETURN,    generate_FUNCEND,
     generate_TABLEGETELEM, generate_ADD,       generate_DIV,
     generate_AND,          generate_IF_EQ,     generate_IF_GREATEREQ,
@@ -602,10 +602,6 @@ char* vmopcodeToString[] = {
     "mul_v",
     "div_v",
     "mod_v",
-    "uminus_v",
-    "and_v",
-    "or_v",
-    "not_v",
     "jump_v",
     "jeq_v",
     "jne_v",

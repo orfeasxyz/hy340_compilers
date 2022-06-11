@@ -5,11 +5,11 @@
 #include <string>
 
 #define WARNING_BUFF_SIZE   512
-#define AVM_STACKSIZE		4096
+#define AVM_STACK_SIZE		4096
 #define AVM_STACKENV_SIZE	4
 #define AVM_NUMACTS_OFFSET  4
-#define AVM_SAVEDSP_OFFSET  3
-#define AVM_SAVEDPC_OFFSET  2
+#define AVM_SAVEDPC_OFFSET  3
+#define AVM_SAVEDSP_OFFSET  2
 #define AVM_SAVEDBP_OFFSET  1
 
 enum vmopcode_e {
@@ -19,10 +19,6 @@ enum vmopcode_e {
     mul_v,
     div_v,
     mod_v,
-    uminus_v,
-    and_v,
-    or_v,
-    not_v,
     jump_v,
     jeq_v,
     jne_v,
@@ -119,13 +115,13 @@ extern avm_memcell	cx;
 extern avm_memcell	retval;
 extern unsigned		sp;
 extern unsigned		bp;
-extern unsigned    pc;
-extern bool        executionFinished;
-extern unsigned    currLine;
-extern unsigned    codeSize;
-extern unsigned    totalActuals;
+extern unsigned     pc;
+extern bool         executionFinished;
+extern unsigned     currLine;
+extern unsigned     codeSize;
+extern unsigned     totalActuals;
 
-extern avm_memcell	stack[AVM_STACKSIZE];
+extern avm_memcell	stack[AVM_STACK_SIZE];
 
 void        avm_stackinit       (void);
 void        avm_memcellclear    (avm_memcell *m);

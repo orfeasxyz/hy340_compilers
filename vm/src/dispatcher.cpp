@@ -27,6 +27,7 @@ static execute_func_t executeFuncs[] = {
     execute_mul         ,
     execute_div         ,
     execute_mod         ,
+    execute_jump        ,
     execute_jeq         ,
     execute_jne         ,
     execute_jle         ,
@@ -40,14 +41,11 @@ static execute_func_t executeFuncs[] = {
     execute_newtable    ,
     execute_tablegetelem,
     execute_tablesetelem,
-    execute_noop
+    execute_nop
 };
 
 void execute_cycle (void) {
-    if (executionFinished) {
-        return;
-    }
-    if (pc == codeSize) {
+    if (pc >= codeSize) {
         executionFinished = 1;
         return;
     }
@@ -75,8 +73,8 @@ void execute_assign (instruction *instr) {
     avm_memcell *rv = avm_translate_op(&instr->arg1, &ax);
 
     // TODO not sure about those checks
-    assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
-    assert(rv and (&stack[bp] >= rv and rv > &stack[sp]));
+    // assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
+    // assert(rv and (&stack[bp] >= rv and rv > &stack[sp]));
     avm_assign(lv, rv);
 }
 
@@ -122,7 +120,7 @@ void execute_arithmetic(instruction *instr){
     avm_memcell* rv1 = avm_translate_op(&instr->arg1, &ax);
     avm_memcell* rv2 = avm_translate_op(&instr->arg2, &bx);
 
-    assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
+//    assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
     assert(rv1 and rv2);
 
     if(rv1->type != number_m or rv2->type != number_m){
@@ -209,6 +207,13 @@ static equality_func_t equalityFuncs[] = {
     undef_equal
 };
 
+void execute_jump(instruction *instr) {
+    assert(instr->result.type == label_a);
+    if (!executionFinished) {
+        pc = instr->result.val;
+    }
+}
+
 void execute_jeq (instruction *instr) {
     assert(instr->result.type == label_a);
 
@@ -240,6 +245,8 @@ void execute_jeq (instruction *instr) {
 }
 
 void execute_jne (instruction *instr) {
+    assert(instr->result.type == label_a);
+
     avm_memcell *rv1 = avm_translate_op(&instr->arg1, &ax);
     avm_memcell *rv2 = avm_translate_op(&instr->arg2, &bx);
 
@@ -287,7 +294,7 @@ void execute_comparison (instruction *instr) {
     avm_memcell* rv1 =  avm_translate_op(&instr->arg1, &ax);
     avm_memcell* rv2 =  avm_translate_op(&instr->arg2, &bx);
 
-    assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
+    // assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
     assert(rv1 and rv2);
 
     if(rv1->type != number_m or rv2->type != number_m){
@@ -303,7 +310,7 @@ void execute_comparison (instruction *instr) {
 }
 
 void execute_call (instruction *instr) {
-    avm_memcell *func = avm_translate_op(&instr->result, &ax);
+    avm_memcell *func = avm_translate_op(&instr->arg1, &ax);
     assert(func);
     avm_callsaveenv();
 
@@ -335,9 +342,9 @@ void execute_pusharg (instruction *instr) {
     avm_memcell *arg = avm_translate_op(&instr->arg1, &ax);
     assert(arg);
 
-    avm_assign(&stack[sp], arg);
     ++totalActuals;
     avm_decsp();
+    avm_assign(&stack[sp], arg);
 }
 
 void execute_funcenter (instruction *instr) {
@@ -361,7 +368,7 @@ void execute_funcexit (instruction *instr) {
 
 void execute_newtable (instruction *instr) {
     avm_memcell *lv = avm_translate_op(&instr->result, NULL);
-    assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
+    // assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
 
     avm_memcellclear(lv);
     lv->type            = table_m;
@@ -374,8 +381,8 @@ void execute_tablegetelem (instruction *instr) {
     avm_memcell *table = avm_translate_op(&instr->arg1, NULL);
     avm_memcell *index = avm_translate_op(&instr->arg2, &ax);
 
-    assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
-    assert(table and &stack[0] <= table and table < &stack[sp]);
+    // assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
+    // assert(table and &stack[0] <= table and table < &stack[sp]);
 
     avm_memcellclear(lv);
     lv->type = nil_m;
@@ -401,7 +408,7 @@ void execute_tablesetelem (instruction *instr) {
     avm_memcell *index = avm_translate_op(&instr->arg1, &ax);
     avm_memcell *value = avm_translate_op(&instr->arg2, &bx);
 
-    assert(table and &stack[0] <= table and table < &stack[sp]);
+    // assert(table and &stack[0] <= table and table < &stack[sp]);
     assert(index and value);
 
     if (table->type != table_m) {
@@ -410,6 +417,6 @@ void execute_tablesetelem (instruction *instr) {
     avm_tablesetelem(table->data.tableVal, index, value);
 }
 
-void execute_noop (instruction *instr) {
+void execute_nop (instruction *instr) {
     return;
 }

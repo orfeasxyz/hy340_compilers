@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "binary.h"
-#include "target.h"
+#include "../include/binary.h"
+#include "../include/target.h"
 
 void create_binary(char* filename) {
   instruction inst;

@@ -27,7 +27,7 @@ unsigned    currLine;
 unsigned    codeSize;
 unsigned 	totalActuals;
 
-avm_memcell stack[AVM_STACKSIZE];
+avm_memcell stack[AVM_STACK_SIZE];
 
 // ----- Stack procedures -----
 void avm_stackinit(void) {
@@ -74,7 +74,7 @@ void avm_memcellclear (avm_memcell *m) {
 // ----- Translate operands -----
 avm_memcell* avm_translate_op (vmarg *arg, avm_memcell *reg) {
 	switch (arg->type) {
-		case global_a:	return &stack[AVM_STACKSIZE-1-arg->val];
+		case global_a:	return &stack[AVM_STACK_SIZE-1-arg->val];
 		case local_a:	return &stack[bp-arg->val];
 		case formal_a:	return &stack[bp+AVM_STACKENV_SIZE+1+arg->val];
 		case retval_a:	return &retval;
@@ -145,13 +145,21 @@ void avm_assign (avm_memcell *lv, avm_memcell *rv) {
     if (rv->type == undef_m) {
         avm_warning("Assigning from 'undefined' variable\n");
     }
+
+    avm_memcellclear(lv);
+    memcpy(lv, rv, sizeof(avm_memcell));
+
+    if (lv->type == string_m) {
+        lv->data.strVal = strdup(rv->data.strVal);
+    }
+    else if (lv->type == table_m) {
+        avm_tablerefinc(lv->data.tableVal);
+    }
 }
 
 void avm_decsp (void) {
-    if (!sp) {
-        avm_error("Stack overflow\n");
-        executionFinished = true;
-        return;
+    if (sp <= 0) {
+        avm_error("Stack overflow\n"); // DOESN'T RETURN
     }
     --sp;
 }
@@ -202,9 +210,10 @@ void libFunc_print (void) {
     unsigned n = avm_totalactuals();
     for (unsigned i = 0; i < n; ++i) {
         char *s = avm_tostring(avm_getactual(i));
-        puts(s);
+        printf("%s", s);
         free(s);
     }
+    putchar('\n');
 }
 // TODO register more libfuncs ^-^
 std::map<std::string, library_func_t> libFuncsMap = {

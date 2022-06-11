@@ -1,8 +1,10 @@
 #include "../include/parser.h"
+#include "../include/dispatcher.h"
+#include "../include/environment.h"
 #include <cassert>
 
 #ifdef DEBUG
-#	define DPRINTF(...)	fprintf(stderr, ...)
+#	define DPRINTF(...)	fprintf(stderr, __VA_ARGS__)
 #else
 #	define DPRINTF(...)
 #endif
@@ -17,6 +19,23 @@
 int main(int argc, char **argv) {
 	assert(argc == 2);
 	parseBinary(argv[1]);
+	
+	// Init
+	sp = AVM_STACK_SIZE-1;
+	bp = sp;
+	pc = 0;
+	executionFinished = false;
+	codeSize = instructions.size();
+	DPRINTF("codeSize = %u\n", codeSize);
+	totalActuals = 0;
+	avm_stackinit();
+	while (!executionFinished) {
+		DPRINTF("executionFinished = %s\n", executionFinished ? "True" : "False");
+		execute_cycle();
+		DPRINTF("pc = %u\n", pc);
+		DPRINTF("sp = %u\n", sp);
+		DPRINTF("bp = %u\n", bp);
+	}
 
 	return 0;
 }
