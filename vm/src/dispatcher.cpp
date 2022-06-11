@@ -17,7 +17,7 @@
 #define execute_jge execute_comparison
 
 // ----- Instruction dispatcher -----
-typedef void (*execute_func_t)(instruction&);
+typedef void (*execute_func_t)(instruction*);
 
 // TODO CHECK ORDER
 static execute_func_t executeFuncs[] = {
@@ -40,7 +40,7 @@ static execute_func_t executeFuncs[] = {
     execute_newtable    ,
     execute_tablegetelem,
     execute_tablesetelem,
-    execute_nop
+    execute_noop
 };
 
 void execute_cycle (void) {
@@ -53,26 +53,26 @@ void execute_cycle (void) {
     }
 
     assert(pc < codeSize);
-    instruction i = instructions.at(pc);
+    instruction *i = &instructions.at(pc);
 
     assert(
-        i.op >= 0 and
-        i.op < sizeof(executeFuncs) / sizeof(executeFuncs[0])
+        i->op >= 0 and
+        i->op < sizeof(executeFuncs) / sizeof(executeFuncs[0])
     );
 
-    if (i.srcLine) {
-        currLine = i.srcLine;
+    if (i->srcLine) {
+        currLine = i->srcLine;
     }
     unsigned oldpc = pc;
-    executeFuncs[i.op](i);
+    executeFuncs[i->op](i);
     if (pc == oldpc) {
         ++pc;
     }
 }
 
-void execute_assign (instruction &i) {
-    avm_memcell *lv = avm_translate_operand(&i.result, 0);
-    avm_memcell *rv = avm_translate_operand(&i.arg1, &ax);
+void execute_assign (instruction *instr) {
+    avm_memcell *lv = avm_translate_op(&instr->result, 0);
+    avm_memcell *rv = avm_translate_op(&instr->arg1, &ax);
 
     // TODO not sure about those checks
     assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
@@ -117,10 +117,10 @@ static arithmetic_func_t arithmeticFuncs[] = {
     mod_impl
 };
 
-void execute_arithmetic(instruction & instr){
-    avm_memcell* lv = avm_translate_operand(&instr.result, NULL);
-    avm_memcell* rv1 = avm_translate_operand(&instr.arg1, &ax);
-    avm_memcell* rv2 = avm_translate_operand(&instr.arg2, &bx);
+void execute_arithmetic(instruction *instr){
+    avm_memcell* lv = avm_translate_op(&instr->result, NULL);
+    avm_memcell* rv1 = avm_translate_op(&instr->arg1, &ax);
+    avm_memcell* rv2 = avm_translate_op(&instr->arg2, &bx);
 
     assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
     assert(rv1 and rv2);
@@ -131,7 +131,7 @@ void execute_arithmetic(instruction & instr){
         return;
     }
 
-    arithmetic_func_t op = arithmeticFuncs[instr.op - add_v];
+    arithmetic_func_t op = arithmeticFuncs[instr->op - add_v];
     avm_memcellclear(lv);
     lv->type = number_m;
     lv->data.numVal = op(rv1->data.numVal, rv2->data.numVal);
@@ -209,11 +209,11 @@ static equality_func_t equalityFuncs[] = {
     undef_equal
 };
 
-void execute_jeq (instruction &instr) {
-    assert(instr.result.type == label_a);
+void execute_jeq (instruction *instr) {
+    assert(instr->result.type == label_a);
 
-    avm_memcell *rv1 = avm_translate_operand(&instr.arg1, &ax);
-    avm_memcell *rv2 = avm_translate_operand(&instr.arg2, &bx);
+    avm_memcell *rv1 = avm_translate_op(&instr->arg1, &ax);
+    avm_memcell *rv2 = avm_translate_op(&instr->arg2, &bx);
 
     bool res = false;
 
@@ -235,13 +235,13 @@ void execute_jeq (instruction &instr) {
     }
 
     if (!executionFinished and res) {
-        pc = instr.result.val;
+        pc = instr->result.val;
     }
 }
 
-void execute_jne (instruction &instr) {
-    avm_memcell *rv1 = avm_translate_operand(&instr.arg1, &ax);
-    avm_memcell *rv2 = avm_translate_operand(&instr.arg2, &bx);
+void execute_jne (instruction *instr) {
+    avm_memcell *rv1 = avm_translate_op(&instr->arg1, &ax);
+    avm_memcell *rv2 = avm_translate_op(&instr->arg2, &bx);
 
     bool res = false;
 
@@ -263,7 +263,7 @@ void execute_jne (instruction &instr) {
     }
 
     if (!executionFinished and res) {
-        pc = instr.result.val;
+        pc = instr->result.val;
     }
 }
 
@@ -282,10 +282,10 @@ comparison_func_t comparisonFuncs[] = {
     jlt_impl
 };
 
-void execute_comparison (instruction &instr) {
-    avm_memcell* lv = avm_translate_operand(&instr.result, NULL);
-    avm_memcell* rv1 = avm_translate_operand(&instr.arg1, &ax);
-    avm_memcell* rv2 = avm_translate_operand(&instr.arg2, &bx);
+void execute_comparison (instruction *instr) {
+    avm_memcell* lv =   avm_translate_op(&instr->result, NULL);
+    avm_memcell* rv1 =  avm_translate_op(&instr->arg1, &ax);
+    avm_memcell* rv2 =  avm_translate_op(&instr->arg2, &bx);
 
     assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
     assert(rv1 and rv2);
@@ -296,39 +296,43 @@ void execute_comparison (instruction &instr) {
         return;
     }
 
-    arithmetic_func_t op = comparisonFuncs[instr.op - add_v];
+    arithmetic_func_t op = comparisonFuncs[instr->op - add_v];
     avm_memcellclear(lv);
     lv->type = number_m;
     lv->data.numVal = op(rv1->data.numVal, rv2->data.numVal);
 }
 
-void execute_call (instruction &i) {
-    avm_memcell *func = avm_translate_operand(&i.result, &ax);
+void execute_call (instruction *instr) {
+    avm_memcell *func = avm_translate_op(&instr->result, &ax);
     assert(func);
     avm_callsaveenv();
 
     switch (func->type) {
-        case userFunc_m:
+        case userFunc_m: {
             pc = func->data.userFuncVal;
             assert(
                 pc < codeSize and
                 instructions[pc].op == funcenter_v
             );
             break;
-        case string_m:  avm_calllibfunc(func->data.strVal);
-        case libFunc_m: avm_calllibfunc(func->data.libFuncVal);
-
+        }
+        case string_m:  {
+            avm_calllibfunc(func->data.strVal);
+            break;
+        }
+        case libFunc_m: {
+            avm_calllibfunc(func->data.libFuncVal);
+            break;
+        }
         default: {
-            char *s = avm_tostring(func);
-            avm_error("Cannot bind '%s' to function\n", s);
-            free(s);
-            executionFinished = true;
+            std::string s(avm_tostring(func));
+            avm_error("Cannot bind '%s' to function\n", s.c_str());
         }
     }
 }
 
-void execute_pusharg(instruction &i) {
-    avm_memcell *arg = avm_translate_operand(&i.arg1, &ax);
+void execute_pusharg (instruction *instr) {
+    avm_memcell *arg = avm_translate_op(&instr->arg1, &ax);
     assert(arg);
 
     avm_assign(&stack[sp], arg);
@@ -336,18 +340,76 @@ void execute_pusharg(instruction &i) {
     avm_decsp();
 }
 
-void execute_funcenter(instruction &i) {
-    // noop
+void execute_funcenter (instruction *instr) {
+    userFunc funcInfo = avm_getfuncinfo(pc);
+    totalActuals = 0;
+    bp = sp;
+    sp -= funcInfo.localSize;
     return;
 }
 
-void execute_funcexit(instruction &i) {
+void execute_funcexit (instruction *instr) {
     unsigned savedsp = sp;
     sp = avm_getenvval(bp + AVM_SAVEDSP_OFFSET);
     pc = avm_getenvval(bp + AVM_SAVEDPC_OFFSET);
     bp = avm_getenvval(bp + AVM_SAVEDBP_OFFSET);
 
-    while (savedsp <= sp) {
+    while (savedsp++ <= sp) {
         avm_memcellclear(&stack[savedsp]);
     }
+}
+
+void execute_newtable (instruction *instr) {
+    avm_memcell *lv = avm_translate_op(&instr->result, NULL);
+    assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
+
+    avm_memcellclear(lv);
+    lv->type            = table_m;
+    lv->data.tableVal   = avm_tablenew();
+    avm_tablerefinc(lv->data.tableVal);
+}
+
+void execute_tablegetelem (instruction *instr) {
+    avm_memcell *lv = avm_translate_op(&instr->result, NULL);
+    avm_memcell *table = avm_translate_op(&instr->arg1, NULL);
+    avm_memcell *index = avm_translate_op(&instr->arg2, &ax);
+
+    assert(lv and (&stack[bp] >= lv and lv > &stack[sp]) or lv == &retval);
+    assert(table and &stack[0] <= table and table < &stack[sp]);
+
+    avm_memcellclear(lv);
+    lv->type = nil_m;
+
+    if (table->type != table_m) {
+        avm_error("Illegal user of type %s as table\n", "TODO"); // TODO
+    }
+    avm_memcell *content = avm_tablegetelem(table->data.tableVal, index);
+    if (content) {
+        avm_assign(lv, content);
+    }
+    else {
+        char *ts = avm_tostring(table);
+        char *is = avm_tostring(index);
+        avm_warning("%s[%s] not found\n", ts, is);
+        free(ts);
+        free(is);
+    }
+}
+
+void execute_tablesetelem (instruction *instr) {
+    avm_memcell *table = avm_translate_op(&instr->result, NULL);
+    avm_memcell *index = avm_translate_op(&instr->arg1, &ax);
+    avm_memcell *value = avm_translate_op(&instr->arg2, &bx);
+
+    assert(table and &stack[0] <= table and table < &stack[sp]);
+    assert(index and value);
+
+    if (table->type != table_m) {
+        avm_error("Illegal user of type %s as table\n", "TODO"); // TODO
+    }
+    avm_tablesetelem(table->data.tableVal, index, value);
+}
+
+void execute_noop (instruction *instr) {
+    return;
 }

@@ -3,7 +3,7 @@ BASE_DIR=../
 EXE_NAME=$(BASE_DIR)/vm.exe
 IDIR=$(BASE_DIR)/include/
 CFLAGS=-I $(IDIR) -DDEBUG -Wall -g
-OBJ=vm.cpp parser.cpp structs.cpp translate.cpp environment.cpp
+OBJ=vm.cpp parser.cpp environment.cpp dispatcher.cpp
 
 all: $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(EXE_NAME)

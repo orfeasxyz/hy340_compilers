@@ -1,6 +1,5 @@
-#include "parser.h"
-#include "structs.h" // strConsts, numConsts, userFuncs, libFuncs, instructions
-#include "environment.h"
+#include "../include/parser.h"
+#include "../include/environment.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -24,7 +23,8 @@ static std::string vmopcode_str[] = {
     "uminus_v",
     "and_v",
     "or_v",
-    "not_v", "jump_v",
+    "not_v",
+	"jump_v",
     "jeq_v",
     "jne_v",
     "jle_v",
@@ -90,7 +90,7 @@ std::ostream& operator<<(std::ostream& os, const instruction &inst) {
 	return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const userfunc &func) {
+std::ostream& operator<<(std::ostream& os, const userFunc &func) {
 	return os << "[" << func.address << "]" << " " << func.id << " : " << func.localSize;
 }
 
