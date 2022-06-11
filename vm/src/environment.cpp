@@ -1,4 +1,5 @@
 #include  "../include/environment.h"
+#include <string.h>
 #include <cstdio>
 #include <cstring>
 #include <cassert>
@@ -122,7 +123,7 @@ void avm_callsaveenv (void) {
 }
 
 userfunc avm_getfuncinfo (unsigned addr) {
-
+    // TODO
 }
 
 unsigned avm_getenvval(unsigned int i) {
@@ -132,30 +133,32 @@ unsigned avm_getenvval(unsigned int i) {
 	return val;
 }
 
-typedef char* (*tostring_func_t)(avm_memcell*);
-
+// ----- String conversion dispatcher -----
 #define TOSTRING_LEN	128
 
-char* number_tostring (avm_memcell *m) {
-	char *str = (char*)malloc(TOSTRING_LEN);
+typedef char* (*tostring_func_t)(avm_memcell*);
+
+static char* number_tostring (avm_memcell *m) {
+	char *str = (char*)malloc(32);
 	sprintf(str, "%lf", m->data.numVal);
 	return str;
 }
 
-char* string_tostring (avm_memcell *m) {
+static char* string_tostring (avm_memcell *m) {
 	return strdup(m->data.strVal);
 }
 
-char* bool_tostring (avm_memcell *m) {
+static char* bool_tostring (avm_memcell *m) {
 	return strdup(m->data.boolVal ? "True" : "False");
 }
 
-char* table_tostring (avm_memcell *m) {
+static char* table_tostring (avm_memcell *m) {
 	std::string str;
-	char intBuf[32];
+	char intBuf[TOSTRING_LEN];
 	char *strBuf;
 	str += "[";
-	size_t n = m->data.tableVal->numIndexed.size() + m->data->;
+	size_t n =  m->data.tableVal->numIndexed.size() + 
+                m->data.tableVal->strIndexed.size();
 	size_t i = 0;
 	for (const auto &e : m->data.tableVal->numIndexed) {
 		str += "{";
@@ -182,16 +185,24 @@ char* table_tostring (avm_memcell *m) {
 	return strdup(str.c_str());
 }
 
-char* userFunc_tostring (avm_memcell*) {
+static char* userFunc_tostring (avm_memcell *m) {
+    char *str = (char*)malloc(TOSTRING_LEN);
+	sprintf(str, "%u", m->data.userFuncVal);
+	return str;
 }
 
-char* libFunc_tostring (avm_memcell*);
-char* nil_tostring (avm_memcell*) {
+static char* libFunc_tostring (avm_memcell *m) {
+    return strdup(m->data.libFuncVal);
+}
+
+static char* nil_tostring (avm_memcell*) {
 	return strdup("Nil");
 }
-char* undef_tostring (avm_memcell*);
+static char* undef_tostring (avm_memcell*) {
+    return strdup("Undefined");
+}
 
-tostring_func_t tostringFuncs[] = {
+static tostring_func_t tostringFuncs[] = {
 	 number_tostring,
 	 string_tostring,
 	 bool_tostring,
@@ -207,12 +218,56 @@ char* avm_tostring(avm_memcell* m){
 	return tostringFuncs[m->type](m);
 }
 
+// ----- Bool conversion dispatcher -----
 typedef bool (*tobool_func_t)(avm_memcell*);
 
-bool number_tobool(avm_memcell*)
-bool string_tobool(avm_memcell*)
-bool bool_tobool(avm_memcell*)
-bool table_tobool(avm_memcell*)
-bool userFunc_tobool(avm_memcell*)
-bool libFunc_tobool(avm_memcell*)
-bool number_tobool(avm_memcell*)
+static bool number_tobool  (avm_memcell *m) {
+    return m->data.numVal != 0.0;
+}
+
+static bool string_tobool  (avm_memcell *m) {
+    return m->data.strVal[0] != 0;
+}
+
+static bool bool_tobool    (avm_memcell *m) {
+    return m->data.boolVal;
+}
+
+static bool table_tobool   (avm_memcell *m) {
+    return true;
+    // return  m->data.tableVal->numIndexed.size() +
+    //         m->data.tableVal->strIndexed.size() > 0;
+}
+
+static bool userFunc_tobool(avm_memcell *m) {
+    return true;
+}
+
+static bool libFunc_tobool (avm_memcell *m) {
+    return true;
+}
+
+static bool nil_tobool (avm_memcell *m) {
+    return false;
+}
+
+static bool undef_tobool   (avm_memcell *m) {
+    avm_error("Cannot convert 'undef' to bool\n");
+    return false;
+}
+
+static tobool_func_t toboolFuncs[] = {
+    number_tobool,
+    string_tobool,
+    bool_tobool,
+    table_tobool,
+    userFunc_tobool,
+    libFunc_tobool,
+    nil_tobool,
+    undef_tobool
+};
+
+bool avm_tobool(avm_memcell* m){
+	assert(m->type >= 0 and m->type <= undef_m);
+	return toboolFuncs[m->type](m);
+}
