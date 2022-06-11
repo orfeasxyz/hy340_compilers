@@ -284,14 +284,13 @@ double jle_impl(double x, double y){ return x <= y;  }
 double jlt_impl(double x, double y){ return x <  y;  }
 
 comparison_func_t comparisonFuncs[] = {
-    jge_impl,
-    jgt_impl,
     jle_impl,
-    jlt_impl
+    jge_impl,
+    jlt_impl,
+    jgt_impl
 };
 
 void execute_comparison (instruction *instr) {
-    avm_memcell* lv =   avm_translate_op(&instr->result, NULL);
     avm_memcell* rv1 =  avm_translate_op(&instr->arg1, &ax);
     avm_memcell* rv2 =  avm_translate_op(&instr->arg2, &bx);
 
@@ -304,10 +303,11 @@ void execute_comparison (instruction *instr) {
         return;
     }
 
-    arithmetic_func_t op = comparisonFuncs[instr->op - add_v];
-    avm_memcellclear(lv);
-    lv->type = number_m;
-    lv->data.numVal = op(rv1->data.numVal, rv2->data.numVal);
+    bool res = comparisonFuncs[instr->op - jle_v](rv1->data.numVal, rv2->data.numVal);
+    
+    if (!executionFinished and res) {
+        pc = instr->result.val;
+    }
 }
 
 void execute_call (instruction *instr) {
@@ -405,9 +405,9 @@ void execute_tablegetelem (instruction *instr) {
 }
 
 void execute_tablesetelem (instruction *instr) {
-    avm_memcell *table = avm_translate_op(&instr->result, NULL);
-    avm_memcell *index = avm_translate_op(&instr->arg1, &ax);
-    avm_memcell *value = avm_translate_op(&instr->arg2, &bx);
+    avm_memcell *value = avm_translate_op(&instr->result, &bx);
+    avm_memcell *table = avm_translate_op(&instr->arg1, NULL);
+    avm_memcell *index = avm_translate_op(&instr->arg2, &ax);
 
     // assert(table and &stack[0] <= table and table < &stack[sp]);
     assert(index and value);

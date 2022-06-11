@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 	parseBinary(argv[1]);
 	
 	// Init
-	sp = AVM_STACK_SIZE-2;
+	sp = AVM_STACK_SIZE-globalsCount-1;
 	bp = sp;
 	pc = 0;
 	executionFinished = false;

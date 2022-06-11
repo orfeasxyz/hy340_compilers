@@ -8,7 +8,7 @@ OBJ=vm.cpp parser.cpp environment.cpp dispatcher.cpp
 .PHONY: all clean
 
 all: $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(BIN_DIR)/vm.exe
+	$(CC) $(CDFLAGS) $(OBJ) -o $(BIN_DIR)/vm.exe
 
 clean:
 	rm -rf *.o *.out *.yy.c *.exe *.output

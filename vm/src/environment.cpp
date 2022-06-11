@@ -1,11 +1,14 @@
 #include  "../include/environment.h"
 #include "../include/dispatcher.h"
 #include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cassert>
+
+
 
 // Const values tables
 std::vector<double>			numConsts;
@@ -14,6 +17,8 @@ std::vector<userFunc>		userFuncs;
 std::vector<std::string>	libFuncs;
 std::vector<instruction>	instructions;
 
+// Total number of globals
+unsigned    globalsCount;
 // 3 general purpose registes, 1 retval register, stack pointer, base pointer
 avm_memcell	ax;
 avm_memcell	bx;
@@ -130,6 +135,7 @@ void avm_error(const char *format, ...) {
     va_start(args,format);
     vfprintf(stderr, buffer, args); 
     va_end(args);
+    assert(0);
     exit(1);
 }
 
@@ -207,13 +213,12 @@ avm_memcell* avm_getactual (unsigned i) {
 typedef void (*library_func_t) (void);
 
 void libFunc_print (void) {
-    unsigned n = avm_totalactuals();
-    for (unsigned i = 0; i < n; ++i) {
+    int n = avm_totalactuals();
+    for (int i = n - 1; i >= 0; --i) {
         char *s = avm_tostring(avm_getactual(i));
         printf("%s", s);
         free(s);
     }
-    putchar('\n');
 }
 // TODO register more libfuncs ^-^
 std::map<std::string, library_func_t> libFuncsMap = {
@@ -297,7 +302,6 @@ void avm_tablesetelem(avm_table *table, avm_memcell *index, avm_memcell *value) 
         default:
             avm_error("Illegal key type\n");
     }
-    assert(0);
 }
 
 // TODO Must check behaviour when the key is not found

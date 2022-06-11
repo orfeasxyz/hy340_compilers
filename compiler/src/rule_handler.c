@@ -249,8 +249,8 @@ SymbolTableEntry* HANDLE_FUNCDEF(SymbolTableEntry* funcprefix, unsigned funcbody
     
     functionScopeStack = stack_pop(functionScopeStack);
     funcprefix->totalLocals = funcbody;
-    scopeOffsetStack = stack_pop(scopeOffsetStack);
     restoreCurrScopeOffset(stack_top(scopeOffsetStack));
+    scopeOffsetStack = stack_pop(scopeOffsetStack);
     emit(funcend, NULL, NULL, arg, 0, lineno);
 	return funcprefix;
 }
@@ -388,19 +388,18 @@ Expr* HANDLE_PRIM_TO_LVALUE(Expr* lvalue, int lineno){
 
 Expr* emitIfTableItem(Expr* e, int lineno){
     if(e->type != tableitem_e) return e;
-    else{
-        Expr* result = newExpr(var_e);
-        result->sym = newTemp(lineno);
-        emit(
-            tablegetelem,
-            e,
-            e->index,
-            result,
-            0,
-            lineno
-        );
-        return result;
-    }
+
+    Expr* result = newExpr(var_e);
+    result->sym = newTemp(lineno);
+    emit(
+        tablegetelem,
+        e,
+        e->index,
+        result,
+        0,
+        lineno
+    );
+    return result;
 }
 
 Expr* memberItem (Expr* lv, char* name, int lineno) {
@@ -435,18 +434,10 @@ Expr* HANDLE_PRIM_TO_FUNCDEF(SymbolTableEntry* funcdef){
 
 Expr* makeCall (Expr* lvalue, Expr* reversed_elist, int lineno) {
     Expr* func = emitIfTableItem(lvalue, lineno);
-    Expr *reversed_reversed_elist = NULL;
 
     while (reversed_elist) {
-        Expr *next = reversed_elist->next;
-        reversed_elist->next = reversed_reversed_elist;
-        reversed_reversed_elist = reversed_elist;
-        reversed_elist = next;
-    }
-
-    while (reversed_reversed_elist) {
-        emit(param, reversed_reversed_elist, NULL, NULL, 0, lineno);
-        reversed_reversed_elist = reversed_reversed_elist->next;
+        emit(param, reversed_elist, NULL, NULL, 0, lineno);
+        reversed_elist = reversed_elist->next;
     }
 
     emit(call, func, NULL, NULL, 0, lineno);

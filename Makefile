@@ -6,6 +6,6 @@ all:
 	$(MAKE) -C vm/ BIN_DIR="$(shell pwd)/bin"
 
 clean:
+	rm -f bin/*.exe *.ascb
 	$(MAKE) -C compiler/ clean
 	$(MAKE) -C compiler/ clean
-	rm -f bin/*.exe

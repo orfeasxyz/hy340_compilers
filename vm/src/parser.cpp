@@ -70,11 +70,11 @@ std::ostream& operator<<(std::ostream& os, const instruction &inst) {
 		case jump_v:
 		case funcenter_v:
 		case funcexit_v:
+		case newtable_v:
 			os << std::setw(12) << inst.result;
 			break;
 		case pusharg_v:
 		case call_v:
-		case newtable_v:
 			os << std::setw(12) << inst.arg1 << " ";
 			break;
 		case assign_v:
@@ -92,8 +92,9 @@ std::ostream& operator<<(std::ostream& os, const userFunc &func) {
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T> &v) {
+	int i = 0;
 	for (const T& e : v) {
-		os << e << nl;
+		os << std::setw(3) << i++ << " : " << e << nl;
 	}
 	return os;
 }
@@ -108,63 +109,64 @@ std::string freadString(FILE *f) {
 }
 
 void parseBinary(char* filename) {
-	FILE* f = fopen(filename, "rb");
+	FILE* fin = fopen(filename, "rb");
 
-	if(!f) {
+	if(!fin) {
 		printf("Error: Could not create file %s\n", filename);
 		exit(1);
 	}
 
 	unsigned magic;
-	fread(&magic, sizeof(magic), 1, f);
+	fread(&magic, sizeof(magic), 1, fin);
 	assert(magic == 340200501u);
 
+	fread(&globalsCount, sizeof(globalsCount), 1, fin);
 	// strings
 	int nStrings;
-	fread(&nStrings, sizeof(nStrings), 1, f);
+	fread(&nStrings, sizeof(nStrings), 1, fin);
 	strConsts.resize(nStrings);
 	for (auto &s : strConsts) {
-		s = freadString(f);
+		s = freadString(fin);
 	}
 	DLOG_V(strConsts);
 
 	// numbers
 	int nNumConsts;
-	fread(&nNumConsts, sizeof(nNumConsts), 1, f);
+	fread(&nNumConsts, sizeof(nNumConsts), 1, fin);
 	numConsts.resize(nNumConsts);
 	for (auto &n : numConsts) {
-		fread(&n, sizeof(n), 1, f);
+		fread(&n, sizeof(n), 1, fin);
 	}
 	DLOG_V(numConsts);
 
 	// functions
 	int nUserFuncs;
-	fread(&nUserFuncs, sizeof(nUserFuncs), 1, f);
+	fread(&nUserFuncs, sizeof(nUserFuncs), 1, fin);
 	userFuncs.resize(nUserFuncs);
 	for (auto &func : userFuncs) {
-		fread(&func.address, sizeof(func.address), 1, f);
-		fread(&func.localSize, sizeof(func.localSize), 1, f);
-		func.id = freadString(f);
+		fread(&func.address, sizeof(func.address), 1, fin);
+		fread(&func.localSize, sizeof(func.localSize), 1, fin);
+		func.id = freadString(fin);
 	}
 	DLOG_V(userFuncs);
 
 	// libfuncs
 	int nLibFuncs;
-	fread(&nLibFuncs, sizeof(nLibFuncs), 1, f);
+	fread(&nLibFuncs, sizeof(nLibFuncs), 1, fin);
 	libFuncs.resize(nLibFuncs);
 	for (auto &func : libFuncs) {
-		func = freadString(f);
+		func = freadString(fin);
 	}
 	DLOG_V(libFuncs);
 
 	// instructions
 	int nInstructions;
-	fread(&nInstructions, sizeof(nInstructions), 1, f);
+	fread(&nInstructions, sizeof(nInstructions), 1, fin);
 	instructions.resize(nInstructions);
 	for (auto &inst : instructions) {
-		fread(&inst, sizeof(inst), 1, f);
+		fread(&inst, sizeof(inst), 1, fin);
 	}
 	DLOG_V(instructions);
 
-	fclose(f);
+	fclose(fin);
 }

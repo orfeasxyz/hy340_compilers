@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../include/structs.h"
 #include "../include/binary.h"
 #include "../include/target.h"
 
@@ -16,6 +17,9 @@ void create_binary(FILE *fout) {
   
   unsigned magic = 340200501u;
   fwrite(&magic, sizeof(magic), 1, fout);
+
+  // Global variable count
+  fwrite(&programVarOffset, sizeof(int), 1, fout);
   
   //strings
   fwrite(&currStrConsts, sizeof(currStrConsts), 1, fout);

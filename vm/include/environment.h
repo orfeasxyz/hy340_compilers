@@ -108,6 +108,9 @@ extern std::vector<userFunc>	userFuncs;
 extern std::vector<std::string>	libFuncs;
 extern std::vector<instruction>	instructions;
 
+// Total number of globals
+extern unsigned     globalsCount;
+
 // 3 general purpose registes, 1 retval register, stack pointer, base pointer
 extern avm_memcell	ax;
 extern avm_memcell	bx;

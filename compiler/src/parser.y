@@ -333,7 +333,8 @@ int main(int argc, char **argv) {
 	}
 
 	// If an output file was given, redirect what would be printed in stdout to that file
-	if(argc == 3 && !(fout = fopen(argv[2], "wb"))) {
+	fout = fopen(argc == 3 ? argv[2] : "a.ascb", "wb");
+	if(!fout) {
 		fprintf(stderr, "There was an error reading the output file, make sure it exists and the path is written correnctly");
 		exit(0);
 	}
