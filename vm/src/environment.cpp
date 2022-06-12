@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <cstdio>
 #include <cstdlib>
@@ -140,7 +141,7 @@ void avm_warning(const char *format, ...) {
     sprintf(buffer, "[Warning] %u : %s", pc, format);
     va_list args;
     va_start(args,format);
-    vfprintf(stderr, buffer, args); 
+    vfprintf(stdout, buffer, args); 
     va_end(args);
 }
 
@@ -149,7 +150,7 @@ void avm_error(const char *format, ...) {
     sprintf(buffer, "[Error] %u : %s\n", pc, format);
     va_list args;
     va_start(args,format);
-    vfprintf(stderr, buffer, args); 
+    vfprintf(stdout, buffer, args); 
     va_end(args);
     assert(0);
     exit(1);
@@ -289,7 +290,7 @@ static void libFunc_strtoenum (void) {
         avm_error("Function 'strtoenum' expects 1 argument (%d given)", n);
     }
     avm_memcell *arg = avm_getactual(0);
-    if (arg->type != number_m) {
+    if (arg->type != string_m) {
         avm_error(  "Function 'strtoenum' expects argument of type string "
                     "(%s given)", avm_type2str(arg->type));
     }
@@ -356,11 +357,14 @@ static void libFunc_objectmemberkeys (void) {
     avm_table *table = arg->data.tableVal;
     retval.type = table_m;
     retval.data.tableVal = avm_tablenew();
+    avm_tablerefinc(table);
     unsigned len = 0;
-    // TODO UNFINISHED
-    // for (auto &e : table->numIndexed) {
-    //     retval.data.tableVal->numIndexed[len++] = 
-    // }
+    for (auto &e : table->strIndexed) {
+        avm_memcell *key = (avm_memcell*)malloc(sizeof(avm_memcell));
+        key->type = number_m;
+        key->data.numVal = len++;
+        avm_tablesetelem(retval.data.tableVal, key, e.second); 
+    }
 }
 
 static void libFunc_objecttotalmembers (void) {
@@ -385,8 +389,12 @@ static void libFunc_objectcopy (void) {
     if (n != 1) { // We are in global scope
         avm_error("Function 'objectcopy' expects 1 argument (%d given)", n);
     }
-
-    // TODO UNFINISHED
+    avm_memcell *arg = avm_getactual(0);
+    if (arg->type != table_m) {
+        avm_error(  "Function 'objecttotalmember' expects argument of type 'table' "
+                    "(%s given)", avm_type2str(arg->type));
+    }
+    memcpy(&retval, arg, sizeof(avm_memcell));
 }
 
 
@@ -399,7 +407,9 @@ static std::map<std::string, library_func_t> libFuncsMap = {
     {"sqrt",                libFunc_sqrt},
     {"cos",                 libFunc_cos},
     {"sin",                 libFunc_sin},
-    {"objecttotalmembers",  libFunc_objecttotalmembers}
+    {"objecttotalmembers",  libFunc_objecttotalmembers},
+    {"objectmemberkeys",    libFunc_objectmemberkeys},
+    {"objectcopy",          libFunc_objectcopy}
 };
 
 library_func_t avm_getlibraryfunc (std::string id) {
@@ -457,20 +467,19 @@ void avm_tablerefdec (avm_table *table) {
 }
 
 void avm_tablesetelem(avm_table *table, avm_memcell *index, avm_memcell *value) {
-    avm_memcell *res;
     switch (index->type) {
         case number_m: {
             unsigned numIndex = static_cast<unsigned>(index->data.numVal);
-            res = (avm_memcell*)malloc(sizeof(avm_memcell));
-            memcpy(res, value, sizeof(avm_memcell));
-            table->numIndexed[numIndex] = res;
+            table->numIndexed[numIndex] = (avm_memcell*)malloc(sizeof(avm_memcell));
+            table->numIndexed[numIndex]->type = undef_m;
+            avm_assign(table->numIndexed[numIndex], value);
             break;
         }
         case string_m: {
             std::string strIndex(index->data.strVal);
-            res = (avm_memcell*)malloc(sizeof(avm_memcell));
-            memcpy(res, value, sizeof(avm_memcell));
-            table->strIndexed[strIndex] = res;
+            table->strIndexed[strIndex] = (avm_memcell*)malloc(sizeof(avm_memcell));
+            table->strIndexed[strIndex]->type = undef_m;
+            avm_assign(table->strIndexed[strIndex], value);
             break;
         }
         default:
@@ -531,25 +540,19 @@ static char* bool_tostring (avm_memcell *m) {
 
 static char* table_tostring (avm_memcell *m) {
 	std::string str;
-	char intBuf[TOSTRING_LEN];
 	str += "[";
 	size_t n =  m->data.tableVal->numIndexed.size() + 
                 m->data.tableVal->strIndexed.size();
 	size_t i = 0;
 	for (const auto &e : m->data.tableVal->numIndexed) {
-		str += "{";
-		sprintf(intBuf, "%u", e.first);
-		str += intBuf;
-		str += ", ";
 		str += avm_tostring(e.second);
-		str += "}";
 		if (i++ < n-1) {
 			str += ",";
 		}
 	}
 	for (const auto &e : m->data.tableVal->strIndexed) {
 		str += "{";
-		str += e.first;
+		str += "\"" + e.first + "\"";
 		str += ", ";
 		str += avm_tostring(e.second);
 		str += "}";

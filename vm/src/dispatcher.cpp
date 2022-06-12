@@ -69,7 +69,7 @@ void execute_cycle (void) {
 }
 
 void execute_assign (instruction *instr) {
-    avm_memcell *lv = avm_translate_op(&instr->result, 0);
+    avm_memcell *lv = avm_translate_op(&instr->result, NULL);
     avm_memcell *rv = avm_translate_op(&instr->arg1, &ax);
 
     // TODO not sure about those checks
@@ -341,6 +341,22 @@ void execute_call (instruction *instr) {
             avm_calllibfunc(func->data.libFuncVal);
             break;
         }
+        case table_m:   {
+            avm_memcell *key = (avm_memcell*) malloc(sizeof(avm_memcell));
+            key->type = string_m;
+            key->data.strVal = strdup("()");
+            avm_memcell *res =  avm_tablegetelem(func->data.tableVal, key);
+            if (res->type != userFunc_m) {
+                std::string s(avm_tostring(func));
+                avm_error("Cannot bind '%s' to function", s.c_str());
+            }
+            pc = res->data.userFuncVal;
+            assert(
+                pc < codeSize and
+                instructions[pc].op == funcenter_v
+            );
+            break;
+        }
         default: {
             std::string s(avm_tostring(func));
             avm_error("Cannot bind '%s' to function", s.c_str());
@@ -390,7 +406,7 @@ void execute_tablegetelem (instruction *instr) {
     lv->type = nil_m;
 
     if (table->type != table_m) {
-        avm_error("Illegal user of type %s as table", avm_type2str(table->type)); // TODO
+        avm_error("Illegal use of type '%s' as table", avm_type2str(table->type));
     }
     avm_memcell *content = avm_tablegetelem(table->data.tableVal, index);
     if (content) {
@@ -414,7 +430,7 @@ void execute_tablesetelem (instruction *instr) {
     assert(index and value);
 
     if (table->type != table_m) {
-        avm_error("Illegal user of type %s as table\n", avm_type2str(table->type)); // TODO
+        avm_error("Illegal user of type '%s' as table\n", avm_type2str(table->type));
     }
     avm_tablesetelem(table->data.tableVal, index, value);
 }
