@@ -63,6 +63,14 @@ void makeBoolStmt(Expr* e, int lineno){
     }
 }
 
+
+void notBoolExpr(Expr* expression, int lineno){
+    expression->trueList = newList(nextQuadLabel());
+    expression->falseList = newList(nextQuadLabel() + 1);
+    emit(if_eq, expression, newExprConstBool(1), NULL, 0, lineno);
+    emit(jump, NULL, NULL, NULL, 0, lineno);
+}
+
 void checkShort(Expr* e, iopcode op, int lineno){
     if (e->type == var_e ||  e->type == assignexpr_e){
         notBoolExpr(e, lineno);

@@ -361,13 +361,6 @@ Expr* HANDLE_TERM_TO_UMINUS_EXPR(Expr* expression, int lineno){
     return temp;
 }
 
-void notBoolExpr(Expr* expression, int lineno){
-    expression->trueList = newList(nextQuadLabel());
-    expression->falseList = newList(nextQuadLabel() + 1);
-    emit(if_eq, expression, newExprConstBool(1), NULL, 0, lineno);
-    emit(jump, NULL, NULL, NULL, 0, lineno);
-}
-
 Expr* HANDLE_TERM_TO_NOT_EXPR(Expr* expression, int lineno)
 {
     Expr* temp = newExpr(boolexpr_e);

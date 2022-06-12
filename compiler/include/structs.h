@@ -139,6 +139,8 @@ void resetTemp();
 SymbolTableEntry* newTemp(int);
 void makeBoolStmt(Expr*, int);
 
+void checkShort(Expr *, iopcode, int);
+void notBoolExpr(Expr* expression, int lineno);
 SymbolTableEntry* makeSymbol(char*, int, int);
 ScopeSpace currScopeSpace(void);
 unsigned currScopeOffset(void);
