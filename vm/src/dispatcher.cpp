@@ -95,14 +95,14 @@ static double mul_impl(double x, double y) {
 
 static double div_impl(double x, double y) {   
     if(y == 0) {
-        avm_error("Can't divide by 0\n");
+        avm_error("Can't divide by 0");
     }
     return x / y;
 }
 
 static double mod_impl(double x, double y){
     if(y == 0) {
-        avm_error("Can't divide by 0\n");
+        avm_error("Can't divide by 0");
     }
     return ((unsigned) x) % ((unsigned) y);
 }
@@ -124,7 +124,7 @@ void execute_arithmetic(instruction *instr){
     assert(rv1 and rv2);
 
     if(rv1->type != number_m or rv2->type != number_m){
-        avm_error("Not a number\n");
+        avm_error("Not a number");
         executionFinished = 1;
         return;
     }
@@ -224,7 +224,7 @@ void execute_jeq (instruction *instr) {
     bool res = false;
 
     if (rv1->type == undef_m or rv2->type == undef_m) {
-        avm_error("Cannot perform equality comparison with 'undef' operands\n");
+        avm_error("Cannot perform equality comparison with 'undef' operands");
     }
     else if (rv1->type == nil_m or rv2->type == nil_m) {
         res = rv1->type == nil_m and rv2->type == nil_m;
@@ -233,7 +233,7 @@ void execute_jeq (instruction *instr) {
         res = (avm_tobool(rv1) == avm_tobool(rv2));
     }
     else if (rv1->type != rv2->type) {
-        avm_error(  "Cannot perform equality comparison %s == %s\n",
+        avm_error(  "Cannot perform equality comparison %s == %s",
                     avm_tostring(rv1), avm_tostring(rv2));
     }
     else { // type can be: num, str, table, userFunc, libFunc
@@ -254,7 +254,7 @@ void execute_jne (instruction *instr) {
     bool res = false;
 
     if (rv1->type == undef_m or rv2->type == undef_m) {
-        avm_error("Cannot perform equality comparison with 'undef' operands\n");
+        avm_error("Cannot perform equality comparison with 'undef' operands");
     }
     else if (rv1->type == nil_m or rv2->type == nil_m) {
         res = rv1->type == nil_m and rv2->type == nil_m;
@@ -263,7 +263,7 @@ void execute_jne (instruction *instr) {
         res = (avm_tobool(rv1) == avm_tobool(rv2));
     }
     else if (rv1->type != rv2->type) {
-        avm_error(  "Cannot perform equality comparison %s == %s\n",
+        avm_error(  "Cannot perform equality comparison %s == %s",
                     avm_tostring(rv1), avm_tostring(rv2));
     }
     else { // type can be: num, str, table, userFunc, libFunc
@@ -343,13 +343,14 @@ void execute_call (instruction *instr) {
         }
         default: {
             std::string s(avm_tostring(func));
-            avm_error("Cannot bind '%s' to function\n", s.c_str());
+            avm_error("Cannot bind '%s' to function", s.c_str());
         }
     }
 }
 
 void execute_funcenter (instruction *instr) {
     userFunc funcInfo = avm_getfuncinfo(pc);
+    retval.type = nil_m;
     totalActuals = 0;
     bp = sp;
     sp -= funcInfo.localSize;
@@ -362,7 +363,7 @@ void execute_funcexit (instruction *instr) {
     pc = avm_getenvval(bp + AVM_SAVEDPC_OFFSET);
     bp = avm_getenvval(bp + AVM_SAVEDBP_OFFSET);
 
-    while (oldsp++ <= sp) {
+    while (++oldsp <= sp) {
         avm_memcellclear(&stack[oldsp]);
     }
 }
@@ -389,7 +390,7 @@ void execute_tablegetelem (instruction *instr) {
     lv->type = nil_m;
 
     if (table->type != table_m) {
-        avm_error("Illegal user of type %s as table\n", "TODO"); // TODO
+        avm_error("Illegal user of type %s as table", avm_type2str(table->type)); // TODO
     }
     avm_memcell *content = avm_tablegetelem(table->data.tableVal, index);
     if (content) {
@@ -413,7 +414,7 @@ void execute_tablesetelem (instruction *instr) {
     assert(index and value);
 
     if (table->type != table_m) {
-        avm_error("Illegal user of type %s as table\n", "TODO"); // TODO
+        avm_error("Illegal user of type %s as table\n", avm_type2str(table->type)); // TODO
     }
     avm_tablesetelem(table->data.tableVal, index, value);
 }

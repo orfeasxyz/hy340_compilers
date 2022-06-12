@@ -110,8 +110,8 @@ expression:     assignexpr                      {$$ = $1;}
                 | expression LET expression     {$$ = HANDLE_REL_OP(if_lesseq, $1, $3, yylineno);}
                 | expression EQUAL expression   {makeBoolStmt($1, yylineno); makeBoolStmt($3, yylineno); $$ = HANDLE_REL_OP(if_eq, $1, $3, yylineno);}
                 | expression NEQUAL expression  {makeBoolStmt($1, yylineno); makeBoolStmt($3, yylineno); $$ = HANDLE_REL_OP(if_noteq, $1, $3, yylineno);}
-                | expression { checkShort($1, and, yylineno); } AND M expression   {$$ = HANDLE_BOOL_OP(and, $1, $5, $4, yylineno);}
-                | expression { checkShort($1, or, yylineno); } OR M expression    {$$ = HANDLE_BOOL_OP(or, $1, $5, $4, yylineno);}
+                | expression AND { checkShort($1, and, yylineno); } M expression   {$$ = HANDLE_BOOL_OP(and, $1, $5, $4, yylineno);}
+                | expression OR { checkShort($1, or, yylineno); }   M expression    {$$ = HANDLE_BOOL_OP(or, $1, $5, $4, yylineno);}
                 | term                          {$$ = $1;}
                 ;
 

@@ -1,5 +1,5 @@
 BIN_DIR="$(shell pwd)"
-CFLAGS=-Wall -g
+CFLAGS=-Wall -g -DDEBUG
 
 .PHONY: all clean
 

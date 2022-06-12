@@ -451,14 +451,28 @@ Expr* HANDLE_CALL_FUNCDEF_ELIST(SymbolTableEntry* funcdef, Expr* elist, int line
     return makeCall(func, elist, lineno);
 }
 
+int elist_len(Expr* elist){
+    int count = 0;
+    while(elist){
+        count++;
+        elist = elist->next;
+    }
+    return count;
+}
+
 Expr* HANDLE_CALL_LVALUE_SUFFIX(Expr* lvalue, Call* callsuffix, int lineno){
     lvalue = emitIfTableItem(lvalue, lineno);
+
     if(callsuffix->method){
         Expr* t = lvalue;
         lvalue = emitIfTableItem(memberItem(t, callsuffix->name, lineno), lineno);
-        if(callsuffix->elist) callsuffix->elist->next = t;
+        if(callsuffix->elist) {
+            t->next = callsuffix->elist;
+            callsuffix->elist = t;
+        }
         else callsuffix->elist = t;
     }
+    
     return makeCall(lvalue, callsuffix->elist, lineno);
 }
 

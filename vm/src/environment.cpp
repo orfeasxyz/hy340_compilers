@@ -1,5 +1,7 @@
 #include  "../include/environment.h"
 #include "../include/dispatcher.h"
+#include <assert.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,6 +9,22 @@
 #include <cstdlib>
 #include <cstring>
 #include <cassert>
+
+const char* typeStrings[] = {
+	"number",
+	"string",
+	"bool",
+    "table",
+	"userFunc",
+	"libFunc",
+	"nil",
+    "undef"
+};
+
+const char* avm_type2str (unsigned i) {
+    assert(number_m <= i and i <= undef_m);
+    return typeStrings[i];
+}
 
 // Const values tables
 std::vector<double>			numConsts;
@@ -128,7 +146,7 @@ void avm_warning(const char *format, ...) {
 
 void avm_error(const char *format, ...) {
     static char buffer[WARNING_BUFF_SIZE] = {0};
-    sprintf(buffer, "[Error] %u : %s", pc, format);
+    sprintf(buffer, "[Error] %u : %s\n", pc, format);
     va_list args;
     va_start(args,format);
     vfprintf(stderr, buffer, args); 
@@ -139,8 +157,10 @@ void avm_error(const char *format, ...) {
 
 // ----- AVM environment helper functions -----
 void avm_assign (avm_memcell *lv, avm_memcell *rv) {
-    if (lv == rv            and
-        lv->type == table_m and
+    if (lv == rv) {
+        return;
+    }
+    if (lv->type == table_m and
         rv->type == table_m and
         lv->data.tableVal == rv->data.tableVal) {
             return;
@@ -208,31 +228,178 @@ avm_memcell* avm_getactual (unsigned i) {
     return &stack[bp + AVM_STACKENV_SIZE + 1 + i];
 }
 
+// ----- Libfuncs implementations & dispatcher -----
 typedef void (*library_func_t) (void);
 
-void libFunc_print (void) {
+static void libFunc_print (void) {
     int n = avm_totalactuals();
     for (int i = n - 1; i >= 0; --i) {
         char *s = avm_tostring(avm_getactual(i));
         printf("%s", s);
         free(s);
     }
-    retval.type = bool_m;
-    retval.data.boolVal = true;
+    retval.type = nil_m;;
 
     fflush(stdout);
 }
 
-void libFunc_totalarguments (void) {
-    unsigned p_bp = avm_getenvval(bp + AVM_SAVEDBP_OFFSET);
-    avm_memcellclear(&retval);
+static void libFunc_totalarguments (void) {
+    unsigned saved_bp = avm_getenvval(bp + AVM_SAVEDBP_OFFSET);
 
-    if (!)
+    if (saved_bp == AVM_STACK_SIZE-1) { // We are in global scope
+        avm_warning("Function 'totalarguments' is called outside of function");
+        retval.type = nil_m;
+        return;
+    }
+    retval.type = number_m;
+    retval.data.numVal = avm_getenvval(saved_bp + AVM_NUMACTS_OFFSET);
 }
 
-// TODO register more libfuncs ^-^
-std::map<std::string, library_func_t> libFuncsMap = {
-    {"print", libFunc_print}
+static void libFunc_typeof (void) {
+    unsigned n = avm_totalactuals();
+
+    if (n != 1) { // We are in global scope
+        avm_error("Function 'typeof' expects 1 argument (%d given)", n);
+    }
+    retval.type = string_m;
+    retval.data.strVal = strdup(avm_type2str(avm_getactual(0)->type));
+}
+
+static void libFunc_argument (void) {
+    unsigned n = avm_totalactuals();
+
+    if (n != 1) { // We are in global scope
+        avm_error("Function 'argument' expects 1 argument (%d given)", n);
+    }
+
+    unsigned saved_bp = avm_getenvval(bp + AVM_SAVEDBP_OFFSET);
+
+    if (saved_bp == AVM_STACK_SIZE-1) { // We are in global scope
+        avm_warning("Function 'argument' is called outside of function");
+        retval.type = nil_m;
+        return;
+    }
+    memcpy(&retval, avm_getactual(0), sizeof(avm_memcell));
+}
+
+static void libFunc_strtoenum (void) {
+    unsigned n = avm_totalactuals();
+
+    if (n != 1) { // We are in global scope
+        avm_error("Function 'strtoenum' expects 1 argument (%d given)", n);
+    }
+    avm_memcell *arg = avm_getactual(0);
+    if (arg->type != number_m) {
+        avm_error(  "Function 'strtoenum' expects argument of type string "
+                    "(%s given)", avm_type2str(arg->type));
+    }
+    retval.type = number_m;
+    retval.data.numVal = atof(arg->data.strVal);
+}
+
+static void libFunc_sqrt (void) {
+    unsigned n = avm_totalactuals();
+
+    if (n != 1) { // We are in global scope
+        avm_error("Function 'sqrt' expects 1 argument (%d given)", n);
+    }
+    avm_memcell *arg = avm_getactual(0);
+    if (arg->type != number_m) {
+        avm_error(  "Function 'sqrt' expects argument of type 'number' "
+                    "(%s given)", avm_type2str(arg->type));
+    }
+    retval.type = number_m;
+    retval.data.numVal = sqrt(arg->data.numVal);
+}
+
+static void libFunc_cos (void) {
+    unsigned n = avm_totalactuals();
+
+    if (n != 1) { // We are in global scope
+        avm_error("Function 'cos' expects 1 argument (%d given)", n);
+    }
+    avm_memcell *arg = avm_getactual(0);
+    if (arg->type != number_m) {
+        avm_error(  "Function 'cos' expects argument of type 'number' "
+                    "(%s given)", avm_type2str(arg->type));
+    }
+    retval.type = number_m;
+    retval.data.numVal = cos(arg->data.numVal);
+}
+
+static void libFunc_sin (void) {
+    unsigned n = avm_totalactuals();
+
+    if (n != 1) { // We are in global scope
+        avm_error("Function 'sin' expects 1 argument (%d given)", n);
+    }
+    avm_memcell *arg = avm_getactual(0);
+    if (arg->type != number_m) {
+        avm_error(  "Function 'sin' expects argument of type 'number' "
+                    "(%s given)", avm_type2str(arg->type));
+    }
+    retval.type = number_m;
+    retval.data.numVal = sin(arg->data.numVal);
+}
+
+static void libFunc_objectmemberkeys (void) {
+    unsigned n = avm_totalactuals();
+
+    if (n != 1) { // We are in global scope
+        avm_error("Function 'objectmemberkeys' expects 1 argument (%d given)", n);
+    }
+    avm_memcell *arg = avm_getactual(0);
+    if (arg->type != table_m) {
+        avm_error(  "Function 'objectmemberkeys' expects argument of type 'table' "
+                    "(%s given)", avm_type2str(arg->type));
+    }
+    avm_table *table = arg->data.tableVal;
+    retval.type = table_m;
+    retval.data.tableVal = avm_tablenew();
+    unsigned len = 0;
+    // TODO UNFINISHED
+    // for (auto &e : table->numIndexed) {
+    //     retval.data.tableVal->numIndexed[len++] = 
+    // }
+}
+
+static void libFunc_objecttotalmembers (void) {
+    unsigned n = avm_totalactuals();
+
+    if (n != 1) { // We are in global scope
+        avm_error("Function 'objecttotalmember' expects 1 argument (%d given)", n);
+    }
+    avm_memcell *arg = avm_getactual(0);
+    if (arg->type != table_m) {
+        avm_error(  "Function 'objecttotalmember' expects argument of type 'table' "
+                    "(%s given)", avm_type2str(arg->type));
+    }
+    retval.type = number_m;
+    retval.data.numVal = arg->data.tableVal->numIndexed.size() +
+                         arg->data.tableVal->strIndexed.size();
+}
+
+static void libFunc_objectcopy (void) {
+    unsigned n = avm_totalactuals();
+
+    if (n != 1) { // We are in global scope
+        avm_error("Function 'objectcopy' expects 1 argument (%d given)", n);
+    }
+
+    // TODO UNFINISHED
+}
+
+
+static std::map<std::string, library_func_t> libFuncsMap = {
+    {"print",               libFunc_print},
+    {"totalarguments",      libFunc_totalarguments},
+    {"typeof",              libFunc_typeof},
+    {"argument",            libFunc_argument},
+    {"strtonum",            libFunc_strtoenum},
+    {"sqrt",                libFunc_sqrt},
+    {"cos",                 libFunc_cos},
+    {"sin",                 libFunc_sin},
+    {"objecttotalmembers",  libFunc_objecttotalmembers}
 };
 
 library_func_t avm_getlibraryfunc (std::string id) {
@@ -250,7 +417,8 @@ void avm_calllibfunc(char *id) {
     }
     bp = sp;
     totalActuals = 0;
-    f(); // TODO implement libfuncs
+    retval.type = nil_m;
+    f();
     if (!executionFinished) {
         execute_funcexit(NULL);
     }
@@ -266,14 +434,10 @@ avm_table* avm_tablenew (void) {
 void avm_tabledestroy (avm_table *table) {
 	assert(table);
 	for (auto &e : table->strIndexed) {
-		if (e.second->type == table_m) {
-			avm_tablerefdec(e.second->data.tableVal);
-		}
+		avm_memcellclear(e.second);
 	}
 	for (auto &e : table->numIndexed) {
-		if (e.second->type == table_m) {
-			avm_tablerefdec(e.second->data.tableVal);
-		}
+		avm_memcellclear(e.second);
 	}
 	delete table;
 }

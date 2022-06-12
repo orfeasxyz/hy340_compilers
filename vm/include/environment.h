@@ -126,6 +126,7 @@ extern unsigned     totalActuals;
 
 extern avm_memcell	stack[AVM_STACK_SIZE];
 
+const char* avm_type2str        (unsigned i);
 void        avm_stackinit       (void);
 void        avm_memcellclear    (avm_memcell *m);
 avm_memcell*avm_translate_op    (vmarg *arg, avm_memcell *reg);
