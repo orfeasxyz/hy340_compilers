@@ -668,7 +668,7 @@ Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2, unsigned M, int linen
         isVar = 1;
     }
 
-    patchList((op == and ? expr2->trueList : expr2->falseList), M);
+    patchList((op == and ? expr1->trueList : expr1->falseList), M);
 
 	if(!isVar && check_bool_eligible(expr1) && check_bool_eligible(expr2)){
 		switch (op) {

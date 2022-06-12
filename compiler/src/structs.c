@@ -213,7 +213,7 @@ Expr* newExprConstBool(unsigned char boolean){
 SymbolTableEntry* makeSymbol(char* key, int lineno, int scope){
     SymbolTableEntry* temp = calloc(1, sizeof(SymbolTableEntry));
     temp->isActive = 1;
-    temp->name = malloc(sizeof(key) + 1);
+    temp->name = malloc(strlen(key) + 1);
     strcpy(temp->name, key);
     temp->line = lineno;
     temp->scope = scope;
