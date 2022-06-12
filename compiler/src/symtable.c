@@ -156,8 +156,7 @@ SymbolTableEntry* SymTable_insert(SymTable_T oSymTable, const char *key, SymbolT
     pos = SymTable_hash(key, oSymTable->max_size);
 
     new = malloc(sizeof(struct List));
-    new->key = malloc(sizeof(key) + 1);
-    strcpy(new->key, key);
+    new->key = strdup(key);
     new->val = value;
 
     if(!oSymTable->buckets[pos]){

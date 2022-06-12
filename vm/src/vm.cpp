@@ -30,7 +30,6 @@ int main(int argc, char **argv) {
 	totalActuals = 0;
 	avm_stackinit();
 	while (!executionFinished) {
-		DPRINTF("executionFinished = %s\n", executionFinished ? "True" : "False");
 		DPRINTF("pc = %u\n", pc);
 		DPRINTF("sp = %u\n", sp);
 		DPRINTF("bp = %u\n", bp);

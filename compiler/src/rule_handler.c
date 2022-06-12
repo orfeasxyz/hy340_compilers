@@ -418,7 +418,7 @@ Expr* HANDLE_MEMBER_TO_LVALUE_SQUARE_EXPR(Expr* lvalue, Expr* expression, int li
     lvalue = emitIfTableItem(lvalue, lineno);
     Expr* temp = newExpr(tableitem_e);
     temp->sym = lvalue->sym;
-    temp->index = expression->index;
+    temp->index = expression;
     return temp;
 }
 

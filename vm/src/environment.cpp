@@ -121,7 +121,7 @@ avm_memcell* avm_translate_op (vmarg *arg, avm_memcell *reg) {
 // ----- Runtime messages -----
 void avm_warning(const char *format, ...) {
     static char buffer[WARNING_BUFF_SIZE] = {0};
-    sprintf(buffer, "[Warning] %s", format);
+    sprintf(buffer, "[Warning] %u : %s", pc, format);
     va_list args;
     va_start(args,format);
     vfprintf(stderr, buffer, args); 
@@ -130,7 +130,7 @@ void avm_warning(const char *format, ...) {
 
 void avm_error(const char *format, ...) {
     static char buffer[WARNING_BUFF_SIZE] = {0};
-    sprintf(buffer, "[Error] %s", format);
+    sprintf(buffer, "[Error] %u : %s", pc, format);
     va_list args;
     va_start(args,format);
     vfprintf(stderr, buffer, args); 
@@ -219,6 +219,10 @@ void libFunc_print (void) {
         printf("%s", s);
         free(s);
     }
+    retval.type = bool_m;
+    retval.data.boolVal = true;
+
+    fflush(stdout);
 }
 // TODO register more libfuncs ^-^
 std::map<std::string, library_func_t> libFuncsMap = {

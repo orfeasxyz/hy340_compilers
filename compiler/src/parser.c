@@ -2280,7 +2280,7 @@ int main(int argc, char **argv) {
     }
 	else {
 		if(!(yyin = fopen(argv[1], "r"))){
-            fprintf(stderr, "There was an error reading the input file, make sure it exists and the path is written correnctly");
+            fprintf(stderr, "There was an error reading the input file, make sure it exists and the path is written correctly");
             exit(0);
         }
 	}
@@ -2288,7 +2288,7 @@ int main(int argc, char **argv) {
 	// If an output file was given, redirect what would be printed in stdout to that file
 	fout = fopen(argc == 3 ? argv[2] : "a.ascb", "wb");
 	if(!fout) {
-		fprintf(stderr, "There was an error reading the output file, make sure it exists and the path is written correnctly");
+		fprintf(stderr, "There was an error opening the output file, make sure it exists and the path is written correctly");
 		exit(0);
 	}
 

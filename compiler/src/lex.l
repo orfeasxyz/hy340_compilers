@@ -122,7 +122,7 @@ char* process_string(char* string){
     size_t len = strlen(string);
 	char *buffer = malloc(len);
 
-	string[strlen(string)-1] = '\0'; // ignore closing "
+	string[len-1] = '\0'; // ignore closing "
 	
     int i = 1; // start from 1 to ignore opening "
 	int j = 0;
