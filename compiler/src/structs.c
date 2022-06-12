@@ -63,6 +63,15 @@ void makeBoolStmt(Expr* e, int lineno){
     }
 }
 
+void checkShort(Expr* e, iopcode op, int lineno){
+    if (e->type == var_e ||  e->type == assignexpr_e){
+        notBoolExpr(e, lineno);
+        patchList((op == and ? e->trueList : e->falseList), nextQuadLabel());
+    }
+
+    return;
+}
+
 ScopeSpace currScopeSpace(void){
     if(scopeSpaceCounter == 1){
         return programvar;

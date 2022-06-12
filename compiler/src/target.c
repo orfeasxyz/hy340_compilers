@@ -104,6 +104,12 @@ void expand_numconst(){
 unsigned consts_newnumber(double n){
     unsigned address;
     if (currNumConsts == totalNumConsts) expand_numconst();
+
+    // Check if the number is already in the table
+    for (address = 0; address < currNumConsts; address++) {
+        if (numConsts[address] == n) return address;
+    }
+
     address = currNumConsts;
     numConsts[currNumConsts++] = n;
     return address;
@@ -126,6 +132,10 @@ void expand_strconst(){
 unsigned consts_newstring(char* s){
     unsigned address;
     if (currStrConsts == totalStrConsts) expand_strconst();
+
+    // Check if the string is already in the table
+    for (address = 0; address < currStrConsts; address++) if (strcmp(strConsts[address], s) == 0) return address;
+
     address = currStrConsts;
     strConsts[currStrConsts++] = (char*)strdup(s);
     return address;
@@ -149,6 +159,10 @@ unsigned libfuncs_newused(char* name){
     unsigned i, address;
     if (currNameLibfuncs == totalNameLibfuncs) expand_namelibfuncs();
     for(i=0; i<currNameLibfuncs; i++)  if (strcmp(nameLibfuncs[i], name) == 0) return i;
+
+    // Check if the string is already in the table
+    for(address=0; address<currNameLibfuncs; address++) if (strcmp(nameLibfuncs[address], name) == 0) return address;
+
     address = currNameLibfuncs;
     nameLibfuncs[currNameLibfuncs++] = (char*)strdup(name);
     return address;
