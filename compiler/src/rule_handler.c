@@ -667,6 +667,15 @@ Expr* HANDLE_BOOL_OP(iopcode op, Expr* expr1, Expr* expr2, unsigned M, int linen
         notBoolExpr(expr2, lineno);
         isVar = 1;
     }
+    else if (expr2->type == constbool_e && expr1->type != constbool_e){
+        if (expr2->boolConst == 1){
+            expr2->trueList = newList(nextQuadLabel());
+        } else {
+            expr2->falseList = newList(nextQuadLabel());
+        }
+        emit(jump, NULL, NULL, NULL, 0, lineno);
+        patchList((op == and ? expr2->trueList : expr2->falseList), nextQuadLabel());
+    }
 
     patchList((op == and ? expr1->trueList : expr1->falseList), M);
 

@@ -8,8 +8,6 @@
 #include <cstring>
 #include <cassert>
 
-
-
 // Const values tables
 std::vector<double>			numConsts;
 std::vector<std::string>	strConsts;

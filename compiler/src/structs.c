@@ -76,7 +76,15 @@ void checkShort(Expr* e, iopcode op, int lineno){
         notBoolExpr(e, lineno);
         patchList((op == and ? e->trueList : e->falseList), nextQuadLabel());
     }
-
+    else if (e->type == constbool_e){
+        if (e->boolConst == 1){
+            e->trueList = newList(nextQuadLabel());
+        } else {
+            e->falseList = newList(nextQuadLabel());
+        }
+        emit(jump, NULL, NULL, NULL, 0, lineno);
+        patchList((op == and ? e->trueList : e->falseList), nextQuadLabel());
+    }
     return;
 }
 

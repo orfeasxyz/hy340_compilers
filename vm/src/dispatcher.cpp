@@ -310,6 +310,15 @@ void execute_comparison (instruction *instr) {
     }
 }
 
+void execute_pusharg (instruction *instr) {
+    avm_memcell *arg = avm_translate_op(&instr->arg1, &ax);
+    assert(arg);
+
+    ++totalActuals;
+    avm_assign(&stack[sp], arg);
+    avm_decsp();
+}
+
 void execute_call (instruction *instr) {
     avm_memcell *func = avm_translate_op(&instr->arg1, &ax);
     assert(func);
@@ -337,15 +346,6 @@ void execute_call (instruction *instr) {
             avm_error("Cannot bind '%s' to function\n", s.c_str());
         }
     }
-}
-
-void execute_pusharg (instruction *instr) {
-    avm_memcell *arg = avm_translate_op(&instr->arg1, &ax);
-    assert(arg);
-
-    ++totalActuals;
-    avm_assign(&stack[sp], arg);
-    avm_decsp();
 }
 
 void execute_funcenter (instruction *instr) {
