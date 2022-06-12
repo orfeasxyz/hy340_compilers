@@ -574,12 +574,12 @@ Expr* HANDLE_ARITH_OP(iopcode op, Expr* expr1, Expr* expr2, int lineno){
     }
 
     if(check_arith_eligible(expr1) == -1) {
-        fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in arithmetic expression\n", 0, str_iopcodeName[expr1->type]);
+        fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in arithmetic expression\n", lineno, str_iopcodeName[expr1->type]);
         exit(1);
     }
 
     if(check_arith_eligible(expr2) == -1) {
-        fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in arithmetic expression\n",  0, str_iopcodeName[expr2->type]);
+        fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in arithmetic expression\n",  lineno, str_iopcodeName[expr2->type]);
         exit(1);
     }
 
@@ -635,12 +635,12 @@ Expr* HANDLE_REL_OP(iopcode op, Expr* expr1, Expr* expr2, int lineno){
 
 
     if(check_arith_eligible(expr1) == -1 && op != if_eq && op != if_noteq) {
-        fprintf(stderr, "Expression 1 has type %s which is not allowed in relation expression\n", str_iopcodeName[expr1->type]);
+        fprintf(stderr, "Expression 1 in line %d has type %s which is not allowed in relation expression\n", lineno, str_iopcodeName[expr1->type]);
         exit(1);
     }
 
     if(check_arith_eligible(expr2) == -1 && op != if_eq && op != if_noteq) {
-        fprintf(stderr, "Expression 2 has type %s which is not allowed in relation expression\n", str_iopcodeName[expr2->type]);
+        fprintf(stderr, "Expression 2 in line %d has type %s which is not allowed in relation expression\n", lineno, str_iopcodeName[expr2->type]);
         exit(1);
     }
 

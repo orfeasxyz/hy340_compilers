@@ -538,7 +538,7 @@ void patch_incomplete_jumps() {
         instructions[ij->instrNo].result.val = 
             (ij->iaddress == nextQuadLabel()) ? 
             nextInstructionLabel() :
-            quads[ij->iaddress].taddress;
+            (quads[ij->iaddress].taddress - (quads[ij->iaddress].op == funcstart ? 1 : 0));
     }
 }
 

@@ -357,13 +357,13 @@ void execute_funcenter (instruction *instr) {
 }
 
 void execute_funcexit (instruction *instr) {
-    unsigned savedsp = sp;
+    unsigned oldsp = sp;
     sp = avm_getenvval(bp + AVM_SAVEDSP_OFFSET);
     pc = avm_getenvval(bp + AVM_SAVEDPC_OFFSET);
     bp = avm_getenvval(bp + AVM_SAVEDBP_OFFSET);
 
-    while (savedsp++ <= sp) {
-        avm_memcellclear(&stack[savedsp]);
+    while (oldsp++ <= sp) {
+        avm_memcellclear(&stack[oldsp]);
     }
 }
 

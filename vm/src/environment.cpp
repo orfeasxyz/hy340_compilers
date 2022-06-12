@@ -222,6 +222,14 @@ void libFunc_print (void) {
 
     fflush(stdout);
 }
+
+void libFunc_totalarguments (void) {
+    unsigned p_bp = avm_getenvval(bp + AVM_SAVEDBP_OFFSET);
+    avm_memcellclear(&retval);
+
+    if (!)
+}
+
 // TODO register more libfuncs ^-^
 std::map<std::string, library_func_t> libFuncsMap = {
     {"print", libFunc_print}
