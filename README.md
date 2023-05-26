@@ -22,7 +22,7 @@ assert the functionality of our code. Tests have been executed on the remote com
 #### Known Issues
 
 - Compiler
-  - Conintinue command not backpatched correctly
+  - Continue command not backpatched correctly
 - Virtual Machine
   - Poblems with object/table reference count
   - Unexpected behavior while executed some library functions
