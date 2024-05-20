@@ -546,6 +546,9 @@ static void backPatchReturnList(return_list_t* rl, unsigned label) {
     for (; rl->next; rl = rl->next) {
         instructions[rl->line].result.val = label;
     }
+
+    // Jump above funcstart has been labeled as return and will always be the "last" on the list
+    // and we don't want it to jump to funcend so it doesn't trigger its code
     instructions[rl->line].result.val = label + 1;
 }
 

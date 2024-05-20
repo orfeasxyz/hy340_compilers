@@ -16,4 +16,4 @@ lex: al.c lex.l $(IDIR)/lex.h parser
 	flex lex.l
 
 clean:
-	rm -rf *.o *.out *.yy.c *.exe *.output
+	rm -rf *.o *.out *.yy.c *.exe *.output parser.c

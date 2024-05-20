@@ -9,5 +9,6 @@ all:
 
 clean:
 	rm -f *.exe *.ascb
+	rm -f compiler/include/parser.h
 	$(MAKE) -C compiler/src/ clean
 	$(MAKE) -C vm/src/ clean

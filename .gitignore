@@ -4,3 +4,4 @@
 *.output
 *.swp
 *.ascb
+tests/Tests_provided_by_red_dragon/
